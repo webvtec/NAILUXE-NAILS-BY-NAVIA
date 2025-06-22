@@ -45,6 +45,7 @@
         <h2>Admin Gallery Management</h2>
         <div class="form-group">
             <label for="galleryImage">Add Image URL:</label>
+            <!-- ✅ Correct input type -->
             <input type="text" id="galleryImage" placeholder="Paste image link here" required>
             <button onclick="addImageToGallery()">Add Image</button>
         </div>
@@ -52,6 +53,7 @@
             <!-- Gallery images will be displayed here -->
         </div>
     </div>
+
     <script>
         let galleryImages = JSON.parse(localStorage.getItem('galleryImages')) || [];
 
