@@ -35,8 +35,12 @@
       text-align: center;
     }
 
-    input[type="file"] {
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
       margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     button {
@@ -105,9 +109,9 @@
 
   <div class="admin-container">
 
-    <h2>Upload New Photos</h2>
-    <input type="file" id="photoInput" accept="image/*" multiple>
-    <button onclick="uploadPhotos()">Upload Photos</button>
+    <h2>Add Image by URL</h2>
+    <input type="text" id="photoUrlInput" placeholder="Enter image URL here">
+    <button onclick="addPhotoUrl()">Add Photo</button>
 
     <h2>Gallery Photos</h2>
     <div class="gallery-grid" id="adminGallery"></div>
@@ -152,28 +156,21 @@
       loadGallery();
     }
 
-    function uploadPhotos() {
-      const input = document.getElementById('photoInput');
-      const files = input.files;
+    function addPhotoUrl() {
+      const urlInput = document.getElementById('photoUrlInput');
+      const url = urlInput.value.trim();
 
-      if (files.length === 0) {
-        alert('Please select photos to upload.');
+      if (url === '') {
+        alert('Please enter a valid image URL.');
         return;
       }
 
       let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+      gallery.push(url);
+      localStorage.setItem('gallery', JSON.stringify(gallery));
 
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          gallery.push(e.target.result);
-          localStorage.setItem('gallery', JSON.stringify(gallery));
-          loadGallery();
-        };
-        reader.readAsDataURL(file);
-      });
-
-      input.value = '';
+      urlInput.value = '';
+      loadGallery();
     }
 
     function loadReservations() {
