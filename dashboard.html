@@ -28,6 +28,28 @@
       color: #6200ea;
     }
 
+    .top-menu {
+      display: flex;
+      justify-content: center;
+      background-color: #6200ea;
+      padding: 10px 0;
+    }
+
+    .top-menu button {
+      background-color: white;
+      color: #6200ea;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .top-menu button:hover {
+      background-color: #FFD1DC;
+    }
+
     .admin-container {
       max-width: 1000px;
       margin: 20px auto;
@@ -76,9 +98,15 @@
       color: #6200ea;
     }
 
+    .gallery-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 10px;
+    }
+
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 15px;
       margin-bottom: 30px;
     }
@@ -122,6 +150,14 @@
       background-color: #6200ea;
       color: white;
     }
+
+    .content-section {
+      display: none;
+    }
+
+    .content-section.active {
+      display: block;
+    }
   </style>
 </head>
 
@@ -129,8 +165,31 @@
 
   <div class="header-bar">Admin Dashboard - ARCTURUS NAIL CARE</div>
 
-  <div class="admin-container">
+  <div class="top-menu">
+    <button onclick="showSection('reservationsSection')">📅 View Reservations</button>
+    <button onclick="showSection('gallerySection')">🖼️ Manage Gallery</button>
+  </div>
 
+  <!-- Reservations Page (Default Start Page) -->
+  <div id="reservationsSection" class="admin-container content-section active">
+    <h2>View Reservations</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Service</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody id="reservationTable"></tbody>
+    </table>
+  </div>
+
+  <!-- Gallery Management Page -->
+  <div id="gallerySection" class="admin-container content-section">
     <h2>Add Image by URL</h2>
     <input type="text" id="photoUrlInput" placeholder="Enter image URL here">
 
@@ -147,22 +206,6 @@
 
     <h2>Gallery Photos</h2>
     <div id="adminGallery"></div>
-
-    <h2>View Reservations</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Service</th>
-          <th>Type</th>
-        </tr>
-      </thead>
-      <tbody id="reservationTable"></tbody>
-    </table>
-
   </div>
 
   <script>
@@ -179,7 +222,15 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Add new photo URL to Firestore
+    // Show section by ID
+    function showSection(sectionId) {
+      document.querySelectorAll('.content-section').forEach(section =>
+        section.classList.remove('active')
+      );
+      document.getElementById(sectionId).classList.add('active');
+    }
+
+    // Add photo to gallery
     function addPhotoUrl() {
       const urlInput = document.getElementById('photoUrlInput');
       const categorySelect = document.getElementById('photoCategorySelect');
@@ -203,7 +254,7 @@
         });
     }
 
-    // Load gallery grouped by category
+    // Load gallery by category
     function loadGallery() {
       const galleryContainer = document.getElementById('adminGallery');
       galleryContainer.innerHTML = '';
@@ -228,7 +279,9 @@
           galleryContainer.innerHTML += `
             <div class="gallery-category">
               <h3>${category}</h3>
-              <div class="gallery-grid" id="gallery-${category}"></div>
+              <div class="gallery-wrapper">
+                <div class="gallery-grid" id="gallery-${category}"></div>
+              </div>
             </div>
           `;
 
@@ -254,7 +307,7 @@
       });
     }
 
-    // Load reservations from Firestore
+    // Load reservations
     function loadReservations() {
       const tableBody = document.getElementById('reservationTable');
       tableBody.innerHTML = '';
@@ -283,8 +336,8 @@
     // Require login to access dashboard
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        loadGallery();
         loadReservations();
+        loadGallery();
       } else {
         window.location.href = 'index.html';
       }
