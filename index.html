@@ -33,16 +33,30 @@
     }
 
     .menu-button {
-      position: absolute;
-      left: 0px;
-      background-color: white;
-      color: #6200ea;
-      border: none;
-      padding: 20px;
-      border-radius: 0px;
-      cursor: pointer;
-      height: 45px;
-    }
+    position: absolute;
+    left: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: white;
+    color: #6200ea;
+    border: none;
+    border-radius: 0px;
+    cursor: pointer;
+    height: 45px;
+    width: 45px;
+
+    /* Center the icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Remove extra padding */
+    padding: 0;
+
+    /* Optional: Increase icon size */
+    font-size: 22px;
+}
+
 
     /* Sidebar Menu */
     .menu {
