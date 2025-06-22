@@ -339,6 +339,16 @@
   </div>
 
     <script>
+
+      function login() {
+  const password = prompt('Enter admin password:');
+  if (password === 'admin123') {  // You can change this password
+    window.location.href = 'dashboard.html';  // Redirect to the admin dashboard
+  } else {
+    alert('Incorrect password.');
+  }
+}
+
 function toggleMenu() {
   const menu = document.getElementById('menu');
   menu.classList.toggle('show');
