@@ -250,7 +250,16 @@
       <input type="date" id="date" required />
 
       <label for="time">Preferred Time:</label>
-      <input type="time" id="time" required />
+<select id="time" required>
+  <option value="09:00">9:00 AM</option>
+  <option value="10:00">10:00 AM</option>
+  <option value="11:00">11:00 AM</option>
+  <option value="12:00">12:00 PM</option>
+  <option value="13:00">1:00 PM</option>
+  <option value="14:00">2:00 PM</option>
+  <option value="15:00">3:00 PM</option>
+  <option value="16:00">4:00 PM</option>
+</select>
 
       <label for="pedicureType">Select Pedicure Type:</label>
       <select id="pedicureType">
@@ -387,6 +396,32 @@
     window.onload = function () {
       loadGallery('galleryDisplay');
     }
+
+  document.getElementById('date').addEventListener('change', function () {
+    const selectedDate = this.value;
+    const timeSelect = document.getElementById('time');
+
+    // Enable all time slots first
+    Array.from(timeSelect.options).forEach(option => {
+      option.disabled = false;
+      option.textContent = option.value; // Reset the text in case "Booked" was added before
+    });
+
+    // Fetch bookings for the selected date
+    db.collection('bookings').where('date', '==', selectedDate).get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const bookedTime = doc.data().time;
+
+          // Disable the booked time slot
+          const optionToDisable = Array.from(timeSelect.options).find(option => option.value === bookedTime);
+          if (optionToDisable) {
+            optionToDisable.disabled = true;
+            optionToDisable.textContent += ' (Booked)';
+          }
+        });
+      });
+  });
   </script>
 
 </body>
