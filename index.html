@@ -197,7 +197,7 @@
     align-items: center;
     justify-content: center;
     font-size: 22px;
-    text-decoration: none; /* Removes underline */
+    text-decoration: none;
 }
 
     /* Admin Dashboard Clean Layout */
@@ -221,34 +221,9 @@
   color: #6200ea;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-
-th {
-  background-color: #6200ea;
-  color: white;
-}
-
-.remove-btn {
-  background-color: red;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
 .admin-gallery {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Two images per row */
+  grid-template-columns: repeat(2, 1fr);
   gap: 15px;
   margin-top: 20px;
 }
@@ -300,11 +275,29 @@ th {
       <input type="time" id="time" required />
 
       <label for="service">Select Service:</label>
-      <select id="service" required>
+      <select id="service" required onchange="showServiceOptions()">
+        <option value="">--Please choose an option--</option>
         <option value="Pedicure">Pedicure</option>
         <option value="Manicure">Manicure</option>
-        <option value="Pedi">Pedi</option>
       </select>
+
+      <div id="pedicureOptions" style="display:none;">
+        <label for="pedicureType">Pedicure Type:</label>
+        <select id="pedicureType">
+          <option value="Classic Pedicure">Classic Pedicure</option>
+          <option value="Spa Pedicure">Spa Pedicure</option>
+          <option value="Gel Pedicure">Gel Pedicure</option>
+        </select>
+      </div>
+
+      <div id="manicureOptions" style="display:none;">
+        <label for="manicureType">Manicure Type:</label>
+        <select id="manicureType">
+          <option value="Classic Manicure">Classic Manicure</option>
+          <option value="French Manicure">French Manicure</option>
+          <option value="Gel Manicure">Gel Manicure</option>
+        </select>
+      </div>
 
       <label for="photos">Upload Photos (Max 3):</label>
       <input type="file" id="photos" accept="image/*" multiple required />
@@ -350,82 +343,108 @@ th {
 </div>
 </div>
 
-  <script>
-    function toggleMenu() {
-      const menu = document.getElementById('menu');
-      menu.classList.toggle('show');
-    }
+<script>
+function toggleMenu() {
+  const menu = document.getElementById('menu');
+  menu.classList.toggle('show');
+}
 
-    function showSection(sectionId) {
-      document.querySelectorAll('.content-section').forEach(section =>
-        section.classList.remove('active')
-      );
-      document.getElementById(sectionId).classList.add('active');
+function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(section =>
+    section.classList.remove('active')
+  );
+  document.getElementById(sectionId).classList.add('active');
 
-      if (sectionId === 'gallerySection') {
-        loadGallery('galleryDisplay');
-      }
-    }
+  if (sectionId === 'gallerySection') {
+    loadGallery('galleryDisplay');
+  }
+}
 
-    function submitBooking(event) {
-      event.preventDefault();
+function showServiceOptions() {
+  const service = document.getElementById('service').value;
+  const pedicureOptions = document.getElementById('pedicureOptions');
+  const manicureOptions = document.getElementById('manicureOptions');
 
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const date = document.getElementById('date').value;
-      const time = document.getElementById('time').value;
-      const service = document.getElementById('service').value;
+  if (service === 'Pedicure') {
+    pedicureOptions.style.display = 'block';
+    manicureOptions.style.display = 'none';
+  } else if (service === 'Manicure') {
+    pedicureOptions.style.display = 'none';
+    manicureOptions.style.display = 'block';
+  } else {
+    pedicureOptions.style.display = 'none';
+    manicureOptions.style.display = 'none';
+  }
+}
 
-      const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+function submitBooking(event) {
+  event.preventDefault();
 
-      const isBooked = bookings.some(
-        booking => booking.date === date && booking.time === time
-      );
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('time').value;
+  const service = document.getElementById('service').value;
 
-      if (isBooked) {
-        document.getElementById('bookingMessage').innerText =
-          'This time slot is unavailable.';
-        document.getElementById('bookingMessage').style.color = 'red';
-        return;
-      }
+  let specificType = '';
+  if (service === 'Pedicure') {
+    specificType = document.getElementById('pedicureType').value;
+  } else if (service === 'Manicure') {
+    specificType = document.getElementById('manicureType').value;
+  }
 
-      bookings.push({ name, phone, date, time, service });
-      localStorage.setItem('bookings', JSON.stringify(bookings));
+  const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
 
-      document.getElementById('bookingMessage').innerText = 'Booking confirmed!';
-      document.getElementById('bookingMessage').style.color = 'green';
+  const isBooked = bookings.some(
+    booking => booking.date === date && booking.time === time
+  );
 
-      event.target.reset();
-      loadReservations();
-    }
+  if (isBooked) {
+    document.getElementById('bookingMessage').innerText = 'This time slot is unavailable.';
+    document.getElementById('bookingMessage').style.color = 'red';
+    return;
+  }
 
-    function loadReservations() {
-      const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-      const tableBody = document.getElementById('bookingTable');
-      tableBody.innerHTML = '';
+  bookings.push({ name, phone, date, time, service, specificType });
+  localStorage.setItem('bookings', JSON.stringify(bookings));
 
-      bookings.forEach(booking => {
-        const row = `<tr>
-            <td>${booking.name}</td>
-            <td>${booking.phone}</td>
-            <td>${booking.date}</td>
-            <td>${booking.time}</td>
-            <td>${booking.service}</td>
-          </tr>`;
-        tableBody.innerHTML += row;
-      });
-    }
+  document.getElementById('bookingMessage').innerText = 'Booking confirmed!';
+  document.getElementById('bookingMessage').style.color = 'green';
 
-    function login() {
-      const password = prompt('Enter admin password:');
-      if (password === 'admin123') {
-        showSection('adminSection');
-        loadReservations();
-        loadGallery('adminGalleryDisplay');
-      } else {
-        alert('Incorrect password.');
-      }
-    }
+  event.target.reset();
+  document.getElementById('pedicureOptions').style.display = 'none';
+  document.getElementById('manicureOptions').style.display = 'none';
+
+  loadReservations();
+}
+
+function loadReservations() {
+  const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+  const tableBody = document.getElementById('bookingTable');
+  tableBody.innerHTML = '';
+
+  bookings.forEach(booking => {
+    const row = `<tr>
+        <td>${booking.name}</td>
+        <td>${booking.phone}</td>
+        <td>${booking.date}</td>
+        <td>${booking.time}</td>
+        <td>${booking.service} - ${booking.specificType}</td>
+      </tr>`;
+    tableBody.innerHTML += row;
+  });
+}
+
+function login() {
+  const password = prompt('Enter admin password:');
+  if (password === 'admin123') {
+    showSection('adminSection');
+    loadReservations();
+    loadGallery('adminGalleryDisplay');
+  } else {
+    alert('Incorrect password.');
+  }
+}
 
 function addGalleryImage(event) {
   event.preventDefault();
@@ -450,41 +469,40 @@ function addGalleryImage(event) {
   }
 }
 
-    function loadGallery(containerId) {
-      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-      const galleryContainer = document.getElementById(containerId);
-      galleryContainer.innerHTML = '';
+function loadGallery(containerId) {
+  const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+  const galleryContainer = document.getElementById(containerId);
+  galleryContainer.innerHTML = '';
 
-      gallery.forEach((imageUrl, index) => {
-        galleryContainer.innerHTML += `
-          <div>
-            <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
-            ${containerId === 'adminGalleryDisplay'
-              ? `<button class="remove-btn" onclick="removeImage(${index})">Remove</button>`
-              : ''
-            }
-          </div>`;
-      });
-    }
+  gallery.forEach((imageUrl, index) => {
+    galleryContainer.innerHTML += `
+      <div>
+        <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+        ${containerId === 'adminGalleryDisplay'
+          ? `<button class="remove-btn" onclick="removeImage(${index})">Remove</button>`
+          : ''
+        }
+      </div>`;
+  });
+}
 
-    function removeImage(index) {
-      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-      gallery.splice(index, 1);
-      localStorage.setItem('gallery', JSON.stringify(gallery));
-      loadGallery('adminGalleryDisplay');
-    }
+function removeImage(index) {
+  const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+  gallery.splice(index, 1);
+  localStorage.setItem('gallery', JSON.stringify(gallery));
+  loadGallery('adminGalleryDisplay');
+}
 
-    document.getElementById('photos').addEventListener('change', function () {
-      if (this.files.length > 3) {
-        alert('You can only upload up to 3 photos.');
-        this.value = '';
-      }
-    });
+document.getElementById('photos').addEventListener('change', function () {
+  if (this.files.length > 3) {
+    alert('You can only upload up to 3 photos.');
+    this.value = '';
+  }
+});
 
-    // Auto-load gallery on page load
-    window.onload = function() {
-      loadGallery('galleryDisplay');
-    };
-  </script>
+window.onload = function() {
+  loadGallery('galleryDisplay');
+};
+</script>
 </body>
 </html>
