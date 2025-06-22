@@ -300,23 +300,23 @@
         <option value="Manicure">Manicure</option>
       </select>
 
-      <div id="pedicureOptions" style="display:none;">
-        <label for="pedicureType">Pedicure Type:</label>
-        <select id="pedicureType">
-          <option value="Classic Pedicure">Classic Pedicure</option>
-          <option value="Spa Pedicure">Spa Pedicure</option>
-          <option value="Gel Pedicure">Gel Pedicure</option>
-        </select>
-      </div>
+      <div id="pedicureOptions">
+  <label for="pedicureType">Select Pedicure Type:</label>
+  <select id="pedicureType">
+    <option value="Regular Pedicure">Regular Pedicure</option>
+    <option value="Gel Pedicure">Gel Pedicure</option>
+    <option value="Spa Pedicure">Spa Pedicure</option>
+  </select>
+</div>
 
-      <div id="manicureOptions" style="display:none;">
-        <label for="manicureType">Manicure Type:</label>
-        <select id="manicureType">
-          <option value="Classic Manicure">Classic Manicure</option>
-          <option value="French Manicure">French Manicure</option>
-          <option value="Gel Manicure">Gel Manicure</option>
-        </select>
-      </div>
+<div id="manicureOptions">
+  <label for="manicureType">Select Manicure Type:</label>
+  <select id="manicureType">
+    <option value="Regular Manicure">Regular Manicure</option>
+    <option value="Gel Manicure">Gel Manicure</option>
+    <option value="Spa Manicure">Spa Manicure</option>
+  </select>
+</div>
 
       <label for="photos">Upload Photos (Max 3):</label>
       <input type="file" id="photos" accept="image/*" multiple required />
@@ -379,22 +379,6 @@ function showSection(sectionId) {
   }
 }
 
-function showServiceOptions() {
-  const service = document.getElementById('service').value;
-  const pedicureOptions = document.getElementById('pedicureOptions');
-  const manicureOptions = document.getElementById('manicureOptions');
-
-  if (service === 'Pedicure') {
-    pedicureOptions.style.display = 'block';
-    manicureOptions.style.display = 'none';
-  } else if (service === 'Manicure') {
-    pedicureOptions.style.display = 'none';
-    manicureOptions.style.display = 'block';
-  } else {
-    pedicureOptions.style.display = 'none';
-    manicureOptions.style.display = 'none';
-  }
-}
 
 function submitBooking(event) {
   event.preventDefault();
