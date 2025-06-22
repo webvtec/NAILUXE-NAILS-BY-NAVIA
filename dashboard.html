@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
-  
+
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -64,10 +64,20 @@
       background-color: #3700b3;
     }
 
+    .gallery-category {
+      margin-top: 30px;
+    }
+
+    .gallery-category h3 {
+      color: #6200ea;
+      margin-bottom: 10px;
+    }
+
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 15px;
+      margin-bottom: 30px;
     }
 
     .gallery-grid div {
@@ -120,10 +130,11 @@
 
     <h2>Add Image by URL</h2>
     <input type="text" id="photoUrlInput" placeholder="Enter image URL here">
+    <input type="text" id="photoCategoryInput" placeholder="Enter category name">
     <button onclick="addPhotoUrl()">Add Photo</button>
 
-    <h2>Gallery Photos</h2>
-    <div class="gallery-grid" id="adminGallery"></div>
+    <h2>Gallery Photos by Category</h2>
+    <div id="adminGallery"></div>
 
     <h2>View Reservations</h2>
     <table>
@@ -157,19 +168,23 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Add new photo URL to Firestore
+    // Add new photo URL with category to Firestore
     function addPhotoUrl() {
       const urlInput = document.getElementById('photoUrlInput');
+      const categoryInput = document.getElementById('photoCategoryInput');
       const url = urlInput.value.trim();
+      const category = categoryInput.value.trim();
 
-      if (url === '') {
-        alert('Please enter a valid image URL.');
+      if (url === '' || category === '') {
+        alert('Please enter both the image URL and category.');
         return;
       }
 
-      db.collection('gallery').add({ url: url })
+      db.collection('gallery').add({ url: url, category: category })
         .then(() => {
           urlInput.value = '';
+          categoryInput.value = '';
+          alert('Photo added successfully!');
         })
         .catch(error => {
           console.error("Error adding document: ", error);
@@ -177,25 +192,42 @@
         });
     }
 
-    // Load gallery with real-time updates
+    // Load gallery grouped by category with real-time updates
     function loadGallery() {
       const galleryContainer = document.getElementById('adminGallery');
       galleryContainer.innerHTML = '';
 
       db.collection('gallery').onSnapshot((querySnapshot) => {
         galleryContainer.innerHTML = ''; // Clear before reloading
+        const categories = {};
 
         querySnapshot.forEach((doc) => {
-          const imageUrl = doc.data().url;
+          const data = doc.data();
+          const imageUrl = data.url;
+          const category = data.category || 'Uncategorized';
           const docId = doc.id;
 
-          galleryContainer.innerHTML += `
-            <div>
-              <img src="${imageUrl}" alt="Design">
-              <button class="remove-btn" onclick="removePhoto('${docId}')">X</button>
-            </div>
-          `;
+          if (!categories[category]) {
+            categories[category] = [];
+          }
+
+          categories[category].push({ url: imageUrl, id: docId });
         });
+
+        // Build the gallery grouped by categories
+        for (const category in categories) {
+          galleryContainer.innerHTML += `<div class="gallery-category"><h3>${category}</h3><div class="gallery-grid" id="gallery-${category}"></div></div>`;
+
+          const categoryContainer = document.getElementById(`gallery-${category}`);
+          categories[category].forEach((image) => {
+            categoryContainer.innerHTML += `
+              <div>
+                <img src="${image.url}" alt="Design">
+                <button class="remove-btn" onclick="removePhoto('${image.id}')">X</button>
+              </div>
+            `;
+          });
+        }
       });
     }
 
