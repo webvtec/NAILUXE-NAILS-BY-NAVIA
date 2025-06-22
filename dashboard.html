@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADMIN DASHBOARD</title>
+  <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -17,6 +17,15 @@
       background-color: #f4f4f4;
       margin: 0;
       padding: 0;
+    }
+
+    .header-bar {
+      background-color: #FFD1DC;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #6200ea;
     }
 
     .top-menu {
@@ -123,39 +132,15 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 30px;
-    }
-
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-
-    th {
-      background-color: #6200ea;
-      color: white;
-    }
-
-    .content-section {
-      display: none;
-    }
-
-    .content-section.active {
-      display: block;
-    }
   </style>
 </head>
 
 <body>
 
+  <div class="header-bar">Admin Dashboard - ARCTURUS NAIL CARE</div>
+
   <div class="top-menu">
-    <button onclick="showSection('gallerySection')">MANAGE GALLERY</button>
+    <button onclick="showSection('gallerySection')">🖼️ Manage Gallery</button>
   </div>
 
   <!-- Gallery Management Page -->
@@ -277,6 +262,15 @@
       });
     }
 
+    // Automatically load gallery on login
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        showSection('gallerySection'); // Start on Manage Gallery
+        loadGallery(); // Load gallery immediately
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
   </script>
 
 </body>
