@@ -271,13 +271,17 @@
     const db = firebase.firestore();
 
     function login() {
-      const password = prompt('Enter admin password:');
-      if (password === 'admin123') {
-        window.location.href = 'dashboard.html';
-      } else {
-        alert('Incorrect password.');
-      }
-    }
+  const email = prompt('Enter admin email:');
+  const password = prompt('Enter admin password:');
+
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => {
+      window.location.href = 'dashboard.html';
+    })
+    .catch((error) => {
+      alert('Authentication failed: ' + error.message);
+    });
+}
 
     function toggleMenu() {
       const menu = document.getElementById('menu');
