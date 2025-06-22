@@ -87,6 +87,7 @@
     }
 
     form input,
+    form select,
     form button {
       width: 100%;
       padding: 12px;
@@ -196,6 +197,14 @@
       <label for="time">Preferred Time:</label>
       <input type="time" id="time" required />
 
+      <label for="service">Select Service:</label>
+      <select id="service" required>
+        <option value="">-- Please Choose a Service --</option>
+        <option value="Pedicure">Pedicure</option>
+        <option value="Manicure">Manicure</option>
+        <option value="Pedi">Pedi</option>
+      </select>
+
       <label for="photos">Upload Photos (Max 3):</label>
       <input type="file" id="photos" accept="image/*" multiple required />
 
@@ -224,6 +233,7 @@
           <th>Phone</th>
           <th>Date</th>
           <th>Time</th>
+          <th>Service</th>
         </tr>
       </thead>
       <tbody id="bookingTable"></tbody>
@@ -263,6 +273,7 @@
       const phone = document.getElementById('phone').value;
       const date = document.getElementById('date').value;
       const time = document.getElementById('time').value;
+      const service = document.getElementById('service').value;
 
       const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
 
@@ -277,7 +288,7 @@
         return;
       }
 
-      bookings.push({ name, phone, date, time });
+      bookings.push({ name, phone, date, time, service });
       localStorage.setItem('bookings', JSON.stringify(bookings));
 
       document.getElementById('bookingMessage').innerText = 'Booking confirmed!';
@@ -298,6 +309,7 @@
             <td>${booking.phone}</td>
             <td>${booking.date}</td>
             <td>${booking.time}</td>
+            <td>${booking.service}</td>
           </tr>`;
         tableBody.innerHTML += row;
       });
@@ -349,7 +361,6 @@
       loadGallery('adminGalleryDisplay');
     }
 
-    // Limit photo uploads
     document.getElementById('photos').addEventListener('change', function () {
       if (this.files.length > 3) {
         alert('You can only upload up to 3 photos.');
