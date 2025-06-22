@@ -182,7 +182,7 @@
   </div>
 
   <!-- Booking Section -->
-  <div id="bookingSection" class="content-section active">
+  <div id="gallerySection" class="content-section active">
     <h1>Book Your Nail Appointment</h1>
     <form onsubmit="submitBooking(event)">
       <label for="name">Name:</label>
@@ -367,6 +367,10 @@
         this.value = '';
       }
     });
+
+    window.onload = function() {
+    loadGallery('galleryDisplay');
+};
   </script>
 </body>
 </html>
