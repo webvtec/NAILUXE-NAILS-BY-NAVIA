@@ -5,9 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
+  
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -167,41 +170,40 @@
       db.collection('gallery').add({ url: url })
         .then(() => {
           urlInput.value = '';
-          loadGallery();
         })
         .catch(error => {
           console.error("Error adding document: ", error);
+          alert('Error adding photo: ' + error.message);
         });
     }
 
-    // Load gallery from Firestore
+    // Load gallery with real-time updates
     function loadGallery() {
-  const galleryContainer = document.getElementById('adminGallery');
-  galleryContainer.innerHTML = '';
+      const galleryContainer = document.getElementById('adminGallery');
+      galleryContainer.innerHTML = '';
 
-  db.collection('gallery').onSnapshot((querySnapshot) => {
-    galleryContainer.innerHTML = ''; // Clear before reloading
+      db.collection('gallery').onSnapshot((querySnapshot) => {
+        galleryContainer.innerHTML = ''; // Clear before reloading
 
-    querySnapshot.forEach((doc) => {
-      const imageUrl = doc.data().url;
-      const docId = doc.id;
+        querySnapshot.forEach((doc) => {
+          const imageUrl = doc.data().url;
+          const docId = doc.id;
 
-      galleryContainer.innerHTML += `
-        <div>
-          <img src="${imageUrl}" alt="Design">
-          <button class="remove-btn" onclick="removePhoto('${docId}')">X</button>
-        </div>
-      `;
-    });
-  });
-}
-    
+          galleryContainer.innerHTML += `
+            <div>
+              <img src="${imageUrl}" alt="Design">
+              <button class="remove-btn" onclick="removePhoto('${docId}')">X</button>
+            </div>
+          `;
+        });
+      });
+    }
+
     // Remove photo from Firestore
     function removePhoto(docId) {
-      db.collection('gallery').doc(docId).delete().then(() => {
-        loadGallery();
-      }).catch((error) => {
+      db.collection('gallery').doc(docId).delete().catch((error) => {
         console.error("Error removing document: ", error);
+        alert('Error removing photo: ' + error.message);
       });
     }
 
@@ -211,6 +213,8 @@
       tableBody.innerHTML = '';
 
       db.collection('bookings').get().then((querySnapshot) => {
+        tableBody.innerHTML = '';
+
         querySnapshot.forEach((doc) => {
           const booking = doc.data();
           tableBody.innerHTML += `
@@ -224,14 +228,20 @@
             </tr>
           `;
         });
+      }).catch(error => {
+        console.error("Error loading bookings: ", error);
       });
     }
 
-    // Load everything on page load
-    window.onload = function () {
-      loadGallery();
-      loadReservations();
-    }
+    // ✅ Require login to access the dashboard
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        loadGallery();
+        loadReservations();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
   </script>
 
 </body>
