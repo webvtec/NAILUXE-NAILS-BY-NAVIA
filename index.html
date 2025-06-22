@@ -248,9 +248,15 @@ th {
 
 .admin-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* Two images per row */
   gap: 15px;
   margin-top: 20px;
+}
+
+.admin-gallery img {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
   </style>
@@ -331,17 +337,17 @@ th {
       </table>
     </div>
 
-    <!-- Gallery Management Card -->
-    <div class="admin-card">
-      <h3>Manage Gallery</h3>
-      <form onsubmit="addGalleryImage(event)">
-        <input type="text" id="galleryImage" placeholder="Paste image URL" required />
-        <button type="submit">Add to Gallery</button>
-      </form>
+<!-- Gallery Management Card -->
+<div class="admin-card">
+  <h3>Manage Gallery</h3>
+  <form onsubmit="addGalleryImage(event)">
+    <input type="file" id="galleryImage" accept="image/*" required />
+    <button type="submit">Upload Photo</button>
+  </form>
 
-      <div class="admin-gallery" id="adminGalleryDisplay"></div>
-    </div>
-  </div>
+  <div class="admin-gallery" id="adminGalleryDisplay"></div>
+</div>
+</div>
 </div>
 
   <script>
@@ -421,16 +427,28 @@ th {
       }
     }
 
-    function addGalleryImage(event) {
-      event.preventDefault();
-      const imageUrl = document.getElementById('galleryImage').value.trim();
-      if (!imageUrl) return;
+function addGalleryImage(event) {
+  event.preventDefault();
+
+  const fileInput = document.getElementById('galleryImage');
+  const file = fileInput.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const imageUrl = e.target.result;
+
       const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
       gallery.push(imageUrl);
       localStorage.setItem('gallery', JSON.stringify(gallery));
-      document.getElementById('galleryImage').value = '';
       loadGallery('adminGalleryDisplay');
-    }
+    };
+
+    reader.readAsDataURL(file);
+    fileInput.value = '';
+  }
+}
 
     function loadGallery(containerId) {
       const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
