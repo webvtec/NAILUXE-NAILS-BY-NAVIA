@@ -5,11 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ARCTURUS NAIL CARE</title>
+
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
   <style>
-    /* Your existing CSS remains unchanged */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -134,12 +136,23 @@
       margin-top: 20px;
     }
 
+    .gallery-category {
+      margin-top: 40px;
+    }
+
+    .gallery-category h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 22px;
+      color: #6200ea;
+    }
+
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px;
       max-width: 900px;
-      margin: 0 auto;
+      margin: 0 auto 40px auto;
     }
 
     .gallery-grid img {
@@ -198,7 +211,7 @@
 </head>
 
 <body>
-  <!-- Header Bar -->
+
   <div class="header-bar">
     <button class="menu-button" onclick="toggleMenu()">☰</button>
     <div class="header-title">ARCTURUS NAIL CARE</div>
@@ -206,20 +219,16 @@
   </div>
 
   <div class="gallery-section">
-    <h2>Design Gallery</h2>
-    <div class="gallery-grid" id="galleryDisplay">
-      <!-- Gallery images will load here -->
-    </div>
+    <h2 style="text-align:center; margin-top:60px;">Design Gallery</h2>
+    <div id="galleryDisplay"></div>
   </div>
 
-  <!-- Sidebar Menu -->
   <div class="menu" id="menu">
     <a onclick="showSection('gallerySection')">💅🏽 DESIGNS</a>
     <a onclick="showSection('bookingSection')">📆 BOOKING</a>
     <a onclick="login()" class="admin-button">ADMIN</a>
   </div>
 
-  <!-- Booking Section -->
   <div id="bookingSection" class="content-section">
     <h1>BOOK APPOINTMENT</h1>
     <form onsubmit="submitBooking(event)">
@@ -258,7 +267,6 @@
   </div>
 
   <script>
-    // Firebase Setup
     const firebaseConfig = {
       apiKey: "AIzaSyBx9_GrR4_ruM8v-GDOj4De1erg7nWsH08",
       authDomain: "arcturus-nail-care.firebaseapp.com",
@@ -272,17 +280,17 @@
     const db = firebase.firestore();
 
     function login() {
-  const email = prompt('Enter admin email:');
-  const password = prompt('Enter admin password:');
+      const email = prompt('Enter admin email:');
+      const password = prompt('Enter admin password:');
 
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .then(() => {
-      window.location.href = 'dashboard.html';
-    })
-    .catch((error) => {
-      alert('Authentication failed: ' + error.message);
-    });
-}
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = 'dashboard.html';
+        })
+        .catch((error) => {
+          alert('Authentication failed: ' + error.message);
+        });
+    }
 
     function toggleMenu() {
       const menu = document.getElementById('menu');
@@ -300,7 +308,6 @@
       }
     }
 
-    // Submit booking to Firestore
     function submitBooking(event) {
       event.preventDefault();
 
@@ -329,45 +336,46 @@
       });
     }
 
-    // Load gallery from Firestore
     function loadGallery(containerId) {
-  const galleryContainer = document.getElementById(containerId);
-  galleryContainer.innerHTML = '';
+      const galleryContainer = document.getElementById(containerId);
+      galleryContainer.innerHTML = '';
 
-  db.collection('gallery').onSnapshot((querySnapshot) => {
-    galleryContainer.innerHTML = ''; // Clear before reloading
+      db.collection('gallery').onSnapshot((querySnapshot) => {
+        galleryContainer.innerHTML = '';
 
-    const categories = {};
+        const categories = {};
 
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const imageUrl = data.url;
-      const category = data.category || 'Uncategorized';
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const imageUrl = data.url;
+          const category = data.category || 'Uncategorized';
 
-      if (!categories[category]) {
-        categories[category] = [];
-      }
-      categories[category].push(imageUrl);
-    });
+          if (!categories[category]) {
+            categories[category] = [];
+          }
+          categories[category].push(imageUrl);
+        });
 
-    // Build the gallery grouped by categories
-    for (const category in categories) {
-      galleryContainer.innerHTML += `<h3 style="margin-top: 30px; color: #6200ea;">${category}</h3><div class="gallery-grid" id="gallery-${category}"></div>`;
+        for (const category in categories) {
+          galleryContainer.innerHTML += `
+            <div class="gallery-category">
+              <h3>${category}</h3>
+              <div class="gallery-grid" id="gallery-${category}"></div>
+            </div>
+          `;
 
-      const categoryContainer = document.getElementById(`gallery-${category}`);
-      categories[category].forEach((imageUrl) => {
-        categoryContainer.innerHTML += `
-          <div>
-            <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
-          </div>
-        `;
+          const categoryContainer = document.getElementById(`gallery-${category}`);
+          categories[category].forEach((imageUrl) => {
+            categoryContainer.innerHTML += `
+              <div>
+                <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+              </div>
+            `;
+          });
+        }
       });
     }
-  });
-}
 
-
-    // Load gallery on page load
     window.onload = function () {
       loadGallery('galleryDisplay');
     }
