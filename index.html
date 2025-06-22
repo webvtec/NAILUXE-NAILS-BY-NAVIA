@@ -14,18 +14,17 @@
 
     /* Header */
     .header-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 45px;
-  background-color: #6200ea;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
-  z-index: 1000;
-}
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 45px;
+      background-color: #6200ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
 
     .header-title {
       color: white;
@@ -33,31 +32,16 @@
       font-size: 20px;
     }
 
-    .menu {
-    position: fixed;
-    top: 45px; /* Start below header */
-    left: 0;
-    width: 200px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 20px;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    height: calc(100% - 45px); /* Fit below header */
-    z-index: 999; /* Lower than header */
-}
-
-    /* Center the icon */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    /* Remove extra padding */
-    padding: 0;
-
-    /* Optional: Increase icon size */
-    font-size: 22px;
-}
+    .menu-button {
+      position: absolute;
+      left: 15px;
+      background-color: white;
+      color: #6200ea;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
     /* Sidebar Menu */
     .menu {
@@ -180,25 +164,6 @@
       cursor: pointer;
       border-radius: 4px;
     }
-
-    .location-button {
-  background-color: white;
-  color: red;
-  border: none;
-  padding: 0;
-  border-radius: 0px;
-  cursor: pointer;
-  height: 45px;
-  width: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  text-decoration: none;
-  box-shadow: none;
-  overflow: hidden;
-}
-
   </style>
 </head>
 
@@ -207,9 +172,8 @@
   <div class="header-bar">
     <button class="menu-button" onclick="toggleMenu()">☰</button>
     <div class="header-title">ARCTURUS NAIL CARE</div>
-    <a href="https://www.google.com/maps/place/YOUR+LOCATION+HERE" target="_blank" class="location-button">📍</a>
-</div>
-  
+  </div>
+
   <!-- Sidebar Menu -->
   <div class="menu" id="menu">
     <a onclick="showSection('gallerySection')">Gallery</a>
