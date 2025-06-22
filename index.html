@@ -164,6 +164,29 @@
       cursor: pointer;
       border-radius: 4px;
     }
+
+    .location-button {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: white;
+    color: red;
+    border: none;
+    padding: 0;
+    border-radius: 0px;
+    cursor: pointer;
+    height: 45px;
+    width: 45px;
+
+    /* Center the icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    text-decoration: none; /* Removes underline */
+}
+
   </style>
 </head>
 
@@ -171,8 +194,9 @@
   <!-- Header Bar -->
   <div class="header-bar">
     <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <div class="header-title">ARCTURUS NAIL CARE</div>
-  </div>
+    <div class="header-title">Nailtech System</div>
+    <a href="https://www.google.com/maps/place/YOUR+LOCATION+HERE" target="_blank" class="location-button">📍</a>
+</div>
 
   <!-- Sidebar Menu -->
   <div class="menu" id="menu">
