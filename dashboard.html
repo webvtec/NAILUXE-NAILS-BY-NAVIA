@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
 
   <style>
     body {
@@ -312,7 +313,7 @@
       const tableBody = document.getElementById('reservationTable');
       tableBody.innerHTML = '';
 
-      db.collection('bookings').get().then((querySnapshot) => {
+      db.collection('bookings').onSnapshot((querySnapshot) => {
         tableBody.innerHTML = '';
 
         querySnapshot.forEach((doc) => {
@@ -328,20 +329,47 @@
             </tr>
           `;
         });
-      }).catch(error => {
-        console.error("Error loading bookings: ", error);
       });
     }
 
-    // Require login to access dashboard
+    // Firebase Authentication
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         loadReservations();
         loadGallery();
+        setupFCM();
       } else {
         window.location.href = 'index.html';
       }
     });
+
+    // Firebase Cloud Messaging Setup
+    function setupFCM() {
+      const messaging = firebase.messaging();
+
+      navigator.serviceWorker.register('firebase-messaging-sw.js')
+        .then((registration) => {
+          messaging.useServiceWorker(registration);
+
+          messaging.getToken({
+            vapidKey: 'BN-dEzy7KqFrW3DF_AVq1gWkYKcxa2sb-E61t3yUsbIDF_ta7JOI88DCm43KhmUV3BYl36KVsz_CR1QC_4svKFw'
+          }).then((currentToken) => {
+            if (currentToken) {
+              console.log('FCM Token:', currentToken);
+              db.collection('adminTokens').doc(currentToken).set({ active: true });
+            } else {
+              console.log('No registration token available.');
+            }
+          }).catch((err) => {
+            console.log('An error occurred while retrieving token. ', err);
+          });
+        });
+
+      messaging.onMessage((payload) => {
+        console.log('Message received. ', payload);
+        alert(`New Reservation: ${payload.notification.title}\n${payload.notification.body}`);
+      });
+    }
   </script>
 
 </body>
