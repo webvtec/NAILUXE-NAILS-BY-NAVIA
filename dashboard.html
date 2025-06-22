@@ -296,41 +296,6 @@
       });
     }
 
-    // Load reservations
-    function loadReservations() {
-      const tableBody = document.getElementById('reservationTable');
-      tableBody.innerHTML = '';
-
-      db.collection('bookings').get().then((querySnapshot) => {
-        tableBody.innerHTML = '';
-
-        querySnapshot.forEach((doc) => {
-          const booking = doc.data();
-          tableBody.innerHTML += `
-            <tr>
-              <td>${booking.name}</td>
-              <td>${booking.phone}</td>
-              <td>${booking.date}</td>
-              <td>${booking.time}</td>
-              <td>${booking.service}</td>
-              <td>${booking.specificType}</td>
-            </tr>
-          `;
-        });
-      }).catch(error => {
-        console.error("Error loading bookings: ", error);
-      });
-    }
-
-    // Require login to access dashboard
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        loadReservations();
-        loadGallery();
-      } else {
-        window.location.href = 'index.html';
-      }
-    });
   </script>
 
 </body>
