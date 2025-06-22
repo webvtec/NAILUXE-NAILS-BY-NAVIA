@@ -250,7 +250,14 @@
       <input type="date" id="date" required />
 
       <label for="time">Preferred Time:</label>
-<input type="text" id="time" placeholder="Example: 10:00 AM" required />
+<input type="text" id="timeInput" placeholder="Enter time (e.g. 1030)" maxlength="5" oninput="formatTime(this)" required />
+
+<div style="margin: 10px 0;">
+  <button type="button" onclick="selectPeriod('AM')" id="amBtn" style="margin-right: 10px;">AM</button>
+  <button type="button" onclick="selectPeriod('PM')" id="pmBtn">PM</button>
+</div>
+
+<input type="hidden" id="timePeriod" value="AM" />
 
       <label for="pedicureType">Select Pedicure Type:</label>
       <select id="pedicureType">
@@ -317,13 +324,38 @@
       }
     }
 
+    // Auto-format the time input as HH:MM
+function formatTime(input) {
+  let numbers = input.value.replace(/\D/g, ''); // Remove non-digits
+  if (numbers.length > 4) numbers = numbers.slice(0, 4);
+
+  if (numbers.length >= 3) {
+    input.value = `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
+  } else {
+    input.value = numbers;
+  }
+}
+
+// AM/PM selection
+function selectPeriod(period) {
+  document.getElementById('timePeriod').value = period;
+
+  document.getElementById('amBtn').style.backgroundColor = (period === 'AM') ? '#6200ea' : '';
+  document.getElementById('amBtn').style.color = (period === 'AM') ? 'white' : '';
+  document.getElementById('pmBtn').style.backgroundColor = (period === 'PM') ? '#6200ea' : '';
+  document.getElementById('pmBtn').style.color = (period === 'PM') ? 'white' : '';
+}
+    
+
     function submitBooking(event) {
   event.preventDefault();
 
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
-  const time = document.getElementById('time').value;
+  const timeInput = document.getElementById('timeInput').value.trim();
+const timePeriod = document.getElementById('timePeriod').value;
+const time = `${timeInput} ${timePeriod}`;
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
 
