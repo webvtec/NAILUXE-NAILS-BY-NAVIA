@@ -175,24 +175,26 @@
 
     // Load gallery from Firestore
     function loadGallery() {
-      db.collection('gallery').get().then((querySnapshot) => {
-        const galleryContainer = document.getElementById('adminGallery');
-        galleryContainer.innerHTML = '';
+  const galleryContainer = document.getElementById('adminGallery');
+  galleryContainer.innerHTML = '';
 
-        querySnapshot.forEach((doc) => {
-          const imageUrl = doc.data().url;
-          const docId = doc.id;
+  db.collection('gallery').onSnapshot((querySnapshot) => {
+    galleryContainer.innerHTML = ''; // Clear before reloading
 
-          galleryContainer.innerHTML += `
-            <div>
-              <img src="${imageUrl}" alt="Design">
-              <button class="remove-btn" onclick="removePhoto('${docId}')">X</button>
-            </div>
-          `;
-        });
-      });
-    }
+    querySnapshot.forEach((doc) => {
+      const imageUrl = doc.data().url;
+      const docId = doc.id;
 
+      galleryContainer.innerHTML += `
+        <div>
+          <img src="${imageUrl}" alt="Design">
+          <button class="remove-btn" onclick="removePhoto('${docId}')">X</button>
+        </div>
+      `;
+    });
+  });
+}
+    
     // Remove photo from Firestore
     function removePhoto(docId) {
       db.collection('gallery').doc(docId).delete().then(() => {
