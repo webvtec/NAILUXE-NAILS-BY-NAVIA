@@ -250,16 +250,7 @@
       <input type="date" id="date" required />
 
       <label for="time">Preferred Time:</label>
-<select id="time" required>
-  <option value="09:00">9:00 AM</option>
-  <option value="10:00">10:00 AM</option>
-  <option value="11:00">11:00 AM</option>
-  <option value="12:00">12:00 PM</option>
-  <option value="13:00">1:00 PM</option>
-  <option value="14:00">2:00 PM</option>
-  <option value="15:00">3:00 PM</option>
-  <option value="16:00">4:00 PM</option>
-</select>
+<input type="text" id="time" placeholder="Example: 10:00 AM" required />
 
       <label for="pedicureType">Select Pedicure Type:</label>
       <select id="pedicureType">
@@ -398,48 +389,71 @@
     }
 
   document.getElementById('date').addEventListener('change', function () {
-  const selectedDate = this.value;
-  const timeSelect = document.getElementById('time');
-
-  // Enable all time slots first
-  Array.from(timeSelect.options).forEach(option => {
-    option.disabled = false;
-    option.textContent = option.value; // Reset the text
-  });
-
-  // Fetch bookings for the selected date
-  db.collection('bookings').where('date', '==', selectedDate).get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const bookedTime = doc.data().time;
-
-        // Disable booked time
-        let optionToDisable = Array.from(timeSelect.options).find(option => option.value === bookedTime);
-        if (optionToDisable) {
-          optionToDisable.disabled = true;
-          optionToDisable.textContent += ' (Booked)';
-        }
-
-        // Calculate and disable buffer time (30 mins later)
-        const bufferTime = getNextTimeSlot(bookedTime);
-        let bufferOption = Array.from(timeSelect.options).find(option => option.value === bufferTime);
-        if (bufferOption) {
-          bufferOption.disabled = true;
-          bufferOption.textContent += ' (Buffer)';
-        }
-      });
-    });
+  // Optional: You can clear any previous validation messages here
 });
 
-// Helper function to calculate the next 30-minute time slot
-function getNextTimeSlot(time) {
-  let [hour, minute] = time.split(':').map(Number);
-  minute += 30;
-  if (minute >= 60) {
-    hour += 1;
-    minute = 0;
+function submitBooking(event) {
+  event.preventDefault();
+
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('time').value.trim();
+
+  const pedicureType = document.getElementById('pedicureType').value;
+  const manicureType = document.getElementById('manicureType').value;
+
+  const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
+
+  // Validate time before proceeding
+  validateTimeSlot(date, time)
+    .then((isAvailable) => {
+      if (!isAvailable) {
+        alert('This time is not available. Please choose a later time.');
+        return;
+      }
+
+      // Build WhatsApp message
+      const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappNumber = '18763422293'; // Replace with your number
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+      window.location.href = whatsappUrl;
+    });
+}
+
+function validateTimeSlot(date, selectedTime) {
+  return db.collection('bookings').where('date', '==', date).get()
+    .then((querySnapshot) => {
+      let selectedMinutes = convertToMinutes(selectedTime);
+
+      for (let doc of querySnapshot.docs) {
+        let bookedTime = doc.data().time.trim();
+        let bookedMinutes = convertToMinutes(bookedTime);
+
+        // If selected time is within 1 hour (60 mins) of a booked time, reject it
+        if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
+          return false;
+        }
+      }
+      return true;
+    });
+}
+
+// Convert time like "10:30 AM" to total minutes for easy comparison
+function convertToMinutes(timeStr) {
+  let [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
   }
-  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  if (period.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return (hours * 60) + minutes;
 }
   </script>
 
