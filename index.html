@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nailtech Booking Page</title>
+    <title>Nailtech Booking with Photo Upload</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
             background-color: #f4f4f4;
+        }
+
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #6200ea;
+            font-weight: bold;
         }
 
         h1 {
@@ -52,31 +64,86 @@
             color: green;
             margin-top: 20px;
         }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .gallery img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Book Your Nail Appointment</h1>
+    <!-- Navigation Menu -->
+    <nav>
+        <a href="#" onclick="showSection('bookingSection')">Booking</a>
+        <a href="#" onclick="showSection('gallerySection')">Gallery</a>
+    </nav>
 
-    <form onsubmit="submitBooking(event)">
-        <label for="name">Name:</label>
-        <input type="text" id="name" required>
+    <h1>Nailtech Appointment System</h1>
 
-        <label for="phone">Phone Number:</label>
-        <input type="text" id="phone" required>
+    <!-- Booking Section -->
+    <div id="bookingSection" class="content-section active">
+        <form onsubmit="submitBooking(event)">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
 
-        <label for="date">Preferred Date:</label>
-        <input type="date" id="date" required>
+            <label for="phone">Phone Number:</label>
+            <input type="text" id="phone" required>
 
-        <label for="time">Preferred Time:</label>
-        <input type="time" id="time" required>
+            <label for="date">Preferred Date:</label>
+            <input type="date" id="date" required>
 
-        <button type="submit">Book Now</button>
-    </form>
+            <label for="time">Preferred Time:</label>
+            <input type="time" id="time" required>
 
-    <p id="bookingMessage"></p>
+            <label for="photos">Upload Photos (Maximum 3):</label>
+            <input type="file" id="photos" name="photos" accept="image/*" multiple required>
+
+            <button type="submit">Book Now</button>
+        </form>
+
+        <p id="bookingMessage"></p>
+    </div>
+
+    <!-- Gallery Section -->
+    <div id="gallerySection" class="content-section">
+        <h2 style="text-align: center;">Previous Nail Designs</h2>
+
+        <div class="gallery">
+            <img src="design1.jpg" alt="Design 1">
+            <img src="design2.jpg" alt="Design 2">
+            <img src="design3.jpg" alt="Design 3">
+            <!-- You can add more images here -->
+        </div>
+    </div>
 
     <script>
+        // Handle photo limit
+        document.getElementById('photos').addEventListener('change', function (event) {
+            if (this.files.length > 3) {
+                alert('You can only upload up to 3 photos.');
+                this.value = ''; // Clear the field if over limit
+            }
+        });
+
+        // Handle form submission
         function submitBooking(event) {
             event.preventDefault();
 
@@ -104,6 +171,14 @@
             document.getElementById('bookingMessage').style.color = 'green';
 
             event.target.reset();
+        }
+
+        // Section switcher
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
         }
     </script>
 
