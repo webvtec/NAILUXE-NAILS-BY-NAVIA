@@ -1,38 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ARCTURUS NAIL CARE</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ARCTURUS NAIL CARE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-width: 100vw; /* ✅ Force the page width to match the viewport width */
+    width: 100vw;     /* ✅ Explicitly set the width to the viewport width */
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    box-sizing: border-box; /* ✅ Ensure padding and border stay within width */
+}
+        * {
+    box-sizing: border-box;
+    max-width: 100%;
+}
 
-    /* Header */
-    .header-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 45px;
-      background-color: #6200ea;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 45px;
+            background-color: #6200ea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            z-index: 1200;
+        }
 
-    .header-title {
-      color: white;
-      font-weight: bold;
-      font-size: 20px;
-    }
-
-    .vibey-heading {
+        .vibey-heading {
             font-family: 'Lobster', cursive;
             font-size: 27px;
             margin: 0;
@@ -43,6 +48,68 @@
             white-space: nowrap;
             text-align: center;
             flex: 1;
+        }
+
+        .open-btn, .location-button {
+            background-color: #50C878;
+            height: 45px;
+            width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            color: white;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            top: 0;
+        }
+
+        .open-btn {
+            left: 0;
+            border-bottom-right-radius: 0px;
+        }
+
+        .location-button {
+            right: 0;
+            border-bottom-left-radius: 0px;
+            text-decoration: none;
+        }
+
+        .sidebar {
+            width: 200px;
+            position: fixed;
+            top: 0;
+            left: -200px;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow-x: hidden;
+            padding: 40px 0 20px 0;
+            transition: 0.3s;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            padding: 12px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            color: white;
+            display: block;
+            transition: 0.3s;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .sidebar a:hover {
+            background-color: #3700b3;
         }
 
     .menu-button {
