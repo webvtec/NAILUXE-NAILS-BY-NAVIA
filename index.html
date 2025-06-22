@@ -318,32 +318,29 @@
     }
 
     function submitBooking(event) {
-      event.preventDefault();
+  event.preventDefault();
 
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const date = document.getElementById('date').value;
-      const time = document.getElementById('time').value;
-      const pedicureType = document.getElementById('pedicureType').value;
-      const manicureType = document.getElementById('manicureType').value;
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('time').value;
+  const pedicureType = document.getElementById('pedicureType').value;
+  const manicureType = document.getElementById('manicureType').value;
 
-      const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
+  const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
 
-      db.collection('bookings').add({
-        name: name,
-        phone: phone,
-        date: date,
-        time: time,
-        service: service,
-        specificType: ''
-      }).then(() => {
-        document.getElementById('bookingMessage').innerText = 'Booking confirmed!';
-        document.getElementById('bookingMessage').style.color = 'green';
-        event.target.reset();
-      }).catch((error) => {
-        console.error('Error adding booking: ', error);
-      });
-    }
+  const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
+
+  const encodedMessage = encodeURIComponent(message);
+  
+  // Replace this with your WhatsApp number (no + or spaces)
+  const whatsappNumber = '8763422293'; // Example: 18761234567 for Jamaica
+
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+  // Redirect user to WhatsApp
+  window.location.href = whatsappUrl;
+}
 
     function loadGallery(containerId) {
       const galleryContainer = document.getElementById(containerId);
