@@ -326,21 +326,24 @@
 
     // Load gallery from Firestore
     function loadGallery(containerId) {
-      const galleryContainer = document.getElementById(containerId);
-      galleryContainer.innerHTML = '';
+  const galleryContainer = document.getElementById(containerId);
+  galleryContainer.innerHTML = '';
 
-      db.collection('gallery').get().then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          const imageUrl = doc.data().url;
+  // Real-time listener to the gallery collection
+  db.collection('gallery').onSnapshot((querySnapshot) => {
+    galleryContainer.innerHTML = ''; // Clear before reloading
 
-          galleryContainer.innerHTML += `
-            <div>
-              <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
-            </div>
-          `;
-        });
-      });
-    }
+    querySnapshot.forEach((doc) => {
+      const imageUrl = doc.data().url;
+
+      galleryContainer.innerHTML += `
+        <div>
+          <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+        </div>
+      `;
+    });
+  });
+}
 
     // Load gallery on page load
     window.onload = function () {
