@@ -338,14 +338,20 @@ function formatTimeInput() {
   input.value = value;
 }
 
-// AM/PM selection
 function selectPeriod(period) {
   document.getElementById('timePeriod').value = period;
 
-  document.getElementById('amBtn').style.backgroundColor = (period === 'AM') ? '#6200ea' : '';
-  document.getElementById('amBtn').style.color = (period === 'AM') ? 'white' : '';
-  document.getElementById('pmBtn').style.backgroundColor = (period === 'PM') ? '#6200ea' : '';
-  document.getElementById('pmBtn').style.color = (period === 'PM') ? 'white' : '';
+  // Hide AM/PM buttons after selection
+  document.getElementById('amBtn').style.display = 'none';
+  document.getElementById('pmBtn').style.display = 'none';
+
+  // Show selected period text
+  const confirmation = document.createElement('div');
+  confirmation.innerText = `You selected ${period}`;
+  confirmation.style.fontWeight = 'bold';
+  confirmation.style.marginBottom = '10px';
+
+  document.getElementById('timeInput').parentElement.insertBefore(confirmation, document.getElementById('timeInput').nextSibling);
 }
 
     function submitBooking(event) {
