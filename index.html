@@ -200,6 +200,59 @@
     text-decoration: none; /* Removes underline */
 }
 
+    /* Admin Dashboard Clean Layout */
+.admin-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.admin-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.admin-card h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #6200ea;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+th {
+  background-color: #6200ea;
+  color: white;
+}
+
+.remove-btn {
+  background-color: red;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.admin-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
   </style>
 </head>
 
@@ -256,34 +309,40 @@
     <p id="bookingMessage"></p>
   </div>
 
-  <!-- Admin Dashboard Section -->
-  <div id="adminSection" class="content-section">
-    <h2 style="text-align: center;">Admin Dashboard</h2>
+<!-- Admin Dashboard Section -->
+<div id="adminSection" class="content-section">
+  <div class="admin-container">
+    <h2 style="text-align: center; margin-bottom: 30px;">Admin Dashboard</h2>
 
-    <!-- Reservation Table -->
-    <h3>Reservations</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Service</th>
-        </tr>
-      </thead>
-      <tbody id="bookingTable"></tbody>
-    </table>
+    <!-- Reservations Card -->
+    <div class="admin-card">
+      <h3>Reservations</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Service</th>
+          </tr>
+        </thead>
+        <tbody id="bookingTable"></tbody>
+      </table>
+    </div>
 
-    <!-- Add Gallery Images -->
-    <h3 style="margin-top: 40px;">Manage Gallery</h3>
-    <form onsubmit="addGalleryImage(event)">
-      <input type="text" id="galleryImage" placeholder="Paste image URL" required />
-      <button type="submit">Add to Gallery</button>
-    </form>
+    <!-- Gallery Management Card -->
+    <div class="admin-card">
+      <h3>Manage Gallery</h3>
+      <form onsubmit="addGalleryImage(event)">
+        <input type="text" id="galleryImage" placeholder="Paste image URL" required />
+        <button type="submit">Add to Gallery</button>
+      </form>
 
-    <div class="gallery" id="adminGalleryDisplay" style="margin-top: 20px;"></div>
+      <div class="admin-gallery" id="adminGalleryDisplay"></div>
+    </div>
   </div>
+</div>
 
   <script>
     function toggleMenu() {
