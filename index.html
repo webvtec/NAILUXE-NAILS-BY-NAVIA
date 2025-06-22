@@ -188,11 +188,12 @@
   border-radius: 8px;        /* Rounded corners */
   font-family: 'Poppins', sans-serif; /* Modern font */
   font-weight: bold;
-  display: inline-block;     /* Makes it button-shaped */
-  margin-top: 50px;          /* Push it lower in the menu */
+  display: block;            /* Makes the button a block element */
+  margin: 50px auto 0;       /* Center the button horizontally */
   cursor: pointer;
   transition: background-color 0.3s ease;
-  text-align: center;
+  text-align: center;        /* Center text inside the button */
+  width: fit-content;        /* Button wraps its text */
 }
 
 .menu a.admin-button:hover {
