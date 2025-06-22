@@ -118,17 +118,22 @@
             });
         }
 
-        function addImageToGallery() {
-            const imageUrl = document.getElementById('galleryImage').value.trim();
-            if (imageUrl) {
-                galleryImages.push(imageUrl);
-                localStorage.setItem('galleryImages', JSON.stringify(galleryImages));
-                document.getElementById('galleryImage').value = '';
-                displayGallery();
-            } else {
-                alert('Please enter a valid image URL.');
-            }
-        }
+        function addGalleryImage(event) {
+  event.preventDefault();
+
+  const imageUrl = document.getElementById('galleryImage').value.trim();
+
+  if (imageUrl) {
+    const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+    gallery.push(imageUrl);
+    localStorage.setItem('gallery', JSON.stringify(gallery));
+    document.getElementById('galleryImage').value = '';
+    displayGallery();  // Update admin view immediately
+  } else {
+    alert('Please paste a valid image URL.');
+  }
+}
+
 
         window.onload = displayGallery;
     </script>
