@@ -6,49 +6,99 @@
     <title>Admin Dashboard</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 50px;
         }
-        .dashboard-section {
-            padding: 20px;
+
+        .dashboard-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
         }
+
+        .dashboard-card h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
         }
-        input, select, button {
+
+        input {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
         }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
-            max-width: 900px;
-            margin: 20px auto;
+            margin-top: 30px;
         }
+
         .gallery-grid img {
             width: 100%;
             border-radius: 10px;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 500px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-section">
+    <div class="dashboard-card">
         <h2>Admin Gallery Management</h2>
+
         <div class="form-group">
             <label for="galleryImage">Add Image URL:</label>
-            <!-- ✅ Text input for web image URLs -->
             <input type="text" id="galleryImage" placeholder="Paste image link here" required>
-            <button onclick="addImageToGallery()">Add Image</button>
         </div>
+
+        <button onclick="addImageToGallery()">Add Image</button>
+
         <div class="gallery-grid" id="galleryGrid">
             <!-- Gallery images will be displayed here -->
         </div>
