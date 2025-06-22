@@ -338,42 +338,7 @@
     <p id="bookingMessage"></p>
   </div>
 
-<!-- Admin Dashboard Section -->
-<div id="adminSection" class="content-section">
-  <div class="admin-container">
-    <h2 style="text-align: center; margin-bottom: 30px;">Admin Dashboard</h2>
-
-    <!-- Reservations Card -->
-    <div class="admin-card">
-      <h3>Reservations</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Service</th>
-          </tr>
-        </thead>
-        <tbody id="bookingTable"></tbody>
-      </table>
-    </div>
-
-<!-- Gallery Management Card -->
-<div class="admin-card">
-  <h3>Manage Gallery</h3>
-  <form onsubmit="addGalleryImage(event)">
-    <input type="file" id="galleryImage" accept="image/*" required />
-    <button type="submit">Upload Photo</button>
-  </form>
-
-  <div class="admin-gallery" id="adminGalleryDisplay"></div>
-</div>
-</div>
-</div>
-
-<script>
+    <script>
 function toggleMenu() {
   const menu = document.getElementById('menu');
   menu.classList.toggle('show');
@@ -389,7 +354,6 @@ function showSection(sectionId) {
     loadGallery('galleryDisplay');
   }
 }
-
 
 function submitBooking(event) {
   event.preventDefault();
@@ -428,59 +392,6 @@ function submitBooking(event) {
   event.target.reset();
   document.getElementById('pedicureOptions').style.display = 'none';
   document.getElementById('manicureOptions').style.display = 'none';
-
-  loadReservations();
-}
-
-function loadReservations() {
-  const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-  const tableBody = document.getElementById('bookingTable');
-  tableBody.innerHTML = '';
-
-  bookings.forEach(booking => {
-    const row = `<tr>
-        <td>${booking.name}</td>
-        <td>${booking.phone}</td>
-        <td>${booking.date}</td>
-        <td>${booking.time}</td>
-        <td>${booking.service} - ${booking.specificType}</td>
-      </tr>`;
-    tableBody.innerHTML += row;
-  });
-}
-
-function login() {
-  const password = prompt('Enter admin password:');
-  if (password === 'admin123') {
-    showSection('adminSection');
-    loadReservations();
-    loadGallery('adminGalleryDisplay');
-  } else {
-    alert('Incorrect password.');
-  }
-}
-
-function addGalleryImage(event) {
-  event.preventDefault();
-
-  const fileInput = document.getElementById('galleryImage');
-  const file = fileInput.files[0];
-
-  if (file) {
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-      const imageUrl = e.target.result;
-
-      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-      gallery.push(imageUrl);
-      localStorage.setItem('gallery', JSON.stringify(gallery));
-      loadGallery('adminGalleryDisplay');
-    };
-
-    reader.readAsDataURL(file);
-    fileInput.value = '';
-  }
 }
 
 function loadGallery(containerId) {
@@ -492,27 +403,9 @@ function loadGallery(containerId) {
     galleryContainer.innerHTML += `
       <div>
         <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
-        ${containerId === 'adminGalleryDisplay'
-          ? `<button class="remove-btn" onclick="removeImage(${index})">Remove</button>`
-          : ''
-        }
       </div>`;
   });
 }
-
-function removeImage(index) {
-  const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-  gallery.splice(index, 1);
-  localStorage.setItem('gallery', JSON.stringify(gallery));
-  loadGallery('adminGalleryDisplay');
-}
-
-document.getElementById('photos').addEventListener('change', function () {
-  if (this.files.length > 3) {
-    alert('You can only upload up to 3 photos.');
-    this.value = '';
-  }
-});
 
 window.onload = function() {
   loadGallery('galleryDisplay');
