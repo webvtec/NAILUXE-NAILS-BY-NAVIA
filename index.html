@@ -334,21 +334,38 @@
   const galleryContainer = document.getElementById(containerId);
   galleryContainer.innerHTML = '';
 
-  // Real-time listener to the gallery collection
   db.collection('gallery').onSnapshot((querySnapshot) => {
     galleryContainer.innerHTML = ''; // Clear before reloading
 
-    querySnapshot.forEach((doc) => {
-      const imageUrl = doc.data().url;
+    const categories = {};
 
-      galleryContainer.innerHTML += `
-        <div>
-          <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
-        </div>
-      `;
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const imageUrl = data.url;
+      const category = data.category || 'Uncategorized';
+
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push(imageUrl);
     });
+
+    // Build the gallery grouped by categories
+    for (const category in categories) {
+      galleryContainer.innerHTML += `<h3 style="margin-top: 30px; color: #6200ea;">${category}</h3><div class="gallery-grid" id="gallery-${category}"></div>`;
+
+      const categoryContainer = document.getElementById(`gallery-${category}`);
+      categories[category].forEach((imageUrl) => {
+        categoryContainer.innerHTML += `
+          <div>
+            <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+          </div>
+        `;
+      });
+    }
   });
 }
+
 
     // Load gallery on page load
     window.onload = function () {
