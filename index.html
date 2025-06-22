@@ -398,30 +398,49 @@
     }
 
   document.getElementById('date').addEventListener('change', function () {
-    const selectedDate = this.value;
-    const timeSelect = document.getElementById('time');
+  const selectedDate = this.value;
+  const timeSelect = document.getElementById('time');
 
-    // Enable all time slots first
-    Array.from(timeSelect.options).forEach(option => {
-      option.disabled = false;
-      option.textContent = option.value; // Reset the text in case "Booked" was added before
-    });
-
-    // Fetch bookings for the selected date
-    db.collection('bookings').where('date', '==', selectedDate).get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          const bookedTime = doc.data().time;
-
-          // Disable the booked time slot
-          const optionToDisable = Array.from(timeSelect.options).find(option => option.value === bookedTime);
-          if (optionToDisable) {
-            optionToDisable.disabled = true;
-            optionToDisable.textContent += ' (Booked)';
-          }
-        });
-      });
+  // Enable all time slots first
+  Array.from(timeSelect.options).forEach(option => {
+    option.disabled = false;
+    option.textContent = option.value; // Reset the text
   });
+
+  // Fetch bookings for the selected date
+  db.collection('bookings').where('date', '==', selectedDate).get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const bookedTime = doc.data().time;
+
+        // Disable booked time
+        let optionToDisable = Array.from(timeSelect.options).find(option => option.value === bookedTime);
+        if (optionToDisable) {
+          optionToDisable.disabled = true;
+          optionToDisable.textContent += ' (Booked)';
+        }
+
+        // Calculate and disable buffer time (30 mins later)
+        const bufferTime = getNextTimeSlot(bookedTime);
+        let bufferOption = Array.from(timeSelect.options).find(option => option.value === bufferTime);
+        if (bufferOption) {
+          bufferOption.disabled = true;
+          bufferOption.textContent += ' (Buffer)';
+        }
+      });
+    });
+});
+
+// Helper function to calculate the next 30-minute time slot
+function getNextTimeSlot(time) {
+  let [hour, minute] = time.split(':').map(Number);
+  minute += 30;
+  if (minute >= 60) {
+    hour += 1;
+    minute = 0;
+  }
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+}
   </script>
 
 </body>
