@@ -60,6 +60,7 @@
 
     /* Sidebar Menu */
     .menu {
+      text-align: center;
       position: fixed;
       top: 50px;
       left: 0;
@@ -180,6 +181,23 @@
       cursor: pointer;
       border-radius: 4px;
     }
+
+    .menu a.admin-button {
+  background-color: #6200ea; /* Purple background */
+  color: white;              /* White text */
+  padding: 10px 20px;        /* Button padding */
+  border-radius: 8px;        /* Rounded corners */
+  font-family: 'Poppins', sans-serif; /* Modern font */
+  font-weight: bold;
+  display: inline-block;     /* Makes it button-shaped */
+  margin-top: 50px;          /* Push it lower in the menu */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.menu a.admin-button:hover {
+  background-color: #3700b3; /* Hover effect */
+}
 
     .location-button {
     position: absolute;
