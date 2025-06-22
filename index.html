@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nailtech Booking Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            color: #6200ea;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        form input, form button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        form button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        form button:hover {
+            background-color: #3700b3;
+        }
+
+        #bookingMessage {
+            text-align: center;
+            font-weight: bold;
+            color: green;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Book Your Nail Appointment</h1>
+
+    <form onsubmit="submitBooking(event)">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+
+        <label for="phone">Phone Number:</label>
+        <input type="text" id="phone" required>
+
+        <label for="date">Preferred Date:</label>
+        <input type="date" id="date" required>
+
+        <label for="time">Preferred Time:</label>
+        <input type="time" id="time" required>
+
+        <button type="submit">Book Now</button>
+    </form>
+
+    <p id="bookingMessage"></p>
+
+    <script>
+        function submitBooking(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
+            // Check if the time slot is already booked
+            const isBooked = bookings.some(booking => booking.date === date && booking.time === time);
+
+            if (isBooked) {
+                document.getElementById('bookingMessage').innerText = 'This time slot is unavailable. Please choose another time.';
+                document.getElementById('bookingMessage').style.color = 'red';
+                return;
+            }
+
+            // Save booking if slot is available
+            bookings.push({ name, phone, date, time });
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+
+            document.getElementById('bookingMessage').innerText = 'Booking confirmed!';
+            document.getElementById('bookingMessage').style.color = 'green';
+
+            event.target.reset();
+        }
+    </script>
+
+</body>
+</html>
