@@ -66,12 +66,14 @@
     }
 
     .gallery-category {
-      margin-top: 30px;
+      margin-top: 40px;
     }
 
     .gallery-category h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 22px;
       color: #6200ea;
-      margin-bottom: 10px;
     }
 
     .gallery-grid {
@@ -177,6 +179,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Add new photo URL to Firestore
     function addPhotoUrl() {
       const urlInput = document.getElementById('photoUrlInput');
       const categorySelect = document.getElementById('photoCategorySelect');
@@ -200,6 +203,7 @@
         });
     }
 
+    // Load gallery grouped by category
     function loadGallery() {
       const galleryContainer = document.getElementById('adminGallery');
       galleryContainer.innerHTML = '';
@@ -242,6 +246,7 @@
       });
     }
 
+    // Remove photo from Firestore
     function removePhoto(docId) {
       db.collection('gallery').doc(docId).delete().catch((error) => {
         console.error("Error removing document: ", error);
@@ -249,6 +254,7 @@
       });
     }
 
+    // Load reservations from Firestore
     function loadReservations() {
       const tableBody = document.getElementById('reservationTable');
       tableBody.innerHTML = '';
@@ -274,6 +280,7 @@
       });
     }
 
+    // Require login to access dashboard
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         loadGallery();
