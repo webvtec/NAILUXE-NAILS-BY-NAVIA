@@ -1,142 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding-top: 50px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
 
-        .dashboard-card {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 600px;
-        }
+    .header-bar {
+      background-color: #FFD1DC;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #6200ea;
+    }
 
-        .dashboard-card h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
+    .admin-container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    h2 {
+      color: #6200ea;
+      text-align: center;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #555;
-        }
+    input[type="file"] {
+      margin-bottom: 15px;
+    }
 
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-        }
+    button {
+      background-color: #6200ea;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+    button:hover {
+      background-color: #3700b3;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
 
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 30px;
-        }
+    .gallery-grid div {
+      position: relative;
+    }
 
-        .gallery-grid img {
-            width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
+    .gallery-grid img {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
 
-        @media (max-width: 500px) {
-            .gallery-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    .remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #6200ea;
+      color: white;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="dashboard-card">
-        <h2>Admin Gallery Management</h2>
+  <div class="header-bar">Admin Dashboard - ARCTURUS NAIL CARE</div>
 
-        <div class="form-group">
-            <label for="galleryImage">Add Image URL:</label>
-            <input type="text" id="galleryImage" placeholder="Paste image link here" required>
-        </div>
+  <div class="admin-container">
 
-        <button onclick="addImageToGallery()">Add Image</button>
+    <h2>Upload New Photos</h2>
+    <input type="file" id="photoInput" accept="image/*" multiple>
+    <button onclick="uploadPhotos()">Upload Photos</button>
 
-        <div class="gallery-grid" id="galleryGrid">
-            <!-- Gallery images will be displayed here -->
-        </div>
-    </div>
+    <h2>Gallery Photos</h2>
+    <div class="gallery-grid" id="adminGallery"></div>
 
-    <script>
-        let galleryImages = JSON.parse(localStorage.getItem('galleryImages')) || [];
+    <h2>View Reservations</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Service</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody id="reservationTable"></tbody>
+    </table>
 
-        function displayGallery() {
-            const galleryGrid = document.getElementById('galleryGrid');
-            galleryGrid.innerHTML = '';
-            galleryImages.forEach((imgUrl, index) => {
-                const imgElement = document.createElement('img');
-                imgElement.src = imgUrl;
-                imgElement.alt = `Gallery Image ${index + 1}`;
-                galleryGrid.appendChild(imgElement);
-            });
-        }
+  </div>
 
-        function addGalleryImage(event) {
-  event.preventDefault();
+  <script>
+    function loadGallery() {
+      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+      const galleryContainer = document.getElementById('adminGallery');
+      galleryContainer.innerHTML = '';
 
-  const imageUrl = document.getElementById('galleryImage').value.trim();
+      gallery.forEach((imageUrl, index) => {
+        galleryContainer.innerHTML += `
+          <div>
+            <img src="${imageUrl}" alt="Design">
+            <button class="remove-btn" onclick="removePhoto(${index})">X</button>
+          </div>
+        `;
+      });
+    }
 
-  if (imageUrl) {
-    const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-    gallery.push(imageUrl);
-    localStorage.setItem('gallery', JSON.stringify(gallery));
-    document.getElementById('galleryImage').value = '';
-    displayGallery();  // Update admin view immediately
-  } else {
-    alert('Please paste a valid image URL.');
-  }
-}
+    function removePhoto(index) {
+      let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+      gallery.splice(index, 1);
+      localStorage.setItem('gallery', JSON.stringify(gallery));
+      loadGallery();
+    }
 
+    function uploadPhotos() {
+      const input = document.getElementById('photoInput');
+      const files = input.files;
 
-        window.onload = displayGallery;
-    </script>
+      if (files.length === 0) {
+        alert('Please select photos to upload.');
+        return;
+      }
+
+      let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          gallery.push(e.target.result);
+          localStorage.setItem('gallery', JSON.stringify(gallery));
+          loadGallery();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      input.value = '';
+    }
+
+    function loadReservations() {
+      const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+      const tableBody = document.getElementById('reservationTable');
+      tableBody.innerHTML = '';
+
+      bookings.forEach(booking => {
+        tableBody.innerHTML += `
+          <tr>
+            <td>${booking.name}</td>
+            <td>${booking.phone}</td>
+            <td>${booking.date}</td>
+            <td>${booking.time}</td>
+            <td>${booking.service}</td>
+            <td>${booking.specificType}</td>
+          </tr>
+        `;
+      });
+    }
+
+    window.onload = function () {
+      loadGallery();
+      loadReservations();
+    }
+  </script>
 
 </body>
 </html>
