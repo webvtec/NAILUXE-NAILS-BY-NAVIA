@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADMIN DASHBOARD</title>
+  <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -27,7 +30,7 @@
       padding: 20px;
       background-color: white;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     h2 {
@@ -70,7 +73,7 @@
     .gallery-grid img {
       width: 100%;
       border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     }
 
     .remove-btn {
@@ -91,7 +94,8 @@
       margin-top: 30px;
     }
 
-    th, td {
+    th,
+    td {
       border: 1px solid #ddd;
       padding: 10px;
       text-align: center;
@@ -103,9 +107,10 @@
     }
   </style>
 </head>
+
 <body>
 
-  <div class="header-bar">ADMIN DASHBOARD</div>
+  <div class="header-bar">Admin Dashboard - ARCTURUS NAIL CARE</div>
 
   <div class="admin-container">
 
@@ -134,28 +139,21 @@
   </div>
 
   <script>
-    function loadGallery() {
-      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-      const galleryContainer = document.getElementById('adminGallery');
-      galleryContainer.innerHTML = '';
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBx9_GrR4_ruM8v-GDOj4De1erg7nWsH08",
+      authDomain: "arcturus-nail-care.firebaseapp.com",
+      projectId: "arcturus-nail-care",
+      storageBucket: "arcturus-nail-care.appspot.com",
+      messagingSenderId: "604991163098",
+      appId: "1:604991163098:web:47730d7480c66d813633e3"
+    };
 
-      gallery.forEach((imageUrl, index) => {
-        galleryContainer.innerHTML += `
-          <div>
-            <img src="${imageUrl}" alt="Design">
-            <button class="remove-btn" onclick="removePhoto(${index})">X</button>
-          </div>
-        `;
-      });
-    }
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    function removePhoto(index) {
-      let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-      gallery.splice(index, 1);
-      localStorage.setItem('gallery', JSON.stringify(gallery));
-      loadGallery();
-    }
-
+    // Add new photo URL to Firestore
     function addPhotoUrl() {
       const urlInput = document.getElementById('photoUrlInput');
       const url = urlInput.value.trim();
@@ -165,33 +163,68 @@
         return;
       }
 
-      let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-      gallery.push(url);
-      localStorage.setItem('gallery', JSON.stringify(gallery));
-
-      urlInput.value = '';
-      loadGallery();
+      db.collection('gallery').add({ url: url })
+        .then(() => {
+          urlInput.value = '';
+          loadGallery();
+        })
+        .catch(error => {
+          console.error("Error adding document: ", error);
+        });
     }
 
-    function loadReservations() {
-      const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-      const tableBody = document.getElementById('reservationTable');
-      tableBody.innerHTML = '';
+    // Load gallery from Firestore
+    function loadGallery() {
+      db.collection('gallery').get().then((querySnapshot) => {
+        const galleryContainer = document.getElementById('adminGallery');
+        galleryContainer.innerHTML = '';
 
-      bookings.forEach(booking => {
-        tableBody.innerHTML += `
-          <tr>
-            <td>${booking.name}</td>
-            <td>${booking.phone}</td>
-            <td>${booking.date}</td>
-            <td>${booking.time}</td>
-            <td>${booking.service}</td>
-            <td>${booking.specificType}</td>
-          </tr>
-        `;
+        querySnapshot.forEach((doc) => {
+          const imageUrl = doc.data().url;
+          const docId = doc.id;
+
+          galleryContainer.innerHTML += `
+            <div>
+              <img src="${imageUrl}" alt="Design">
+              <button class="remove-btn" onclick="removePhoto('${docId}')">X</button>
+            </div>
+          `;
+        });
       });
     }
 
+    // Remove photo from Firestore
+    function removePhoto(docId) {
+      db.collection('gallery').doc(docId).delete().then(() => {
+        loadGallery();
+      }).catch((error) => {
+        console.error("Error removing document: ", error);
+      });
+    }
+
+    // Load reservations from Firestore
+    function loadReservations() {
+      const tableBody = document.getElementById('reservationTable');
+      tableBody.innerHTML = '';
+
+      db.collection('bookings').get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const booking = doc.data();
+          tableBody.innerHTML += `
+            <tr>
+              <td>${booking.name}</td>
+              <td>${booking.phone}</td>
+              <td>${booking.date}</td>
+              <td>${booking.time}</td>
+              <td>${booking.service}</td>
+              <td>${booking.specificType}</td>
+            </tr>
+          `;
+        });
+      });
+    }
+
+    // Load everything on page load
     window.onload = function () {
       loadGallery();
       loadReservations();
@@ -199,4 +232,5 @@
   </script>
 
 </body>
+
 </html>
