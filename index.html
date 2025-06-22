@@ -181,8 +181,14 @@
     <a onclick="login()">Admin</a>
   </div>
 
-  <!-- Booking Section -->
+  <!-- Gallery Section (Default Page) -->
   <div id="gallerySection" class="content-section active">
+    <h2 style="text-align: center;">Previous Nail Designs</h2>
+    <div class="gallery" id="galleryDisplay"></div>
+  </div>
+
+  <!-- Booking Section -->
+  <div id="bookingSection" class="content-section">
     <h1>Book Your Nail Appointment</h1>
     <form onsubmit="submitBooking(event)">
       <label for="name">Name:</label>
@@ -212,12 +218,6 @@
     </form>
 
     <p id="bookingMessage"></p>
-  </div>
-
-  <!-- Gallery Section -->
-  <div id="gallerySection" class="content-section active">
-    <h2 style="text-align: center;">Previous Nail Designs</h2>
-    <div class="gallery" id="galleryDisplay"></div>
   </div>
 
   <!-- Admin Dashboard Section -->
@@ -368,9 +368,10 @@
       }
     });
 
+    // Auto-load gallery on page load
     window.onload = function() {
-    loadGallery('galleryDisplay');
-};
+      loadGallery('galleryDisplay');
+    };
   </script>
 </body>
 </html>
