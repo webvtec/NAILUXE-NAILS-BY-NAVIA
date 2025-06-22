@@ -4,13 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
+  <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
 
   <style>
     body {
@@ -18,6 +17,15 @@
       background-color: #f4f4f4;
       margin: 0;
       padding: 0;
+    }
+
+    .header-bar {
+      background-color: #FFD1DC;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #6200ea;
     }
 
     .top-menu {
@@ -155,9 +163,11 @@
 
 <body>
 
+  <div class="header-bar">Admin Dashboard - ARCTURUS NAIL CARE</div>
+
   <div class="top-menu">
     <button onclick="showSection('reservationsSection')">📅 View Reservations</button>
-    <button onclick="showSection('gallerySection')">Manage Gallery</button>
+    <button onclick="showSection('gallerySection')">🖼️ Manage Gallery</button>
   </div>
 
   <!-- Reservations Page (Default Start Page) -->
@@ -302,7 +312,7 @@
       const tableBody = document.getElementById('reservationTable');
       tableBody.innerHTML = '';
 
-      db.collection('bookings').onSnapshot((querySnapshot) => {
+      db.collection('bookings').get().then((querySnapshot) => {
         tableBody.innerHTML = '';
 
         querySnapshot.forEach((doc) => {
@@ -318,47 +328,20 @@
             </tr>
           `;
         });
+      }).catch(error => {
+        console.error("Error loading bookings: ", error);
       });
     }
 
-    // Firebase Authentication
+    // Require login to access dashboard
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         loadReservations();
         loadGallery();
-        setupFCM();
       } else {
         window.location.href = 'index.html';
       }
     });
-
-    // Firebase Cloud Messaging Setup
-    function setupFCM() {
-      const messaging = firebase.messaging();
-
-      navigator.serviceWorker.register('firebase-messaging-sw.js')
-        .then((registration) => {
-          messaging.useServiceWorker(registration);
-
-          messaging.getToken({
-            vapidKey: 'BN-dEzy7KqFrW3DF_AVq1gWkYKcxa2sb-E61t3yUsbIDF_ta7JOI88DCm43KhmUV3BYl36KVsz_CR1QC_4svKFw'
-          }).then((currentToken) => {
-            if (currentToken) {
-              console.log('FCM Token:', currentToken);
-              db.collection('adminTokens').doc(currentToken).set({ active: true });
-            } else {
-              console.log('No registration token available.');
-            }
-          }).catch((err) => {
-            console.log('An error occurred while retrieving token. ', err);
-          });
-        });
-
-      messaging.onMessage((payload) => {
-        console.log('Message received. ', payload);
-        alert(`New Reservation: ${payload.notification.title}\n${payload.notification.body}`);
-      });
-    }
   </script>
 
 </body>
