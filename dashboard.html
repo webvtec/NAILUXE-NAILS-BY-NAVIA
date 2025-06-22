@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nailtech Booking System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #6200ea;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        h1 {
+            text-align: center;
+            color: #6200ea;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        form input, form button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        form button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        form button:hover {
+            background-color: #3700b3;
+        }
+
+        #bookingMessage {
+            text-align: center;
+            font-weight: bold;
+            color: green;
+            margin-top: 20px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .gallery img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #6200ea;
+            color: white;
+        }
+
+        .remove-btn {
+            background-color: red;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation Menu -->
+    <nav>
+        <a onclick="showSection('bookingSection')">Booking</a>
+        <a onclick="showSection('gallerySection')">Gallery</a>
+        <a onclick="showSection('adminSection')">Admin Dashboard</a>
+    </nav>
+
+    <h1>Nailtech Appointment System</h1>
+
+    <!-- Booking Section -->
+    <div id="bookingSection" class="content-section active">
+        <form onsubmit="submitBooking(event)">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+
+            <label for="phone">Phone Number:</label>
+            <input type="text" id="phone" required>
+
+            <label for="date">Preferred Date:</label>
+            <input type="date" id="date" required>
+
+            <label for="time">Preferred Time:</label>
+            <input type="time" id="time" required>
+
+            <label for="photos">Upload Photos (Maximum 3):</label>
+            <input type="file" id="photos" name="photos" accept="image/*" multiple required>
+
+            <button type="submit">Book Now</button>
+        </form>
+
+        <p id="bookingMessage"></p>
+    </div>
+
+    <!-- Gallery Section -->
+    <div id="gallerySection" class="content-section">
+        <h2 style="text-align: center;">Previous Nail Designs</h2>
+
+        <div class="gallery" id="galleryDisplay">
+            <!-- Images will be added here -->
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Section -->
+    <div id="adminSection" class="content-section">
+        <h2 style="text-align: center;">Admin Dashboard</h2>
+
+        <!-- Reservation Table -->
+        <h3>Reservations</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTable">
+                <!-- Reservations will load here -->
+            </tbody>
+        </table>
+
+        <!-- Add Gallery Images -->
+        <h3 style="margin-top: 40px;">Manage Gallery</h3>
+        <form onsubmit="addGalleryImage(event)">
+            <label for="galleryImage">Add Image URL:</label>
+            <input type="text" id="galleryImage" placeholder="Paste image link here" required>
+            <button type="submit">Add to Gallery</button>
+        </form>
+
+        <!-- Gallery Images List -->
+        <div class="gallery" id="adminGalleryDisplay" style="margin-top: 20px;">
+            <!-- Admin Gallery Images will load here -->
+        </div>
+    </div>
+
+    <script>
+        // Limit photo uploads
+        document.getElementById('photos').addEventListener('change', function () {
+            if (this.files.length > 3) {
+                alert('You can only upload up to 3 photos.');
+                this.value = '';
+            }
+        });
+
+        // Handle form submission
+        function submitBooking(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
+            const isBooked = bookings.some(booking => booking.date === date && booking.time === time);
+
+            if (isBooked) {
+                document.getElementById('bookingMessage').innerText = 'This time slot is unavailable. Please choose another time.';
+                document.getElementById('bookingMessage').style.color = 'red';
+                return;
+            }
+
+            bookings.push({ name, phone, date, time });
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+
+            document.getElementById('bookingMessage').innerText = 'Booking confirmed!';
+            document.getElementById('bookingMessage').style.color = 'green';
+
+            event.target.reset();
+            loadReservations();
+        }
+
+        // Switch sections
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            if (sectionId === 'adminSection') {
+                loadReservations();
+                loadGallery('adminGalleryDisplay');
+            } else if (sectionId === 'gallerySection') {
+                loadGallery('galleryDisplay');
+            }
+        }
+
+        // Load Reservations in Admin Dashboard
+        function loadReservations() {
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            const tableBody = document.getElementById('bookingTable');
+            tableBody.innerHTML = '';
+
+            bookings.forEach(booking => {
+                const row = `<tr>
+                    <td>${booking.name}</td>
+                    <td>${booking.phone}</td>
+                    <td>${booking.date}</td>
+                    <td>${booking.time}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Add image to gallery
+        function addGalleryImage(event) {
+            event.preventDefault();
+
+            const imageUrl = document.getElementById('galleryImage').value.trim();
+            if (!imageUrl) return;
+
+            const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+            gallery.push(imageUrl);
+            localStorage.setItem('gallery', JSON.stringify(gallery));
+
+            document.getElementById('galleryImage').value = '';
+            loadGallery('adminGalleryDisplay');
+        }
+
+        // Load gallery images
+        function loadGallery(containerId) {
+            const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+            const galleryContainer = document.getElementById(containerId);
+            galleryContainer.innerHTML = '';
+
+            gallery.forEach((imageUrl, index) => {
+                galleryContainer.innerHTML += `
+                    <div>
+                        <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+                        ${containerId === 'adminGalleryDisplay' ? `<button class="remove-btn" onclick="removeImage(${index})">Remove</button>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        // Remove image from gallery
+        function removeImage(index) {
+            const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+            gallery.splice(index, 1);
+            localStorage.setItem('gallery', JSON.stringify(gallery));
+            loadGallery('adminGalleryDisplay');
+        }
+    </script>
+
+</body>
+</html>
