@@ -509,21 +509,47 @@ function submitBooking(event) {
   }
 
   function validateTimeSlot(date, selectedTime) {
-    return db.collection('bookings').where('date', '==', date).get()
-      .then((querySnapshot) => {
-        let selectedMinutes = convertToMinutes(selectedTime);
+  return db.collection('unavailableDays').where('date', '==', date).get()
+    .then((unavailableSnapshot) => {
+      let selectedMinutes = convertToMinutes(selectedTime);
 
-        for (let doc of querySnapshot.docs) {
-          let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
-          let bookedMinutes = convertToMinutes(bookedTime);
+      let isUnavailable = false;
 
-          if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
-            return false; // Time slot is too close to existing booking
+      unavailableSnapshot.forEach((doc) => {
+        const data = doc.data();
+
+        if (data.allDay) {
+          isUnavailable = true; // Entire day is blocked
+        } else {
+          const startMinutes = convertToMinutes(data.startTime + ' AM');
+          const endMinutes = convertToMinutes(data.endTime + ' PM');
+
+          if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
+            isUnavailable = true; // Time slot is blocked
           }
         }
-        return true; // Time slot is available
       });
-  }
+
+      if (isUnavailable) {
+        return false; // Date/time is unavailable
+      }
+
+      // If date is available, check for conflicting bookings
+      return db.collection('bookings').where('date', '==', date).get()
+        .then((querySnapshot) => {
+          for (let doc of querySnapshot.docs) {
+            let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+            let bookedMinutes = convertToMinutes(bookedTime);
+
+            if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
+              return false; // Time slot is too close to existing booking
+            }
+          }
+          return true; // Slot is available
+        });
+    });
+}
+
 
   function convertToMinutes(timeStr) {
     let [time, period] = timeStr.split(' ');
