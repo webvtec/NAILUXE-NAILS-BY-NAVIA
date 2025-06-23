@@ -494,9 +494,8 @@ function submitBooking(event) {
         if (data.allDay) {
           isUnavailable = true; // Entire day is blocked
         } else {
-          // Calculate minutes for unavailable time ranges
-          const startMinutes = convertToMinutes(data.startTime + ' AM');
-          const endMinutes = convertToMinutes(data.endTime + ' PM');
+          const startMinutes = convertToMinutes(data.startTime);
+          const endMinutes = convertToMinutes(data.endTime);
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
             isUnavailable = true; // Time slot is blocked
@@ -523,7 +522,7 @@ function submitBooking(event) {
         });
     });
 }
-
+    
   function convertToMinutes(timeStr) {
     let [time, period] = timeStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
