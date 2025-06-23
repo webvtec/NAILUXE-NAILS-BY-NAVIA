@@ -251,7 +251,7 @@
       <input type="text" id="phone" required />
 
       <label for="date">Preferred Date:</label>
-      <input type="date" id="date" required />
+      <input type="date" id="date" min="" required />
 
       <label for="timeInput">Preferred Time:</label>
 <input type="text" id="timeInput" placeholder="ENTER TIME" maxlength="5" oninput="formatTimeInput()" required />
@@ -456,6 +456,11 @@ const time = `${timeInput} ${timePeriod}`;
   // Optional: You can clear any previous validation messages here
 });
 
+    document.addEventListener('DOMContentLoaded', function () {
+  const dateInput = document.getElementById('date');
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.min = today;
+});
 
 function submitBooking(event) {
     event.preventDefault();
