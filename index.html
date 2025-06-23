@@ -457,38 +457,77 @@ const time = `${timeInput} ${timePeriod}`;
 });
 
 
-function validateTimeSlot(date, selectedTime) {
-  return db.collection('bookings').where('date', '==', date).get()
-    .then((querySnapshot) => {
-      let selectedMinutes = convertToMinutes(selectedTime);
+function submitBooking(event) {
+    event.preventDefault();
 
-      for (let doc of querySnapshot.docs) {
-        let bookedTime = doc.data().time.trim();
-        let bookedMinutes = convertToMinutes(bookedTime);
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const date = document.getElementById('date').value;
+    const timeInput = document.getElementById('timeInput').value.trim();
+    const timePeriod = document.getElementById('timePeriod').value;
+    const time = `${timeInput} ${timePeriod}`;
 
-        // If selected time is within 1 hour (60 mins) of a booked time, reject it
-        if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
-          return false;
+    const pedicureType = document.getElementById('pedicureType').value;
+    const manicureType = document.getElementById('manicureType').value;
+    const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
+
+    validateTimeSlot(date, time)
+      .then((isAvailable) => {
+        if (!isAvailable) {
+          alert('This time is not available. Please choose a later time.');
+          return;
         }
-      }
-      return true;
-    });
-}
 
-// Convert time like "10:30 AM" to total minutes for easy comparison
-function convertToMinutes(timeStr) {
-  let [time, period] = timeStr.split(' ');
-  let [hours, minutes] = time.split(':').map(Number);
+        // Save booking to Firestore
+        db.collection('bookings').add({
+          name: name,
+          phone: phone,
+          date: date,
+          time: time,
+          service: service
+        })
+        .then(() => {
+          // Send WhatsApp message after saving booking
+          const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
+          const encodedMessage = encodeURIComponent(message);
+          const whatsappNumber = '18763422293';
+          const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
-  if (period.toUpperCase() === 'PM' && hours !== 12) {
-    hours += 12;
+          window.location.href = whatsappUrl;
+        });
+      });
   }
-  if (period.toUpperCase() === 'AM' && hours === 12) {
-    hours = 0;
+
+  function validateTimeSlot(date, selectedTime) {
+    return db.collection('bookings').where('date', '==', date).get()
+      .then((querySnapshot) => {
+        let selectedMinutes = convertToMinutes(selectedTime);
+
+        for (let doc of querySnapshot.docs) {
+          let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+          let bookedMinutes = convertToMinutes(bookedTime);
+
+          if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
+            return false; // Time slot is too close to existing booking
+          }
+        }
+        return true; // Time slot is available
+      });
   }
 
-  return (hours * 60) + minutes;
-}
+  function convertToMinutes(timeStr) {
+    let [time, period] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+
+    if (period.toUpperCase() === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+    if (period.toUpperCase() === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return (hours * 60) + minutes;
+  }
   </script>
 
 </body>
