@@ -58,7 +58,7 @@
       color: #6200ea;
       text-align: center;
     }
-    input[type="text"], input[type="date"], select {
+    input[type="text"], input[type="date"], input[type="time"], select {
       width: 100%;
       padding: 10px;
       margin-bottom: 15px;
@@ -157,9 +157,9 @@
   <div class="header-bar">ADMIN DASHBOARD</div>
 
   <div class="top-menu">
-    <button onclick="showSection('gallerySection')">GALLERY</button>
-    <button onclick="showSection('reservationsPage')">RESERVATIONS</button>
-    <button onclick="showSection('unavailableDaysSection')">UNAVAILABLE DAYS</button>
+    <button onclick="showSection('gallerySection')">MANAGE GALLERY</button>
+    <button onclick="showSection('reservationsPage')">VIEW RESERVATIONS</button>
+    <button onclick="showSection('unavailableDaysSection')">SET UNAVAILABLE DAYS</button>
   </div>
 
   <!-- Gallery Management Page -->
@@ -206,6 +206,13 @@
   <div id="unavailableDaysSection" class="admin-container content-section">
     <h2>Set Unavailable Days</h2>
     <input type="date" id="unavailableDateInput">
+    <label><input type="checkbox" id="allDayCheckbox" checked onchange="toggleTimeInputs()"> All Day</label>
+
+    <div id="timeInputs" style="display: none;">
+      <input type="time" id="startTimeInput">
+      <input type="time" id="endTimeInput">
+    </div>
+
     <button onclick="addUnavailableDate()">Add Unavailable Date</button>
 
     <h3>Unavailable Dates</h3>
@@ -230,6 +237,11 @@
         section.classList.remove('active')
       );
       document.getElementById(sectionId).classList.add('active');
+    }
+
+    function toggleTimeInputs() {
+      const isAllDay = document.getElementById('allDayCheckbox').checked;
+      document.getElementById('timeInputs').style.display = isAllDay ? 'none' : 'block';
     }
 
     function addPhotoUrl() {
@@ -353,20 +365,35 @@
 
     function addUnavailableDate() {
       const dateInput = document.getElementById('unavailableDateInput').value;
+      const isAllDay = document.getElementById('allDayCheckbox').checked;
+      const startTime = document.getElementById('startTimeInput').value;
+      const endTime = document.getElementById('endTimeInput').value;
 
       if (!dateInput) {
         alert('Please select a date.');
         return;
       }
 
-      db.collection('unavailableDays').add({ date: dateInput })
+      if (!isAllDay && (!startTime || !endTime)) {
+        alert('Please enter both start and end times.');
+        return;
+      }
+
+      db.collection('unavailableDays').add({
+        date: dateInput,
+        allDay: isAllDay,
+        startTime: isAllDay ? null : startTime,
+        endTime: isAllDay ? null : endTime
+      })
         .then(() => {
-          alert('Date marked as unavailable.');
+          alert('Unavailability added.');
           loadUnavailableDates();
           document.getElementById('unavailableDateInput').value = '';
+          document.getElementById('startTimeInput').value = '';
+          document.getElementById('endTimeInput').value = '';
         })
         .catch(error => {
-          console.error("Error adding unavailable date: ", error);
+          console.error('Error adding unavailable date: ', error);
           alert('Error adding date: ' + error.message);
         });
     }
@@ -380,9 +407,17 @@
 
         querySnapshot.forEach((doc) => {
           const data = doc.data();
+          let displayText = `${data.date} - `;
+
+          if (data.allDay) {
+            displayText += 'All Day';
+          } else {
+            displayText += `${data.startTime} to ${data.endTime}`;
+          }
+
           list.innerHTML += `
             <li>
-              ${data.date}
+              ${displayText}
               <button onclick="removeUnavailableDate('${doc.id}')">Remove</button>
             </li>
           `;
