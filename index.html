@@ -441,35 +441,36 @@ function selectPeriod(period) {
 });
 
 function submitBooking(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const name = document.getElementById('name').value;
-    const phone = document.getElementById('phone').value;
-    const date = document.getElementById('date').value;
-    const timeInput = document.getElementById('timeInput').value.trim();
-    const timePeriod = document.getElementById('timePeriod').value;
-    const time = `${timeInput} ${timePeriod}`;
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
+  const date = document.getElementById('date').value;
+  const timeInput = document.getElementById('timeInput').value.trim();
+  const timePeriod = document.getElementById('timePeriod').value;
+  const time = `${timeInput} ${timePeriod}`;
 
-    const pedicureType = document.getElementById('pedicureType').value;
-    const manicureType = document.getElementById('manicureType').value;
-    const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
+  const pedicureType = document.getElementById('pedicureType').value;
+  const manicureType = document.getElementById('manicureType').value;
+  const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
 
-    validateTimeSlot(date, time)
-      .then((isAvailable) => {
-        if (!isAvailable) {
-          alert('This time is not available. Please choose a later time.');
-          return;
-        }
+  validateTimeSlot(date, time)
+    .then((isAvailable) => {
+      if (!isAvailable) {
+        alert('This time is not available. Please choose another time.');
+        return;
+      }
 
-        // Save booking to Firestore
-        db.collection('bookings').add({
-          name: name,
-          phone: phone,
-          date: date,
-          time: time,
-          service: service
-        })
+      // Save booking to Firestore
+      db.collection('bookings').add({
+        name: name,
+        phone: phone,
+        date: date,
+        time: time,
+        service: service
+      })
         .then(() => {
+          alert('Booking successful! Redirecting to WhatsApp...');
           // Send WhatsApp message after saving booking
           const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
           const encodedMessage = encodeURIComponent(message);
@@ -477,9 +478,17 @@ function submitBooking(event) {
           const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
           window.location.href = whatsappUrl;
+        })
+        .catch((error) => {
+          console.error('Error saving booking:', error);
+          alert('Error saving booking. Please try again.');
         });
-      });
-  }
+    })
+    .catch((error) => {
+      console.error('Error during time validation:', error);
+      alert('Error validating time. Please try again.');
+    });
+}
 
   function validateTimeSlot(date, selectedTime) {
   return db.collection('unavailableDays').where('date', '==', date).get()
