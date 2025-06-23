@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADMIN DASHBOARD</title>
+  <title>Admin Dashboard - ARCTURUS NAIL CARE</title>
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -17,6 +17,15 @@
       background-color: #f4f4f4;
       margin: 0;
       padding: 0;
+    }
+
+    .header-bar {
+      background-color: #FFD1DC;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #6200ea;
     }
 
     .top-menu {
@@ -84,10 +93,10 @@
 
     .gallery-category h3 {
       text-align: center;
-      text-transform: uppercase;
       margin-bottom: 15px;
       font-size: 22px;
       color: #6200ea;
+      text-transform: uppercase;
     }
 
     .gallery-wrapper {
@@ -109,6 +118,8 @@
 
     .gallery-grid img {
       width: 100%;
+      height: 250px;
+      object-fit: cover;
       border-radius: 10px;
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     }
@@ -124,31 +135,80 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #6200ea;
+      color: white;
+    }
+
+    .content-section {
+      display: none;
+    }
+
+    .content-section.active {
+      display: block;
+    }
   </style>
 </head>
 
 <body>
+  <div class="header-bar">Admin Dashboard - ARCTURUS NAIL CARE</div>
+
+  <div class="top-menu">
+    <button onclick="showSection('gallerySection')">🖼️ Manage Gallery</button>
+    <button onclick="showSection('reservationsPage')">📋 View Reservations</button>
+  </div>
 
   <!-- Gallery Management Page -->
   <div id="gallerySection" class="admin-container content-section">
-    <h2>ADD IMAGE BY URL</h2>
+    <h2>Add Image by URL</h2>
     <input type="text" id="photoUrlInput" placeholder="Enter image URL here">
 
     <select id="photoCategorySelect">
       <option value="">Select Category</option>
-      <option value="Nails">NAILS</option>
-      <option value="Pedicure">PEDICURE</option>
-      <option value="Manicure">MANICURE</option>
+      <option value="Nails">Nails</option>
+      <option value="Pedicure">Pedicure</option>
+      <option value="Manicure">Manicure</option>
+      <option value="Gel Polish">Gel Polish</option>
+      <option value="Spa">Spa</option>
     </select>
 
-    <button onclick="addPhotoUrl()">ADD PHOTO</button>
+    <button onclick="addPhotoUrl()">Add Photo</button>
 
-    <h2>GALLERY PHOTOS</h2>
+    <h2>Gallery Photos</h2>
     <div id="adminGallery"></div>
   </div>
 
+  <!-- Reservations Page -->
+  <div id="reservationsPage" class="admin-container content-section">
+    <h2>Reservations</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Service</th>
+        </tr>
+      </thead>
+      <tbody id="reservationsTable"></tbody>
+    </table>
+  </div>
+
   <script>
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBx9_GrR4_ruM8v-GDOj4De1erg7nWsH08",
       authDomain: "arcturus-nail-care.firebaseapp.com",
@@ -161,7 +221,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Show section by ID
     function showSection(sectionId) {
       document.querySelectorAll('.content-section').forEach(section =>
         section.classList.remove('active')
@@ -169,7 +228,6 @@
       document.getElementById(sectionId).classList.add('active');
     }
 
-    // Add photo to gallery
     function addPhotoUrl() {
       const urlInput = document.getElementById('photoUrlInput');
       const categorySelect = document.getElementById('photoCategorySelect');
@@ -193,7 +251,6 @@
         });
     }
 
-    // Load gallery by category
     function loadGallery() {
       const galleryContainer = document.getElementById('adminGallery');
       galleryContainer.innerHTML = '';
@@ -238,7 +295,6 @@
       });
     }
 
-    // Remove photo from Firestore
     function removePhoto(docId) {
       db.collection('gallery').doc(docId).delete().catch((error) => {
         console.error("Error removing document: ", error);
@@ -246,15 +302,40 @@
       });
     }
 
-    // Automatically load gallery on login
+    function loadReservations() {
+      const tableBody = document.getElementById('reservationsTable');
+      tableBody.innerHTML = '';
+
+      db.collection('bookings').orderBy('date').onSnapshot((querySnapshot) => {
+        tableBody.innerHTML = '';
+
+        querySnapshot.forEach((doc) => {
+          const booking = doc.data();
+
+          tableBody.innerHTML += `
+            <tr>
+              <td>${booking.name}</td>
+              <td>${booking.phone}</td>
+              <td>${booking.date}</td>
+              <td>${booking.time}</td>
+              <td>${booking.service}</td>
+            </tr>
+          `;
+        });
+      });
+    }
+
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        showSection('gallerySection'); // Start on Manage Gallery
-        loadGallery(); // Load gallery immediately
+        showSection('gallerySection');
+        loadGallery();
+        loadReservations();
       } else {
         window.location.href = 'index.html';
       }
     });
   </script>
+
 </body>
+
 </html>
