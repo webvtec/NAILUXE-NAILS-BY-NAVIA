@@ -235,9 +235,9 @@
 
   <!-- ✅ Menu -->
   <div class="menu" id="menu">
-    <a onclick="showSection('gallerySection')">💅🏽 DESIGNS</a>
-    <a onclick="showSection('bookingSection')">📆 BOOKING</a>
-    <a onclick="login()" class="admin-button">ADMIN</a>
+    <a onclick="showSection('gallerySection'); closeMenu();">💅🏽 DESIGNS</a>
+<a onclick="showSection('bookingSection'); closeMenu();">📆 BOOKING</a>
+<a onclick="login(); closeMenu();" class="admin-button">ADMIN</a>
   </div>
 
   <!-- ✅ Booking Section -->
@@ -327,17 +327,14 @@
     }
 
       function toggleMenu() {
-    const menu = document.getElementById('menu');
-    if (menu.style.display === 'block') {
-      menu.style.display = 'none';
-    } else {
-      menu.style.display = 'block';
-    }
-  }
+  const menu = document.getElementById('menu');
+  menu.classList.toggle('show');
+}
 
-  function closeMenu() {
-    document.getElementById('menu').style.display = 'none';
-  }
+function closeMenu() {
+  const menu = document.getElementById('menu');
+  menu.classList.remove('show');
+}
 
     function showSection(sectionId) {
       document.querySelectorAll('.content-section').forEach(section =>
