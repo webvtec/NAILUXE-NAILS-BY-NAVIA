@@ -514,7 +514,7 @@ function submitBooking(event) {
 }
 
   function validateTimeSlot(date, selectedTime) {
-  const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
   if (!business) {
