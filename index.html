@@ -456,36 +456,6 @@ const time = `${timeInput} ${timePeriod}`;
   // Optional: You can clear any previous validation messages here
 });
 
-function submitBooking(event) {
-  event.preventDefault();
-
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
-  const date = document.getElementById('date').value;
-  const time = document.getElementById('time').value.trim();
-
-  const pedicureType = document.getElementById('pedicureType').value;
-  const manicureType = document.getElementById('manicureType').value;
-
-  const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
-
-  // Validate time before proceeding
-  validateTimeSlot(date, time)
-    .then((isAvailable) => {
-      if (!isAvailable) {
-        alert('This time is not available. Please choose a later time.');
-        return;
-      }
-
-      // Build WhatsApp message
-      const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappNumber = '18763422293'; // Replace with your number
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-
-      window.location.href = whatsappUrl;
-    });
-}
 
 function validateTimeSlot(date, selectedTime) {
   return db.collection('bookings').where('date', '==', date).get()
