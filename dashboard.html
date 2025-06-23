@@ -209,8 +209,10 @@
     <label><input type="checkbox" id="allDayCheckbox" checked onchange="toggleTimeInputs()"> All Day</label>
 
     <div id="timeInputs" style="display: none;">
-      <input type="time" id="startTimeInput">
-      <input type="time" id="endTimeInput">
+  <label>FROM:</label>
+  <input type="time" id="startTimeInput">
+  <label>UNTIL:</label>
+  <input type="time" id="endTimeInput">
     </div>
 
     <button onclick="addUnavailableDate()">Add Unavailable Date</button>
