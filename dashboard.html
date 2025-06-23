@@ -12,13 +12,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <style>
+    /* Styles remain unchanged */
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       margin: 0;
       padding: 0;
     }
-
     .header-bar {
       background-color: #FFD1DC;
       padding: 15px;
@@ -27,14 +27,12 @@
       font-weight: bold;
       color: #6200ea;
     }
-
     .top-menu {
       display: flex;
       justify-content: center;
       background-color: #6200ea;
       padding: 10px 0;
     }
-
     .top-menu button {
       background-color: white;
       color: #6200ea;
@@ -45,11 +43,9 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     .top-menu button:hover {
       background-color: #FFD1DC;
     }
-
     .admin-container {
       max-width: 1000px;
       margin: 20px auto;
@@ -58,21 +54,17 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-
     h2 {
       color: #6200ea;
       text-align: center;
     }
-
-    input[type="text"],
-    select {
+    input[type="text"], input[type="date"], select {
       width: 100%;
       padding: 10px;
       margin-bottom: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-
     button {
       background-color: #6200ea;
       color: white;
@@ -82,15 +74,12 @@
       cursor: pointer;
       margin-bottom: 20px;
     }
-
     button:hover {
       background-color: #3700b3;
     }
-
     .gallery-category {
       margin-top: 40px;
     }
-
     .gallery-category h3 {
       text-align: center;
       margin-bottom: 15px;
@@ -98,24 +87,20 @@
       color: #6200ea;
       text-transform: uppercase;
     }
-
     .gallery-wrapper {
       max-width: 1000px;
       margin: 0 auto;
       padding: 0 10px;
     }
-
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px;
       margin-bottom: 30px;
     }
-
     .gallery-grid div {
       position: relative;
     }
-
     .gallery-grid img {
       width: 100%;
       height: 250px;
@@ -123,7 +108,6 @@
       border-radius: 10px;
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     }
-
     .remove-btn {
       position: absolute;
       top: 8px;
@@ -135,38 +119,31 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 30px;
     }
-
     th, td {
       border: 1px solid #ddd;
       padding: 10px;
       text-align: center;
     }
-
     th {
       background-color: #6200ea;
       color: white;
     }
-
     .content-section {
       display: none;
     }
-
     .content-section.active {
       display: block;
     }
-
     .clear-container {
       display: flex;
       justify-content: center;
       margin-top: 20px;
     }
-
     .clear-container input {
       padding: 10px;
       margin-right: 10px;
@@ -182,6 +159,7 @@
   <div class="top-menu">
     <button onclick="showSection('gallerySection')">MANAGE GALLERY</button>
     <button onclick="showSection('reservationsPage')">VIEW RESERVATIONS</button>
+    <button onclick="showSection('unavailableDaysSection')">SET UNAVAILABLE DAYS</button>
   </div>
 
   <!-- Gallery Management Page -->
@@ -222,6 +200,16 @@
       <input type="text" id="clearInput" placeholder="Type CONFIRM to clear all">
       <button onclick="clearReservations()">Clear Reservations</button>
     </div>
+  </div>
+
+  <!-- Unavailable Days Page -->
+  <div id="unavailableDaysSection" class="admin-container content-section">
+    <h2>Set Unavailable Days</h2>
+    <input type="date" id="unavailableDateInput">
+    <button onclick="addUnavailableDate()">Add Unavailable Date</button>
+
+    <h3>Unavailable Dates</h3>
+    <ul id="unavailableDatesList"></ul>
   </div>
 
   <script>
@@ -363,11 +351,58 @@
       });
     }
 
+    function addUnavailableDate() {
+      const dateInput = document.getElementById('unavailableDateInput').value;
+
+      if (!dateInput) {
+        alert('Please select a date.');
+        return;
+      }
+
+      db.collection('unavailableDays').add({ date: dateInput })
+        .then(() => {
+          alert('Date marked as unavailable.');
+          loadUnavailableDates();
+          document.getElementById('unavailableDateInput').value = '';
+        })
+        .catch(error => {
+          console.error("Error adding unavailable date: ", error);
+          alert('Error adding date: ' + error.message);
+        });
+    }
+
+    function loadUnavailableDates() {
+      const list = document.getElementById('unavailableDatesList');
+      list.innerHTML = '';
+
+      db.collection('unavailableDays').orderBy('date').onSnapshot((querySnapshot) => {
+        list.innerHTML = '';
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          list.innerHTML += `
+            <li>
+              ${data.date}
+              <button onclick="removeUnavailableDate('${doc.id}')">Remove</button>
+            </li>
+          `;
+        });
+      });
+    }
+
+    function removeUnavailableDate(docId) {
+      db.collection('unavailableDays').doc(docId).delete().catch((error) => {
+        console.error("Error removing unavailable date: ", error);
+        alert('Error removing date: ' + error.message);
+      });
+    }
+
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         showSection('gallerySection');
         loadGallery();
         loadReservations();
+        loadUnavailableDates();
       } else {
         window.location.href = 'index.html';
       }
