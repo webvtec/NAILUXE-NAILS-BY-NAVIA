@@ -384,33 +384,6 @@ function selectPeriod(period) {
   document.getElementById('timeInput').parentElement.insertBefore(confirmation, document.getElementById('timeInput').nextSibling);
 }
 
-    function submitBooking(event) {
-  event.preventDefault();
-
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
-  const date = document.getElementById('date').value;
-  const timeInput = document.getElementById('timeInput').value.trim();
-const timePeriod = document.getElementById('timePeriod').value;
-const time = `${timeInput} ${timePeriod}`;
-  const pedicureType = document.getElementById('pedicureType').value;
-  const manicureType = document.getElementById('manicureType').value;
-
-  const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
-
-  const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
-
-  const encodedMessage = encodeURIComponent(message);
-  
-  // Replace this with your WhatsApp number (no + or spaces)
-  const whatsappNumber = '18763422293'; // Example: 18761234567 for Jamaica
-
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-
-  // Redirect user to WhatsApp
-  window.location.href = whatsappUrl;
-}
-
     function loadGallery(containerId) {
       const galleryContainer = document.getElementById(containerId);
       galleryContainer.innerHTML = '';
