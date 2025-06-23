@@ -470,7 +470,6 @@ function submitBooking(event) {
         service: service
       })
         .then(() => {
-          alert('Booking successful! Redirecting to WhatsApp...');
           // Send WhatsApp message after saving booking
           const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
           const encodedMessage = encodeURIComponent(message);
