@@ -490,11 +490,45 @@ function submitBooking(event) {
     });
 }
 
+    const businessHours = {
+  'Sunday': null, // Closed
+  'Monday': { open: '8:30 AM', close: '6:00 PM' },
+  'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Thursday': { open: '8:30 AM', close: '6:00 PM' },
+  'Friday': { open: '9:00 AM', close: '7:00 PM' },
+  'Saturday': { open: '9:00 AM', close: '7:00 PM' }
+};
+
   function validateTimeSlot(date, selectedTime) {
+  const businessHours = {
+    'Sunday': null, // Closed
+    'Monday': { open: '8:30 AM', close: '6:00 PM' },
+    'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
+    'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
+    'Thursday': { open: '8:30 AM', close: '6:00 PM' },
+    'Friday': { open: '9:00 AM', close: '7:00 PM' },
+    'Saturday': { open: '9:00 AM', close: '7:00 PM' }
+  };
+
+  const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+
+  if (!business) {
+    return Promise.resolve(false); // Closed on this day
+  }
+
+  const selectedMinutes = convertToMinutes(selectedTime);
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
+    return Promise.resolve(false); // Outside business hours
+  }
+
+  // Continue with unavailableDays check
   return db.collection('unavailableDays').where('date', '==', date).get()
     .then((unavailableSnapshot) => {
-      let selectedMinutes = convertToMinutes(selectedTime);
-
       let isUnavailable = false;
 
       unavailableSnapshot.forEach((doc) => {
@@ -516,7 +550,7 @@ function submitBooking(event) {
         return false; // Date/time is unavailable
       }
 
-      // If date is available, check for conflicting bookings
+      // Check for conflicting bookings
       return db.collection('bookings').where('date', '==', date).get()
         .then((querySnapshot) => {
           for (let doc of querySnapshot.docs) {
@@ -531,20 +565,6 @@ function submitBooking(event) {
         });
     });
 }
-    
-  function convertToMinutes(timeStr) {
-    let [time, period] = timeStr.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
-
-    if (period.toUpperCase() === 'PM' && hours !== 12) {
-      hours += 12;
-    }
-    if (period.toUpperCase() === 'AM' && hours === 12) {
-      hours = 0;
-    }
-
-    return (hours * 60) + minutes;
-  }
   </script>
 
 </body>
