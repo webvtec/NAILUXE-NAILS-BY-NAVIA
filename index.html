@@ -518,6 +518,7 @@ function submitBooking(event) {
   const business = businessHours[dayName];
 
   if (!business) {
+    alert(`We are closed on Sundays. Please select another day.`);
     return Promise.resolve(false); // Closed on this day
   }
 
@@ -526,6 +527,7 @@ function submitBooking(event) {
   const closeMinutes = convertToMinutes(business.close);
 
   if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
+    alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
     return Promise.resolve(false); // Outside business hours
   }
 
@@ -568,6 +570,7 @@ function submitBooking(event) {
         });
     });
 }
+
   </script>
 
 </body>
