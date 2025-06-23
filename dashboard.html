@@ -160,6 +160,19 @@
     .content-section.active {
       display: block;
     }
+
+    .clear-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .clear-container input {
+      padding: 10px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
   </style>
 </head>
 
@@ -206,6 +219,11 @@
       </thead>
       <tbody id="reservationsTable"></tbody>
     </table>
+
+    <div class="clear-container">
+      <input type="text" id="clearInput" placeholder="Type CONFIRM to clear all">
+      <button onclick="clearReservations()">Clear Reservations</button>
+    </div>
   </div>
 
   <script>
@@ -321,6 +339,28 @@
               <td>${booking.service}</td>
             </tr>
           `;
+        });
+      });
+    }
+
+    function clearReservations() {
+      const confirmInput = document.getElementById('clearInput').value.trim();
+
+      if (confirmInput !== 'CONFIRM') {
+        alert('Please type CONFIRM to clear all reservations.');
+        return;
+      }
+
+      db.collection('bookings').get().then((querySnapshot) => {
+        const batch = db.batch();
+
+        querySnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+
+        batch.commit().then(() => {
+          alert('All reservations cleared successfully.');
+          document.getElementById('clearInput').value = '';
         });
       });
     }
