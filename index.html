@@ -499,18 +499,21 @@ function submitBooking(event) {
   'Friday': { open: '9:00 AM', close: '7:00 PM' },
   'Saturday': { open: '9:00 AM', close: '7:00 PM' }
 };
+    function convertToMinutes(timeStr) {
+  let [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  }
+  if (period.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return (hours * 60) + minutes;
+}
 
   function validateTimeSlot(date, selectedTime) {
-  const businessHours = {
-    'Sunday': null, // Closed
-    'Monday': { open: '8:30 AM', close: '6:00 PM' },
-    'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
-    'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
-    'Thursday': { open: '8:30 AM', close: '6:00 PM' },
-    'Friday': { open: '9:00 AM', close: '7:00 PM' },
-    'Saturday': { open: '9:00 AM', close: '7:00 PM' }
-  };
-
   const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
