@@ -476,6 +476,88 @@ function selectPeriod(period) {
   dateInput.min = today;
 });
 
+    function convertToMinutes(timeStr) {
+  let [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  }
+  if (period.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return (hours * 60) + minutes;
+}
+
+const businessHours = {
+  'Sunday': null, // Closed
+  'Monday': { open: '8:30 AM', close: '6:00 PM' },
+  'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Thursday': { open: '8:30 AM', close: '6:00 PM' },
+  'Friday': { open: '9:00 AM', close: '7:00 PM' },
+  'Saturday': { open: '9:00 AM', close: '7:00 PM' }
+};
+
+function validateTimeSlot(date, selectedTime) {
+  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+
+  if (!business) {
+    alert(`We are closed on Sundays. Please select another day.`);
+    return Promise.resolve(false); // Closed on this day
+  }
+
+  const selectedMinutes = convertToMinutes(selectedTime);
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
+    alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
+    return Promise.resolve(false); // Outside business hours
+  }
+
+  // Continue with unavailableDays check
+  return db.collection('unavailableDays').where('date', '==', date).get()
+    .then((unavailableSnapshot) => {
+      let isUnavailable = false;
+
+      unavailableSnapshot.forEach((doc) => {
+        const data = doc.data();
+
+        if (data.allDay) {
+          isUnavailable = true; // Entire day is blocked
+        } else {
+          const startMinutes = convertToMinutes(data.startTime);
+          const endMinutes = convertToMinutes(data.endTime);
+
+          if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
+            isUnavailable = true; // Time slot is blocked
+          }
+        }
+      });
+
+      if (isUnavailable) {
+        return false; // Date/time is unavailable
+      }
+
+      // Check for conflicting bookings
+      return db.collection('bookings').where('date', '==', date).get()
+        .then((querySnapshot) => {
+          for (let doc of querySnapshot.docs) {
+            let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+            let bookedMinutes = convertToMinutes(bookedTime);
+
+            if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
+              return false; // Time slot is too close to existing booking
+            }
+          }
+          return true; // Slot is available
+        });
+    });
+}
+
 function submitBooking(event) {
   event.preventDefault();
 
