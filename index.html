@@ -294,13 +294,22 @@
   <option value="Athletic Manicure">Athletic Manicure</option>
 </select>
 
-      <label for="nail extensions">Select Nail Extension Type:</label>
-      <select id="manicureType">
+      <label for="nailExtensionType">Select Nail Extension Type:</label>
+<select id="nailExtensionType" onchange="showExtensionLengthOptions()">
   <option value="NONE">NONE</option>
-  <option value="Dip Powder Manicure">Dip Powder Manicure</option>
-  <option value="Athletic Manicure">Athletic Manicure</option>
-  <option value="Athletic Manicure">Athletic Manicure</option>
-      </select>
+  <option value="Acrylic Nails">Acrylic Nails</option>
+  <option value="Gel Extensions">Gel Extensions</option>
+  <option value="Dip Powder Extensions">Dip Powder Extensions</option>
+</select>
+<div id="extensionLengthContainer" style="display: none; margin-top: 15px;">
+  <label for="extensionLength">Select Length:</label>
+  <select id="extensionLength">
+    <option value="LONG">LONG</option>
+    <option value="MEDIUM">MEDIUM</option>
+    <option value="SHORT">SHORT</option>
+  </select>
+</div>
+
 <div style="margin: 15px 0; display: flex; align-items: center;">
   <input type="checkbox" id="lateAgreement" required style="margin-right: 3px;" />
   <label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
@@ -399,6 +408,17 @@ function selectPeriod(period) {
   document.getElementById('timeInput').parentElement.insertBefore(confirmation, document.getElementById('timeInput').nextSibling);
 }
 
+    function showExtensionLengthOptions() {
+  const extensionType = document.getElementById('nailExtensionType').value;
+  const lengthContainer = document.getElementById('extensionLengthContainer');
+
+  if (extensionType !== 'NONE') {
+    lengthContainer.style.display = 'block';
+  } else {
+    lengthContainer.style.display = 'none';
+  }
+}
+
     function loadGallery(containerId) {
       const galleryContainer = document.getElementById(containerId);
       galleryContainer.innerHTML = '';
@@ -467,7 +487,20 @@ function submitBooking(event) {
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
-  const service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
+
+  // ✅ New: Get Nail Extension Type and Length
+  const nailExtensionType = document.getElementById('nailExtensionType').value;
+  let extensionLength = '';
+
+  if (nailExtensionType !== 'NONE') {
+    extensionLength = document.getElementById('extensionLength').value;
+  }
+
+  // ✅ Build Service Description
+  let service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
+  if (nailExtensionType !== 'NONE') {
+    service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
+  }
 
   validateTimeSlot(date, time)
     .then((isAvailable) => {
@@ -501,87 +534,6 @@ function submitBooking(event) {
     .catch((error) => {
       console.error('Error during time validation:', error);
       alert('Error validating time. Please try again.');
-    });
-}
-
-    const businessHours = {
-  'Sunday': null, // Closed
-  'Monday': { open: '8:30 AM', close: '6:00 PM' },
-  'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
-  'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
-  'Thursday': { open: '8:30 AM', close: '6:00 PM' },
-  'Friday': { open: '9:00 AM', close: '7:00 PM' },
-  'Saturday': { open: '9:00 AM', close: '7:00 PM' }
-};
-    function convertToMinutes(timeStr) {
-  let [time, period] = timeStr.split(' ');
-  let [hours, minutes] = time.split(':').map(Number);
-
-  if (period.toUpperCase() === 'PM' && hours !== 12) {
-    hours += 12;
-  }
-  if (period.toUpperCase() === 'AM' && hours === 12) {
-    hours = 0;
-  }
-
-  return (hours * 60) + minutes;
-}
-
-  function validateTimeSlot(date, selectedTime) {
-  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
-  const business = businessHours[dayName];
-
-  if (!business) {
-    alert(`We are closed on Sundays. Please select another day.`);
-    return Promise.resolve(false); // Closed on this day
-  }
-
-  const selectedMinutes = convertToMinutes(selectedTime);
-  const openMinutes = convertToMinutes(business.open);
-  const closeMinutes = convertToMinutes(business.close);
-
-  if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
-    alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
-    return Promise.resolve(false); // Outside business hours
-  }
-
-  // Continue with unavailableDays check
-  return db.collection('unavailableDays').where('date', '==', date).get()
-    .then((unavailableSnapshot) => {
-      let isUnavailable = false;
-
-      unavailableSnapshot.forEach((doc) => {
-        const data = doc.data();
-
-        if (data.allDay) {
-          isUnavailable = true; // Entire day is blocked
-        } else {
-          const startMinutes = convertToMinutes(data.startTime);
-          const endMinutes = convertToMinutes(data.endTime);
-
-          if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-            isUnavailable = true; // Time slot is blocked
-          }
-        }
-      });
-
-      if (isUnavailable) {
-        return false; // Date/time is unavailable
-      }
-
-      // Check for conflicting bookings
-      return db.collection('bookings').where('date', '==', date).get()
-        .then((querySnapshot) => {
-          for (let doc of querySnapshot.docs) {
-            let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
-            let bookedMinutes = convertToMinutes(bookedTime);
-
-            if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
-              return false; // Time slot is too close to existing booking
-            }
-          }
-          return true; // Slot is available
-        });
     });
 }
 
