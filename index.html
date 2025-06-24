@@ -260,6 +260,7 @@
 <div style="margin: 10px 0;">
   <button type="button" onclick="selectPeriod('AM')" id="amBtn" style="margin-right: 10px;">AM</button>
   <button type="button" onclick="selectPeriod('PM')" id="pmBtn">PM</button>
+<div id="periodConfirmation" style="margin-bottom: 10px;"></div>
 </div>
 
 <input type="hidden" id="timePeriod" value="AM" />
@@ -401,13 +402,11 @@ function selectPeriod(period) {
   document.getElementById('amBtn').style.display = 'none';
   document.getElementById('pmBtn').style.display = 'none';
 
-  // Show selected period text
-  const confirmation = document.createElement('div');
+  // Show selected period text (ensure no duplicates)
+  const confirmation = document.getElementById('periodConfirmation');
   confirmation.innerText = `You selected ${period}`;
   confirmation.style.fontWeight = 'bold';
   confirmation.style.marginBottom = '10px';
-
-  document.getElementById('timeInput').parentElement.insertBefore(confirmation, document.getElementById('timeInput').nextSibling);
 }
 
     function showExtensionLengthOptions() {
