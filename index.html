@@ -501,12 +501,13 @@ const businessHours = {
 };
 
 function validateTimeSlot(date, selectedTime) {
+function validateTimeSlot(date, selectedTime) {
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
   if (!business) {
     alert(`We are closed on Sundays. Please select another day.`);
-    return Promise.resolve(false); // Closed on this day
+    return Promise.resolve(false);
   }
 
   const selectedMinutes = convertToMinutes(selectedTime);
@@ -515,7 +516,7 @@ function validateTimeSlot(date, selectedTime) {
 
   if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
     alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
-    return Promise.resolve(false); // Outside business hours
+    return Promise.resolve(false);
   }
 
   // Get selected service durations
@@ -526,18 +527,17 @@ function validateTimeSlot(date, selectedTime) {
   let requiredGap = 0;
 
   if (pedicureType !== 'NONE') {
-    requiredGap = Math.max(requiredGap, 90); // 90 minutes if pedicure is booked
+    requiredGap = Math.max(requiredGap, 90);
   }
 
   if (manicureType !== 'NONE') {
-    requiredGap = Math.max(requiredGap, 60); // 60 minutes if manicure is booked
+    requiredGap = Math.max(requiredGap, 60);
   }
 
   if (nailExtensionType !== 'NONE') {
-    requiredGap = Math.max(requiredGap, 30); // 30 minutes if nail extension is booked
+    requiredGap = Math.max(requiredGap, 30);
   }
 
-  // If no service selected
   if (requiredGap === 0) {
     alert('Please select at least one service.');
     return Promise.resolve(false);
@@ -570,15 +570,18 @@ function validateTimeSlot(date, selectedTime) {
       // Check for conflicting bookings
       return db.collection('bookings').where('date', '==', date).get()
         .then((querySnapshot) => {
-          for (let doc of querySnapshot.docs) {
+          let isConflict = false;
+
+          querySnapshot.forEach((doc) => {
             let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
             let bookedMinutes = convertToMinutes(bookedTime);
 
             if (Math.abs(selectedMinutes - bookedMinutes) < requiredGap) {
-              return false; // Conflict based on required service gap
+              isConflict = true;
             }
-          }
-          return true; // Slot is available
+          });
+
+          return !isConflict; // Return true if no conflict, false if there is a conflict
         });
     });
 }
