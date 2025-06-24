@@ -518,7 +518,32 @@ function validateTimeSlot(date, selectedTime) {
     return Promise.resolve(false); // Outside business hours
   }
 
-  // Continue with unavailableDays check
+  // Get selected service durations
+  const pedicureType = document.getElementById('pedicureType').value;
+  const manicureType = document.getElementById('manicureType').value;
+  const nailExtensionType = document.getElementById('nailExtensionType').value;
+
+  let requiredGap = 0;
+
+  if (pedicureType !== 'NONE') {
+    requiredGap = Math.max(requiredGap, 90); // 90 minutes if pedicure is booked
+  }
+
+  if (manicureType !== 'NONE') {
+    requiredGap = Math.max(requiredGap, 60); // 60 minutes if manicure is booked
+  }
+
+  if (nailExtensionType !== 'NONE') {
+    requiredGap = Math.max(requiredGap, 30); // 30 minutes if nail extension is booked
+  }
+
+  // If no service selected
+  if (requiredGap === 0) {
+    alert('Please select at least one service.');
+    return Promise.resolve(false);
+  }
+
+  // Check unavailable days
   return db.collection('unavailableDays').where('date', '==', date).get()
     .then((unavailableSnapshot) => {
       let isUnavailable = false;
@@ -527,19 +552,19 @@ function validateTimeSlot(date, selectedTime) {
         const data = doc.data();
 
         if (data.allDay) {
-          isUnavailable = true; // Entire day is blocked
+          isUnavailable = true;
         } else {
           const startMinutes = convertToMinutes(data.startTime);
           const endMinutes = convertToMinutes(data.endTime);
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-            isUnavailable = true; // Time slot is blocked
+            isUnavailable = true;
           }
         }
       });
 
       if (isUnavailable) {
-        return false; // Date/time is unavailable
+        return false;
       }
 
       // Check for conflicting bookings
@@ -549,8 +574,8 @@ function validateTimeSlot(date, selectedTime) {
             let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
             let bookedMinutes = convertToMinutes(bookedTime);
 
-            if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
-              return false; // Time slot is too close to existing booking
+            if (Math.abs(selectedMinutes - bookedMinutes) < requiredGap) {
+              return false; // Conflict based on required service gap
             }
           }
           return true; // Slot is available
