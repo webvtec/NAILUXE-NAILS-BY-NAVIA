@@ -506,7 +506,7 @@ function validateTimeSlot(date, selectedTime) {
 
   if (!business) {
     alert(`We are closed on Sundays. Please select another day.`);
-    return Promise.resolve(false); // Closed on this day
+    return Promise.resolve(false);
   }
 
   const selectedMinutes = convertToMinutes(selectedTime);
@@ -515,10 +515,9 @@ function validateTimeSlot(date, selectedTime) {
 
   if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
     alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
-    return Promise.resolve(false); // Outside business hours
+    return Promise.resolve(false);
   }
 
-  // Continue with unavailableDays check
   return db.collection('unavailableDays').where('date', '==', date).get()
     .then((unavailableSnapshot) => {
       let isUnavailable = false;
@@ -527,33 +526,49 @@ function validateTimeSlot(date, selectedTime) {
         const data = doc.data();
 
         if (data.allDay) {
-          isUnavailable = true; // Entire day is blocked
+          isUnavailable = true;
         } else {
           const startMinutes = convertToMinutes(data.startTime);
           const endMinutes = convertToMinutes(data.endTime);
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-            isUnavailable = true; // Time slot is blocked
+            isUnavailable = true;
           }
         }
       });
 
       if (isUnavailable) {
-        return false; // Date/time is unavailable
+        return false;
       }
 
-      // Check for conflicting bookings
       return db.collection('bookings').where('date', '==', date).get()
         .then((querySnapshot) => {
+
+          // Calculate buffer based on selected service
+          const pedicureType = document.getElementById('pedicureType').value;
+          const manicureType = document.getElementById('manicureType').value;
+          const nailExtensionType = document.getElementById('nailExtensionType').value;
+
+          let buffer = 0;
+
+          if (pedicureType !== 'NONE') {
+            buffer = 90;
+          } else if (manicureType !== 'NONE') {
+            buffer = 45;
+          } else if (nailExtensionType !== 'NONE') {
+            buffer = 30;
+          }
+
           for (let doc of querySnapshot.docs) {
             let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
             let bookedMinutes = convertToMinutes(bookedTime);
 
-            if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
-              return false; // Time slot is too close to existing booking
+            if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
+              return false; // Conflict
             }
           }
-          return true; // Slot is available
+
+          return true; // No conflict
         });
     });
 }
