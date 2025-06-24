@@ -501,13 +501,12 @@ const businessHours = {
 };
 
 function validateTimeSlot(date, selectedTime) {
-function validateTimeSlot(date, selectedTime) {
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
   if (!business) {
     alert(`We are closed on Sundays. Please select another day.`);
-    return Promise.resolve(false);
+    return Promise.resolve(false); // Closed on this day
   }
 
   const selectedMinutes = convertToMinutes(selectedTime);
@@ -516,34 +515,10 @@ function validateTimeSlot(date, selectedTime) {
 
   if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
     alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
-    return Promise.resolve(false);
+    return Promise.resolve(false); // Outside business hours
   }
 
-  // Get selected service durations
-  const pedicureType = document.getElementById('pedicureType').value;
-  const manicureType = document.getElementById('manicureType').value;
-  const nailExtensionType = document.getElementById('nailExtensionType').value;
-
-  let requiredGap = 0;
-
-  if (pedicureType !== 'NONE') {
-    requiredGap = Math.max(requiredGap, 90);
-  }
-
-  if (manicureType !== 'NONE') {
-    requiredGap = Math.max(requiredGap, 60);
-  }
-
-  if (nailExtensionType !== 'NONE') {
-    requiredGap = Math.max(requiredGap, 30);
-  }
-
-  if (requiredGap === 0) {
-    alert('Please select at least one service.');
-    return Promise.resolve(false);
-  }
-
-  // Check unavailable days
+  // Continue with unavailableDays check
   return db.collection('unavailableDays').where('date', '==', date).get()
     .then((unavailableSnapshot) => {
       let isUnavailable = false;
@@ -552,36 +527,33 @@ function validateTimeSlot(date, selectedTime) {
         const data = doc.data();
 
         if (data.allDay) {
-          isUnavailable = true;
+          isUnavailable = true; // Entire day is blocked
         } else {
           const startMinutes = convertToMinutes(data.startTime);
           const endMinutes = convertToMinutes(data.endTime);
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-            isUnavailable = true;
+            isUnavailable = true; // Time slot is blocked
           }
         }
       });
 
       if (isUnavailable) {
-        return false;
+        return false; // Date/time is unavailable
       }
 
       // Check for conflicting bookings
       return db.collection('bookings').where('date', '==', date).get()
         .then((querySnapshot) => {
-          let isConflict = false;
-
-          querySnapshot.forEach((doc) => {
+          for (let doc of querySnapshot.docs) {
             let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
             let bookedMinutes = convertToMinutes(bookedTime);
 
-            if (Math.abs(selectedMinutes - bookedMinutes) < requiredGap) {
-              isConflict = true;
+            if (Math.abs(selectedMinutes - bookedMinutes) < 60) {
+              return false; // Time slot is too close to existing booking
             }
-          });
-
-          return !isConflict; // Return true if no conflict, false if there is a conflict
+          }
+          return true; // Slot is available
         });
     });
 }
