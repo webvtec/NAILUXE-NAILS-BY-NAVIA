@@ -350,6 +350,7 @@
     <option value="SHORT">SHORT</option>
   </select>
 </div>
+      <p id="estimateTimeMessage" style="color: #6200ea; font-weight: bold;"></p>
       <div style="margin: 15px 0; display: flex; align-items: center;">
   <input type="checkbox" id="lateAgreement" required style="margin-right: 3px;" />
   <label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
@@ -572,6 +573,59 @@ const businessHours = {
   'Friday': { open: '9:00 AM', close: '7:00 PM' },
   'Saturday': { open: '9:00 AM', close: '7:00 PM' }
 };
+
+    // This function is triggered when the user selects a hair type
+function showEstimateTime() {
+    const hairType = document.getElementById('hairType').value;
+    const estimateMessage = document.getElementById('estimateTimeMessage');
+
+    // Set default message if no hair type is selected
+    if (hairType === 'NONE') {
+        estimateMessage.innerHTML = '';
+        return;
+    }
+
+    // Estimate time for each hair type
+    let timeEstimate;
+    switch (pedicureType) {
+        case 'Regular Pedicure':
+            timeEstimate = 'Approximately 2 hours';
+            break;
+        case 'Spa Pedicure':
+            timeEstimate = 'Approximately 1.5 hours';
+            break;
+        case 'Deluxe Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        case 'Gel Pedicure':
+            timeEstimate = 'Approximately 2 hours';
+            break;
+        case 'Paraffin Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        case 'Hot Stone Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        case 'French Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        case 'Shellac Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        case 'Fish Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        case 'Athletic Pedicure':
+            timeEstimate = 'Approximately 1 hour';
+            break;
+        default:
+            timeEstimate = '';
+            break;
+    }
+
+    // Display the estimated time in the paragraph
+    estimateMessage.innerHTML = `Estimated Time: ${timeEstimate}`;
+}
 
 function validateTimeSlot(date, selectedTime) {
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
