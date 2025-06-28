@@ -576,11 +576,11 @@ const businessHours = {
 
     // This function is triggered when the user selects a hair type
 function showEstimateTime() {
-    const pedicureType = document.getElementById('hairType').value;
+    const pedicureType = document.getElementById('pedicureType').value;
     const estimateMessage = document.getElementById('estimateTimeMessage');
 
     // Set default message if no hair type is selected
-    if (hairType === 'NONE') {
+    if (pedicureType === 'NONE') {
         estimateMessage.innerHTML = '';
         return;
     }
