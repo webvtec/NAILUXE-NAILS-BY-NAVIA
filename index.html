@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
@@ -26,7 +27,7 @@
       left: 0;
       right: 0;
       height: 48px;
-      background-color: #FFD1DC;
+      background-color: #4169E1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -50,7 +51,7 @@
       left: 0;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #98FF98;
+      background-color: #6A0DAD;
       color: #FF69B4;
       border: none;
       border-radius: 0px;
@@ -70,7 +71,7 @@
       left: 0;
       width: 150px;
       background-color: rgba(0, 0, 0, 0.8);
-      color: #98FF98;
+      color: #6A0DAD;
       padding: 20px;
       transform: translateX(-100%);
       transition: transform 0.3s ease;
@@ -180,7 +181,7 @@
     }
 
     .menu a.admin-button {
-      background-color: #6200ea;
+      background-color: #6A0DAD;
       color: white;
       padding: 10px 20px;
       border-radius: 8px;
@@ -203,7 +204,7 @@
       right: 0px;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #98FF98;
+      background-color: #6A0DAD;
       color: red;
       border: none;
       padding: 0;
@@ -235,11 +236,19 @@
   </div>
 
   <!-- ✅ Menu -->
-  <div class="menu" id="menu">
-    <a onclick="showSection('gallerySection'); closeMenu();">💅🏽 DESIGNS</a>
+ <div class="menu" id="menu">
+ <a onclick="showSection('gallerySection'); closeMenu();">💅🏽 DESIGNS</a>
 <a onclick="showSection('bookingSection'); closeMenu();">📆 BOOKING</a>
-<a onclick="login(); closeMenu();" class="admin-button">ADMIN</a>
-  </div>
+<a onclick="showSection('reviewsSection'); closeMenu();">⭐️ REVIEWS</a>
+<a onclick="logoutUser(); closeMenu();" 
+   style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:red; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; font-weight:bold;">
+  LOGOUT</a>
+
+<a onclick="login(); closeMenu();" class="admin-button"
+   style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#6200ea; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
+  ADMIN
+</a>
+ </div>
 
   <!-- ✅ Booking Section -->
   <div id="bookingSection" class="content-section">
@@ -312,13 +321,12 @@
     <option value="SHORT">SHORT</option>
   </select>
 </div>
-
-<div style="margin: 15px 0; display: flex; align-items: center;">
+      <div style="margin: 15px 0; display: flex; align-items: center;">
   <input type="checkbox" id="lateAgreement" required style="margin-right: 3px;" />
   <label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
     I agree to pay <strong>25% extra</strong> if I am more than 10 minutes late.
   </label>
-</div>
+      </div>
 
       <button type="submit">Book Now</button>
     </form>
@@ -326,15 +334,46 @@
     <p id="bookingMessage"></p>
   </div>
 
+<div id="reviewsSection" class="content-section">
+  <h1 style="text-align:center; color:#6200ea;">CLIENT REVIEWS</h1>
+
+  <form id="reviewForm" style="max-width:500px; margin:10px auto; text-align:center;">
+    <input type="text" id="reviewName" placeholder="Your Name" required
+      style="width:100%; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;" />
+
+    <textarea id="reviewComment" placeholder="Write your review..." required
+      style="width:100%; height:80px; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;"></textarea>
+
+    <div id="starRating" style="font-size:24px; margin-bottom:10px; cursor:pointer; color:#ccc;">
+      <span data-value="1">★</span>
+      <span data-value="2">★</span>
+      <span data-value="3">★</span>
+      <span data-value="4">★</span>
+      <span data-value="5">★</span>
+    </div>
+
+    <button type="submit"
+      style="background-color:#6200ea; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;">Submit
+      Review</button>
+  </form>
+
+  <p id="reviewSubmitMsg" style="text-align:center; color:green;"></p>
+
+  <!-- Container where reviews will be loaded -->
+  <div id="reviewsContainer" style="max-width:600px; margin:20px auto;"></div>
+</div>
+
   <!-- ✅ Scripts -->
   <script>
+    let currentUser = null;
+
     const firebaseConfig = {
-  apiKey: "AIzaSyBx9_GrR4_ruM8v-GDOj4De1erg7nWsH08",
-  authDomain: "arcturus-nail-care.firebaseapp.com",
-  projectId: "arcturus-nail-care",
-  storageBucket: "arcturus-nail-care.firebasestorage.app",
-  messagingSenderId: "604991163098",
-  appId: "1:604991163098:web:47730d7480c66d813633e3"
+  apiKey: "AIzaSyAKXJ18jbcTbl-Q6OlfORc7iuLFX7rKCG4",
+  authDomain: "dazzeld-nails.firebaseapp.com",
+  projectId: "dazzeld-nails",
+  storageBucket: "dazzeld-nails.firebasestorage.app",
+  messagingSenderId: "786223907397",
+  appId: "1:786223907397:web:b42ecefaa7967807c6d92c"
 };
 
     firebase.initializeApp(firebaseConfig);
@@ -353,6 +392,22 @@
         });
     }
 
+    function login() {
+  const email = prompt('Enter admin email:');
+  const password = prompt('Enter admin password:');
+
+  // Your one admin email and password:
+  const adminEmail = 'carlanviroberts@gmail.com';
+  const adminPassword = 'admin123';
+
+  if (email === adminEmail && password === adminPassword) {
+    // Correct login
+    window.location.href = 'dashboard.html'; // Go to admin page
+  } else {
+    alert('Wrong email or password.');
+  }
+}
+
       function toggleMenu() {
   const menu = document.getElementById('menu');
   menu.classList.toggle('show');
@@ -362,17 +417,6 @@ function closeMenu() {
   const menu = document.getElementById('menu');
   menu.classList.remove('show');
 }
-
-    function showSection(sectionId) {
-      document.querySelectorAll('.content-section').forEach(section =>
-        section.classList.remove('active')
-      );
-      document.getElementById(sectionId).classList.add('active');
-
-      if (sectionId === 'gallerySection') {
-        loadGallery('galleryDisplay');
-      }
-    }
 
 function formatTimeInput() {
   let input = document.getElementById('timeInput');
@@ -634,6 +678,171 @@ function submitBooking(event) {
       alert('Error validating time. Please try again.');
     });
 }
+
+    function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(section =>
+    section.classList.remove('active')
+  );
+  document.getElementById(sectionId).classList.add('active');
+
+  if (sectionId === 'gallerySection') {
+    loadGallery('galleryDisplay');
+  } else if (sectionId === 'reviewsSection') {
+    loadReviews(currentUser); // ✅ Pass the user here
+  }
+}
+
+// Assume firebase is initialized and 'db' and 'auth' are set up
+
+let selectedRating = 0;
+
+// Star rating UI logic
+document.querySelectorAll('#starRating span').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.getAttribute('data-value'));
+    document.querySelectorAll('#starRating span').forEach(s => {
+      s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+    });
+  });
+});
+
+// Submit review
+document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("You must be logged in to submit a review.");
+    return;
+  }
+
+  const name = document.getElementById('reviewName').value.trim();
+  const comment = document.getElementById('reviewComment').value.trim();
+  const msg = document.getElementById('reviewSubmitMsg');
+
+  if (!name || !comment || selectedRating === 0) {
+    msg.style.color = "red";
+    msg.textContent = "Please fill all fields and select a star rating.";
+    return;
+  }
+
+  try {
+    await db.collection('reviews').add({
+      name,
+      comment,
+      rating: selectedRating,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      uid: user.uid
+    });
+
+    msg.style.color = "green";
+    msg.textContent = "Thank you for your review!";
+    document.getElementById('reviewForm').reset();
+    selectedRating = 0;
+    document.querySelectorAll('#starRating span').forEach(s => s.style.color = '#ccc');
+
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    msg.style.color = "red";
+    msg.textContent = "Error submitting review.";
+  }
+});
+
+function loadReviews(user) {
+  const container = document.getElementById('reviewsContainer');
+  container.innerHTML = "<p>Loading reviews...</p>";
+
+  db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    if (snapshot.empty) {
+      container.innerHTML = "<p>No reviews yet.</p>";
+      return;
+    }
+
+    container.innerHTML = '';
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const isOwner = user && d.uid === user.uid;
+
+      // Set star color based on rating value
+      let stars = '';
+      for (let i = 1; i <= 5; i++) {
+        // If the current index is less than or equal to the rating, make it gold
+        stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+      }
+
+      container.innerHTML += `
+        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
+          <div><strong>${d.name}</strong></div>
+          <div>${stars}</div> <!-- Display stars based on rating -->
+          <div>${d.comment}</div>
+          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
+        </div>
+      `;
+    });
+  });
+}
+
+// ✅ Watch for login/logout and always reload reviews with correct user
+firebase.auth().onAuthStateChanged(user => {
+  currentUser = user;        // ✅ Save user globally
+  loadReviews(currentUser);  // ✅ Call with correct user
+});
+
+function deleteReview(docId) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert('You must be logged in to delete reviews.');
+    return;
+  }
+
+  db.collection('reviews').doc(docId).get().then(doc => {
+    if (!doc.exists) {
+      alert("Review not found.");
+      return;
+    }
+
+    const data = doc.data();
+    if (data.uid !== user.uid) {
+      alert("You can only delete your own reviews.");
+      return;
+    }
+
+    // If the review belongs to the current user, delete it
+    db.collection('reviews').doc(docId).delete()
+      .then(() => alert("Review deleted."))
+      .catch(error => alert("Failed to delete review: " + error.message));
+  }).catch(error => {
+    alert("Error fetching review: " + error.message);
+  });
+}
+
+    document.addEventListener('DOMContentLoaded', function () {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      firebase.auth().signOut()
+        .then(() => {
+          window.location.href = 'login.html';
+        })
+        .catch((error) => {
+          console.error("Logout error:", error);
+          alert("Failed to log out.");
+        });
+    });
+  }
+});
+
+    function logoutUser() {
+  firebase.auth().signOut()
+    .then(() => {
+      window.location.href = 'login.html'; // or wherever you want after logout
+    })
+    .catch(error => {
+      alert('Logout failed: ' + error.message);
+    });
+}
+
+
 
   </script>
 
