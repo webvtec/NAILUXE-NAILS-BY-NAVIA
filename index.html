@@ -421,23 +421,7 @@
           alert('Authentication failed: ' + error.message);
         });
     }
-
-    function login() {
-  const email = prompt('Enter admin email:');
-  const password = prompt('Enter admin password:');
-
-  // Your one admin email and password:
-  const adminEmail = 'carlanviroberts@gmail.com';
-  const adminPassword = 'admin123';
-
-  if (email === adminEmail && password === adminPassword) {
-    // Correct login
-    window.location.href = 'dashboard.html'; // Go to admin page
-  } else {
-    alert('Wrong email or password.');
-  }
-}
-
+  
       function toggleMenu() {
   const menu = document.getElementById('menu');
   menu.classList.toggle('show');
