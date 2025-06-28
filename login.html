@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LOGIN PAGE</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: white;
+      padding: 2.5rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 360px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 1.8rem;
+      color: #333;
+    }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 1.2rem;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      border-color: #6200ea;
+      outline: none;
+      box-shadow: 0 0 8px rgba(98,0,234,0.3);
+    }
+    button {
+      width: 100%;
+      padding: 12px 0;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #6200ea;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(98,0,234,0.25);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    button:hover {
+      background-color: #4500b5;
+      box-shadow: 0 6px 15px rgba(69,0,181,0.4);
+    }
+    hr {
+      margin: 1.5rem 0;
+      border: none;
+      border-top: 1px solid #eee;
+    }
+    #status {
+      font-size: 0.9rem;
+      color: #555;
+      min-height: 1.4em;
+      margin-top: 1rem;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>Login / Sign Up</h2>
+
+    <input type="email" id="email" placeholder="Email" autocomplete="username" />
+    <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+
+    <button id="loginBtn">Log In</button>
+    <button id="signupBtn">Sign Up</button>
+
+    <hr />
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAKXJ18jbcTbl-Q6OlfORc7iuLFX7rKCG4",
+      authDomain: "dazzeld-nails.firebaseapp.com",
+      projectId: "dazzeld-nails",
+      storageBucket: "dazzeld-nails.firebasestorage.app",
+      messagingSenderId: "786223907397",
+      appId: "1:786223907397:web:b42ecefaa7967807c6d92c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const statusText = document.getElementById('status');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+
+    loginBtn.addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        statusText.textContent = 'Please enter email and password.';
+        return;
+      }
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = 'index.html';
+        })
+        .catch(err => {
+          statusText.textContent = `Login error: ${err.message}`;
+        });
+    });
+
+    signupBtn.addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        statusText.textContent = 'Please enter email and password.';
+        return;
+      }
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = 'index.html';
+        })
+        .catch(err => {
+          statusText.textContent = `Signup error: ${err.message}`;
+        });
+    });
+  </script>
+
+</body>
+</html>
