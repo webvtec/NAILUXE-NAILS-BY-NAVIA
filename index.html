@@ -409,6 +409,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = 'login.html';
+  } else {
+    currentUser = user;
+  }
+});
+
     function login() {
       const email = prompt('Enter admin email:');
       const password = prompt('Enter admin password:');
@@ -979,12 +987,6 @@ function loadReviews(user) {
     });
   });
 }
-
-// ✅ Watch for login/logout and always reload reviews with correct user
-firebase.auth().onAuthStateChanged(user => {
-  currentUser = user;        // ✅ Save user globally
-  loadReviews(currentUser);  // ✅ Call with correct user
-});
 
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
