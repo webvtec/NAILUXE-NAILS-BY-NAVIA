@@ -394,6 +394,48 @@
   <div id="reviewsContainer" style="max-width:600px; margin:20px auto;"></div>
 </div>
 
+  <!-- Booking Confirmation Modal -->
+<div id="bookingModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+">
+  <div style="
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+  ">
+    <div style="font-size: 50px; color: green; margin-bottom: 10px;">✔</div>
+    <h3 style="margin-bottom: 10px;">Booking Confirmed</h3>
+    <p style="font-size: 14px; color: #333;">
+      Thank you! We have received your booking.  
+      You will be contacted shortly to confirm the details.
+    </p>
+    <button onclick="closeBookingModal()" style="
+      margin-top: 15px;
+      padding: 6px 14px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    ">OK</button>
+  </div>
+</div>
+
+<script>
+  function closeBookingModal() {
+    document.getElementById('bookingModal').style.display = 'none';
+  }
+</script>
+
   <!-- ✅ Scripts -->
   <script>
     let currentUser = null;
@@ -839,7 +881,6 @@ function submitBooking(event) {
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
 
-  // ✅ New: Get Nail Extension Type and Length
   const nailExtensionType = document.getElementById('nailExtensionType').value;
   let extensionLength = '';
 
@@ -847,7 +888,6 @@ function submitBooking(event) {
     extensionLength = document.getElementById('extensionLength').value;
   }
 
-  // ✅ Build Service Description
   let service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
   if (nailExtensionType !== 'NONE') {
     service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
@@ -860,7 +900,6 @@ function submitBooking(event) {
         return;
       }
 
-      // Save booking to Firestore
       db.collection('bookings').add({
         name: name,
         phone: phone,
@@ -868,39 +907,39 @@ function submitBooking(event) {
         time: time,
         service: service
       })
-        .then(() => {
-          // ✅ Send booking to Telegram instead of WhatsApp
-          const message = `📅 New Booking Request\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+      .then(() => {
+        const message = `📅 New Booking Request\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
-          const telegramBotToken = "YOUR_BOT_TOKEN_HERE"; // Replace with your bot token
-          const telegramChatId = "YOUR_CHAT_ID_HERE";     // Replace with your chat ID
+        const telegramBotToken = "YOUR_BOT_TOKEN_HERE";
+        const telegramChatId = "YOUR_CHAT_ID_HERE";
 
-          fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: telegramChatId,
-              text: message,
-              parse_mode: "HTML"
-            })
+        fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: message,
+            parse_mode: "HTML"
           })
-          .then(response => {
-            if (response.ok) {
-              alert("Booking sent successfully via Telegram!");
-            } else {
-              alert("Failed to send booking to Telegram.");
-            }
-          })
-          .catch(error => {
-            console.error("Error sending to Telegram:", error);
-            alert("Error sending booking to Telegram.");
-          });
-
         })
-        .catch((error) => {
-          console.error('Error saving booking:', error);
-          alert('Error saving booking. Please try again.');
+        .then(response => {
+          if (response.ok) {
+            document.getElementById('bookingModal').style.display = 'flex';
+          } else {
+            alert("Failed to send booking to Telegram.");
+          }
+        })
+        .catch(error => {
+          console.error("Error sending to Telegram:", error);
+          alert("Error sending booking to Telegram.");
         });
+
+      })
+      .catch((error) => {
+        console.error('Error saving booking:', error);
+        alert('Error saving booking. Please try again.');
+      });
+
     })
     .catch((error) => {
       console.error('Error during time validation:', error);
