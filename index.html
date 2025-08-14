@@ -869,13 +869,33 @@ function submitBooking(event) {
         service: service
       })
         .then(() => {
-          // Send WhatsApp message after saving booking
-          const message = `Hello, I would like to book an appointment.\n\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nService: ${service}`;
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappNumber = '18763422293';
-          const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+          // ✅ Send booking to Telegram instead of WhatsApp
+          const message = `📅 New Booking Request\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
-          window.location.href = whatsappUrl;
+          const telegramBotToken = "YOUR_BOT_TOKEN_HERE"; // Replace with your bot token
+          const telegramChatId = "YOUR_CHAT_ID_HERE";     // Replace with your chat ID
+
+          fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: telegramChatId,
+              text: message,
+              parse_mode: "HTML"
+            })
+          })
+          .then(response => {
+            if (response.ok) {
+              alert("Booking sent successfully via Telegram!");
+            } else {
+              alert("Failed to send booking to Telegram.");
+            }
+          })
+          .catch(error => {
+            console.error("Error sending to Telegram:", error);
+            alert("Error sending booking to Telegram.");
+          });
+
         })
         .catch((error) => {
           console.error('Error saving booking:', error);
@@ -887,6 +907,7 @@ function submitBooking(event) {
       alert('Error validating time. Please try again.');
     });
 }
+
 
     function showSection(sectionId) {
   document.querySelectorAll('.content-section').forEach(section =>
