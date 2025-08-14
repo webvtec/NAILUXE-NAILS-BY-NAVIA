@@ -488,7 +488,7 @@ function selectPeriod(period) {
   }
 }
 
-    function loadGallery(containerId) {
+  function loadGallery(containerId) {
   const galleryContainer = document.getElementById(containerId);
   galleryContainer.innerHTML = '';
 
@@ -536,6 +536,13 @@ function selectPeriod(period) {
     }
   });
 }
+
+// ✅ Force the Designs page to load immediately
+document.addEventListener('DOMContentLoaded', function () {
+  showSection('gallerySection');
+  loadGallery('galleryDisplay');
+});
+
 
 
     function convertToMinutes(timeStr) {
