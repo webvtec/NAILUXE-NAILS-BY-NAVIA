@@ -489,60 +489,54 @@ function selectPeriod(period) {
 }
 
     function loadGallery(containerId) {
-      const galleryContainer = document.getElementById(containerId);
-      galleryContainer.innerHTML = '';
+  const galleryContainer = document.getElementById(containerId);
+  galleryContainer.innerHTML = '';
 
-      db.collection('gallery').onSnapshot((querySnapshot) => {
-        galleryContainer.innerHTML = '';
+  db.collection('gallery').onSnapshot((querySnapshot) => {
+    galleryContainer.innerHTML = '';
 
-        const categories = {};
+    const categories = {};
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const imageUrl = data.url;
-          const category = data.category || 'Uncategorized';
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const imageUrl = data.url;
+      const category = data.category || 'Uncategorized';
 
-          if (!categories[category]) {
-            categories[category] = [];
-          }
-          categories[category].push(imageUrl);
-        });
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push(imageUrl);
+    });
 
-        for (const category in categories) {
-          galleryContainer.innerHTML += `
-            <div class="gallery-category">
-              <h3>${category}</h3>
-              <div class="gallery-wrapper">
-                <div class="gallery-grid" id="gallery-${category}"></div>
-              </div>
-            </div>
-          `;
+    for (const category in categories) {
+      galleryContainer.innerHTML += `
+        <div class="gallery-category">
+          <h3>${category}</h3>
+          <div class="gallery-wrapper">
+            <div class="gallery-grid" id="gallery-${category}"></div>
+          </div>
+          <div style="text-align:center; margin-top:15px;">
+            <button 
+              onclick="showSection('bookingSection')" 
+              style="background-color:#6200ea; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">
+              Book Now
+            </button>
+          </div>
+        </div>
+      `;
 
-          const categoryContainer = document.getElementById(`gallery-${category}`);
-          categories[category].forEach((imageUrl) => {
-            categoryContainer.innerHTML += `
-              <div>
-                <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
-              </div>
-            `;
-          });
-        }
+      const categoryContainer = document.getElementById(`gallery-${category}`);
+      categories[category].forEach((imageUrl) => {
+        categoryContainer.innerHTML += `
+          <div>
+            <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+          </div>
+        `;
       });
     }
+  });
+}
 
-    window.onload = function () {
-      loadGallery('galleryDisplay');
-    }
-
-  document.getElementById('date').addEventListener('change', function () {
-  // Optional: You can clear any previous validation messages here
-});
-
-    document.addEventListener('DOMContentLoaded', function () {
-  const dateInput = document.getElementById('date');
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.min = today;
-});
 
     function convertToMinutes(timeStr) {
   let [time, period] = timeStr.split(' ');
