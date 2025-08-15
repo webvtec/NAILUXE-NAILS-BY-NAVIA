@@ -462,12 +462,8 @@
     const db = firebase.firestore();
 
     firebase.auth().onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = 'login.html';
-  } else {
-    currentUser = user;
-    loadReviews(currentUser);
-  }
+  currentUser = user || null; // Store user if logged in, null if not
+  loadReviews(currentUser);
 });
 
 
@@ -1097,10 +1093,10 @@ function loadReviews(user) {
 
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
-  if (!user) {
-    alert('You must be logged in to delete reviews.');
+if (!user) {
+    window.location.href = 'login.html'; // send them to your login form
     return;
-  }
+}
 
   db.collection('reviews').doc(docId).get().then(doc => {
     if (!doc.exists) {
