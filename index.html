@@ -251,6 +251,32 @@
   color: #98FF98; /* Sunday closed in red */
   font-weight: bold;
 }
+
+        .location-info {
+  font-family: Arial, sans-serif;
+  padding: 10px 0;
+}
+
+.location-info h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  color: #E30B5C; /* Raspberry pink */
+}
+
+.location-info p {
+  font-size: 13px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8); /* Slightly lighter than title */
+}
+
+    .separator-line {
+  height: 2px;
+  background-color: #5B5B5B;
+  margin: 10px 0; /* Optional spacing */
+    }
+    
   </style>
 </head>
 
@@ -283,6 +309,14 @@
       <p>Saturday: 10:00 AM - 4:00 PM</p>
       <p>Sunday: Closed</p>
     </div>
+
+    <div class="location-info">
+  <h3>LOCATION:</h3>
+  <p>Main Plaza Shop #13, Kellits Clarendon</p>
+</div>
+
+    <!-- Another Separator Line -->
+    <div class="separator-line"></div>
 
     <!-- Logout and Admin Buttons -->
     <a onclick="logoutUser(); closeMenu();" 
