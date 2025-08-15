@@ -1042,17 +1042,23 @@ function loadReviews(user) {
       const d = doc.data();
       const isOwner = user && d.uid === user.uid;
 
-      // Set star color based on rating value
+      // Format timestamp
+      let dateString = '';
+      if (d.timestamp && d.timestamp.toDate) {
+        const dateObj = d.timestamp.toDate();
+        dateString = dateObj.toLocaleString(); // "MM/DD/YYYY, HH:MM:SS"
+      }
+
+      // Star rating display
       let stars = '';
       for (let i = 1; i <= 5; i++) {
-        // If the current index is less than or equal to the rating, make it gold
         stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
       }
 
       container.innerHTML += `
         <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
-          <div><strong>${d.name}</strong></div>
-          <div>${stars}</div> <!-- Display stars based on rating -->
+          <div><strong>${d.name}</strong> <small style="color:gray;">${dateString}</small></div>
+          <div>${stars}</div>
           <div>${d.comment}</div>
           ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
         </div>
@@ -1060,6 +1066,7 @@ function loadReviews(user) {
     });
   });
 }
+
 
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
