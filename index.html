@@ -987,9 +987,11 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
 
   const user = firebase.auth().currentUser;
   if (!user) {
-    alert("You must be logged in to submit a review.");
+    if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+        window.location.href = 'login.html';
+    }
     return;
-  }
+}
 
   const name = document.getElementById('reviewName').value.trim();
   const comment = document.getElementById('reviewComment').value.trim();
