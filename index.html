@@ -226,9 +226,31 @@
   margin: 20px 0;
     }
 
-    .opening-hours {
-  font-size: 0.9em;  /* Slightly smaller font size */
-    }
+        .opening-hours {
+  font-family: Arial, sans-serif;
+  padding: 10px 0;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.opening-hours h3 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  color: #98FF98; /* Match sidebar text color */
+}
+
+.opening-hours p {
+  font-size: 13px;
+  margin: 2px 0;
+  color: #98FF98;
+}
+
+.opening-hours p:last-child {
+  color: #98FF98; /* Sunday closed in red */
+  font-weight: bold;
+}
   </style>
 </head>
 
