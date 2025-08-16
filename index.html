@@ -575,6 +575,10 @@
 function closeAdminModal() {
   document.getElementById('adminLoginModal').style.display = 'none';
   document.getElementById('adminLoginMsg').style.display = 'none'; // Hide error message
+
+  // ✅ Clear inputs on close
+  document.getElementById('adminEmail').value = "";
+  document.getElementById('adminPassword').value = "";
 }
 
 function attemptAdminLogin() {
@@ -589,19 +593,28 @@ function attemptAdminLogin() {
   if (email === adminEmail && password === adminPassword) {
     firebase.auth().signInWithEmailAndPassword(email, password)
       .then(() => {
+        // ✅ Close modal immediately
+        closeAdminModal();
+
+        // ✅ Redirect to dashboard
         window.location.href = 'dashboard.html';
       })
       .catch(() => {
         msg.textContent = "You are not an admin user.";
         msg.style.display = "block";
+
+        // ✅ Clear only password on error
+        document.getElementById('adminPassword').value = "";
       });
   } else {
     msg.textContent = "You are not an admin user.";
     msg.style.display = "block";
+
+    // ✅ Clear only password on wrong login
+    document.getElementById('adminPassword').value = "";
   }
 }
 
-  
       function toggleMenu() {
   const menu = document.getElementById('menu');
   menu.classList.toggle('show');
