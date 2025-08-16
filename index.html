@@ -591,11 +591,11 @@ function attemptAdminLogin() {
         window.location.href = 'dashboard.html';
       })
       .catch(() => {
-        msg.textContent = "Login failed. Please try again.";
+        msg.textContent = "You are not an admin user.";
         msg.style.display = "block";
       });
   } else {
-    msg.textContent = "Incorrect email or password.";
+    msg.textContent = "You are not an admin user.";
     msg.style.display = "block";
   }
 }
