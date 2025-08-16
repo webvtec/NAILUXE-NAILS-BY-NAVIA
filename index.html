@@ -503,13 +503,29 @@
     max-width: 320px;
     width: 100%;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    position: relative;
   ">
-    <h3 style="margin-bottom:15px; color:#6200ea;">Admin Login</h3>
+    <!-- Close button -->
+    <span onclick="closeAdminModal()" style="
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #999;
+    ">&times;</span>
+
+    <h3 style="margin:10px 0 20px; color:#6200ea;">Admin Login</h3>
+
     <input type="email" id="adminEmail" placeholder="Email" 
-           style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ccc; border-radius:6px;" />
+           style="width: 90%; margin-bottom:10px; padding:10px;
+                  border:1px solid #ccc; border-radius:6px;" />
     <input type="password" id="adminPassword" placeholder="Password"
-           style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ccc; border-radius:6px;" />
+           style="width: 90%; margin-bottom:10px; padding:10px;
+                  border:1px solid #ccc; border-radius:6px;" />
+
     <p id="adminLoginMsg" style="color:red; font-size:14px; display:none;"></p>
+
     <button onclick="attemptAdminLogin()" style="
       background-color:#6200ea; color:white; border:none;
       padding:10px 20px; border-radius:6px; cursor:pointer; margin-right:8px;">
