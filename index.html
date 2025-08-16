@@ -513,16 +513,25 @@
 
 
     function login() {
-      const email = prompt('Enter admin email:');
-      const password = prompt('Enter admin password:');
+  const email = prompt('Enter admin email:');
+  const password = prompt('Enter admin password:');
 
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = 'dashboard.html';
-        })
-        .catch((error) => {
-          alert('Authentication failed: ' + error.message);
-        });
+  // Hard-coded admin credentials
+  const adminEmail = 'carlanviroberts@gmail.com';
+  const adminPassword = '@Carlanvi325';
+
+  if (email === adminEmail && password === adminPassword) {
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(() => {
+        // ✅ Login successful
+        window.location.href = 'dashboard.html';
+      })
+      .catch(() => {
+        alert("You are not an admin user.");
+      });
+  } else {
+    alert("You are not an admin user.");
+  }
     }
   
       function toggleMenu() {
