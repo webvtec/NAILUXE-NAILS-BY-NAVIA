@@ -484,6 +484,45 @@
   </div>
 </div>
 
+
+  <!-- Admin Login Modal -->
+<div id="adminLoginModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+">
+  <div style="
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  ">
+    <h3 style="margin-bottom:15px; color:#6200ea;">Admin Login</h3>
+    <input type="email" id="adminEmail" placeholder="Email" 
+           style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ccc; border-radius:6px;" />
+    <input type="password" id="adminPassword" placeholder="Password"
+           style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ccc; border-radius:6px;" />
+    <p id="adminLoginMsg" style="color:red; font-size:14px; display:none;"></p>
+    <button onclick="attemptAdminLogin()" style="
+      background-color:#6200ea; color:white; border:none;
+      padding:10px 20px; border-radius:6px; cursor:pointer; margin-right:8px;">
+      Login
+    </button>
+    <button onclick="closeAdminModal()" style="
+      background-color:#ccc; color:#333; border:none;
+      padding:10px 20px; border-radius:6px; cursor:pointer;">
+      Cancel
+    </button>
+  </div>
+</div>
+
 <script>
   function closeBookingModal() {
     document.getElementById('bookingModal').style.display = 'none';
@@ -513,8 +552,18 @@
 
 
     function login() {
-  const email = prompt('Enter admin email:');
-  const password = prompt('Enter admin password:');
+  document.getElementById('adminLoginModal').style.display = 'flex';
+}
+
+function closeAdminModal() {
+  document.getElementById('adminLoginModal').style.display = 'none';
+  document.getElementById('adminLoginMsg').style.display = 'none'; // Hide error message
+}
+
+function attemptAdminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value.trim();
+  const msg = document.getElementById('adminLoginMsg');
 
   // Hard-coded admin credentials
   const adminEmail = 'carlanviroberts@gmail.com';
@@ -523,16 +572,18 @@
   if (email === adminEmail && password === adminPassword) {
     firebase.auth().signInWithEmailAndPassword(email, password)
       .then(() => {
-        // ✅ Login successful
         window.location.href = 'dashboard.html';
       })
       .catch(() => {
-        alert("You are not an admin user.");
+        msg.textContent = "Login failed. Please try again.";
+        msg.style.display = "block";
       });
   } else {
-    alert("You are not an admin user.");
+    msg.textContent = "Incorrect email or password.";
+    msg.style.display = "block";
   }
-    }
+}
+
   
       function toggleMenu() {
   const menu = document.getElementById('menu');
