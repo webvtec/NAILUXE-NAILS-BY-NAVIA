@@ -88,6 +88,10 @@
 
     <hr />
 
+    <button id="googleSignInBtn" style="background-color: #db4437; color: white;">
+  Sign in with Google
+</button>
+
     <p id="status"></p>
   </div>
 
@@ -145,6 +149,22 @@
           statusText.textContent = `Signup error: ${err.message}`;
         });
     });
+
+    // Google Sign-In
+const googleSignInBtn = document.getElementById('googleSignInBtn');
+googleSignInBtn.addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  auth.signInWithPopup(provider)
+    .then((result) => {
+      // ✅ Successful sign-in
+      window.location.href = 'index.html';
+    })
+    .catch((error) => {
+      statusText.textContent = `Google sign-in error: ${error.message}`;
+    });
+});
+
   </script>
 
 </body>
