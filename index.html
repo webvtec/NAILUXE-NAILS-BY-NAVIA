@@ -1036,6 +1036,12 @@ function validateTimeSlot(date, selectedTime) {
     });
 }
 
+function generateBookingNumber(name) {
+  const initials = name.trim().substring(0, 2).toUpperCase();
+  const digits = Math.floor(1000 + Math.random() * 9000); // random 4 digits
+  return initials + digits;
+}
+
 function submitBooking(event) {
   event.preventDefault();
 
@@ -1048,10 +1054,9 @@ function submitBooking(event) {
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
-
   const nailExtensionType = document.getElementById('nailExtensionType').value;
-  let extensionLength = '';
 
+  let extensionLength = '';
   if (nailExtensionType !== 'NONE') {
     extensionLength = document.getElementById('extensionLength').value;
   }
@@ -1061,6 +1066,9 @@ function submitBooking(event) {
     service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
   }
 
+  // ✅ Generate booking number
+  const bookingNumber = generateBookingNumber(name);
+
   validateTimeSlot(date, time)
     .then((isAvailable) => {
       if (!isAvailable) {
@@ -1069,6 +1077,7 @@ function submitBooking(event) {
       }
 
       db.collection('bookings').add({
+        bookingNumber: bookingNumber, // ✅ Save booking number
         name: name,
         phone: phone,
         date: date,
@@ -1076,7 +1085,7 @@ function submitBooking(event) {
         service: service
       })
       .then(() => {
-        const message = `📅 New Booking Request\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
         const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
         const telegramChatId = "-1002734216867";
