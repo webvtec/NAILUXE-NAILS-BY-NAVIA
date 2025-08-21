@@ -1384,22 +1384,54 @@ if (!user) {
   try {
     db.collection('bookings')
       .where("uid", "==", user.uid)
-      .orderBy("date", "desc")
-      .limit(5)
+      .limit(20) // fetch more, we'll sort in JS
       .get()
       .then(snapshot => {
-        let bookingsHTML = "";
+        let bookings = [];
 
-        if (snapshot.empty) {
+        snapshot.forEach(doc => {
+          bookings.push({ id: doc.id, ...doc.data() });
+        });
+
+        // 🔹 Sort manually by date descending
+        bookings.sort((a, b) => {
+          let da, db;
+          try {
+            if (a.date && a.date.toDate) {
+              da = a.date.toDate();
+            } else if (typeof a.date === "string") {
+              const [y, m, d] = a.date.split("-").map(Number);
+              da = new Date(y, m - 1, d);
+            }
+
+            if (b.date && b.date.toDate) {
+              db = b.date.toDate();
+            } else if (typeof b.date === "string") {
+              const [y, m, d] = b.date.split("-").map(Number);
+              db = new Date(y, m - 1, d);
+            }
+          } catch (err) {
+            console.error("Date parse issue:", err);
+          }
+          return (db || 0) - (da || 0); // newest first
+        });
+
+        // 🔹 Keep last 5 bookings only
+        bookings = bookings.slice(0, 5);
+
+        // 🔹 Build HTML
+        let bookingsHTML = "";
+        if (bookings.length === 0) {
           bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
         } else {
-          snapshot.forEach(doc => {
-            const b = doc.data();
-
+          bookings.forEach(b => {
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
                 bookingDate = b.date.toDate().toLocaleDateString();
+              } else if (typeof b.date === "string") {
+                const [y, m, d] = b.date.split("-").map(Number);
+                bookingDate = new Date(y, m - 1, d).toLocaleDateString();
               }
             } catch (err) {
               console.error("Date format issue:", err);
@@ -1420,11 +1452,9 @@ if (!user) {
         document.getElementById('myBookingsModal').style.display = 'flex';
       })
       .catch(error => {
-        // 🔎 Show exact Firestore error on mobile
         const errorMsg = `Firestore Error: ${error.code} - ${error.message}`;
         console.error(errorMsg);
-        alert(errorMsg); // popup so you see it immediately
-
+        alert(errorMsg);
         document.getElementById('myBookingsContent').innerHTML =
           `<p style="color:red;">⚠ ${errorMsg}</p>`;
         document.getElementById('myBookingsModal').style.display = 'flex';
@@ -1434,6 +1464,7 @@ if (!user) {
     alert("⚠ An unexpected error occurred while loading your bookings: " + err.message);
   }
 }
+
 
   function closeMyBookings() {
     document.getElementById('myBookingsModal').style.display = 'none';
