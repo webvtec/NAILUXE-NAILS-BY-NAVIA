@@ -1069,8 +1069,8 @@ function submitBooking(event) {
       .then(() => {
         const message = `📅 New Booking Request\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
-        const telegramBotToken = "YOUR_BOT_TOKEN_HERE";
-        const telegramChatId = "YOUR_CHAT_ID_HERE";
+        const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
+        const telegramChatId = "-1002734216867";
 
         fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
           method: "POST",
