@@ -1384,7 +1384,7 @@ if (!user) {
   try {
     db.collection('bookings')
       .where("uid", "==", user.uid)
-      .limit(20) // fetch more, we'll sort in JS
+      .limit(20) // fetch more, then sort manually
       .get()
       .then(snapshot => {
         let bookings = [];
@@ -1393,30 +1393,14 @@ if (!user) {
           bookings.push({ id: doc.id, ...doc.data() });
         });
 
-        // 🔹 Sort manually by date descending
+        // 🔹 Sort manually by date (newest first)
         bookings.sort((a, b) => {
-          let da, db;
-          try {
-            if (a.date && a.date.toDate) {
-              da = a.date.toDate();
-            } else if (typeof a.date === "string") {
-              const [y, m, d] = a.date.split("-").map(Number);
-              da = new Date(y, m - 1, d);
-            }
-
-            if (b.date && b.date.toDate) {
-              db = b.date.toDate();
-            } else if (typeof b.date === "string") {
-              const [y, m, d] = b.date.split("-").map(Number);
-              db = new Date(y, m - 1, d);
-            }
-          } catch (err) {
-            console.error("Date parse issue:", err);
-          }
-          return (db || 0) - (da || 0); // newest first
+          let da = a.date && a.date.toDate ? a.date.toDate() : new Date(a.date);
+          let db = b.date && b.date.toDate ? b.date.toDate() : new Date(b.date);
+          return db - da;
         });
 
-        // 🔹 Keep last 5 bookings only
+        // 🔹 Keep only the last 5
         bookings = bookings.slice(0, 5);
 
         // 🔹 Build HTML
@@ -1425,24 +1409,48 @@ if (!user) {
           bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
         } else {
           bookings.forEach(b => {
+            // Format date in "July 4, 2025" style
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
-                bookingDate = b.date.toDate().toLocaleDateString();
+                bookingDate = b.date.toDate().toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                });
               } else if (typeof b.date === "string") {
                 const [y, m, d] = b.date.split("-").map(Number);
-                bookingDate = new Date(y, m - 1, d).toLocaleDateString();
+                bookingDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                });
               }
             } catch (err) {
               console.error("Date format issue:", err);
             }
 
+            // Neat booking card with fields from the form
             bookingsHTML += `
-              <div style="border-bottom:1px solid #ddd; margin-bottom:10px; padding-bottom:10px;">
-                <h4>Booking No: ${b.bookingNumber || "N/A"}</h4>
-                <p><strong>Date:</strong> ${bookingDate}</p>
-                <p><strong>Time:</strong> ${b.time || "N/A"}</p>
-                <p><strong>Service:</strong> ${b.service || "N/A"}</p>
+              <div style="
+                border:1px solid #ccc;
+                border-radius:12px;
+                padding:15px;
+                margin-bottom:15px;
+                background:#fafafa;
+                box-shadow:0 2px 5px rgba(0,0,0,0.1);
+              ">
+                <h3 style="margin-top:0; color:#333;">Booking #${b.bookingNumber || "N/A"}</h3>
+                <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
+                <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
+                <p><strong>📅 Date:</strong> ${bookingDate}</p>
+                <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
+                <p><strong>💅 Pedicure:</strong> ${b.pedicureType || "None"}</p>
+                <p><strong>💅 Manicure:</strong> ${b.manicureType || "None"}</p>
+                <p><strong>✨ Nail Shape:</strong> ${b.nailExtensionShape || "None"}</p>
+                <p><strong>📏 Nail Length:</strong> ${b.nailExtensionLength || "None"}</p>
+                ${b.deposit ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>` : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`}
+                ${b.notes ? `<p><strong>📝 Notes:</strong> ${b.notes}</p>` : ""}
               </div>
             `;
           });
