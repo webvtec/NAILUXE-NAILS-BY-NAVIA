@@ -1118,14 +1118,14 @@ function submitBooking(event) {
       }
 
       db.collection('bookings').add({
-        uid: user.uid,                  // ✅ Save which user made the booking
-        bookingNumber: bookingNumber,   // ✅ Save booking number
-        name: name,
-        phone: phone,
-        date: date,
-        time: time,
-        service: service
-      })
+  uid: user.uid,                  
+  bookingNumber: bookingNumber,   
+  name: name,
+  phone: phone,
+  date: firebase.firestore.Timestamp.fromDate(new Date(date)), // ✅ Timestamp
+  time: time,
+  service: service
+})
       .then(() => {
         // ✅ Message including booking number
         const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
@@ -1392,10 +1392,12 @@ if (!user) {
       } else {
         snapshot.forEach(doc => {
           const b = doc.data();
+          const bookingDate = b.date.toDate().toLocaleDateString(); // ✅ format timestamp
+
           bookingsHTML += `
             <div style="background:#fff; border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:10px; text-align:left;">
               <h4 style="margin:0; color:#6200ea;">Booking No: ${b.bookingNumber}</h4>
-              <p><strong>Date:</strong> ${b.date}</p>
+              <p><strong>Date:</strong> ${bookingDate}</p>
               <p><strong>Time:</strong> ${b.time}</p>
               <p><strong>Service:</strong> ${b.service}</p>
             </div>
