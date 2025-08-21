@@ -270,6 +270,46 @@
   background-color: #5B5B5B;
   margin: 10px 0; /* Optional spacing */
     }
+
+
+    /* Modal container */
+#myBookingsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none; /* default hidden */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Modal box */
+#myBookingsBox {
+  background: #fff;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;   /* ✅ prevent overflowing screen */
+  border-radius: 12px;
+  overflow-y: auto;   /* ✅ allow scrolling when content is tall */
+  position: relative;
+  padding: 20px;
+}
+
+/* Close button */
+#closeBookings {
+  position: sticky;   /* ✅ stays visible when scrolling */
+  top: 0;
+  float: right;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
     
   </style>
 </head>
@@ -385,6 +425,14 @@
   </div>
 </div>
 
+  <div id="myBookingsModal">
+  <div id="myBookingsBox">
+    <button id="closeBookings">✖</button>
+    <div id="myBookingsContent"></div>
+  </div>
+</div>
+
+  
 
   <!-- ✅ Booking Section -->
   <div id="bookingSection" class="content-section">
