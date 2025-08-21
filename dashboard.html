@@ -243,6 +243,20 @@
   background-color: #c62828;
 }
 
+    .deposit-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.deposit-btn:hover {
+  background-color: #388E3C;
+}
+
+
   </style>
 </head>
 
@@ -468,8 +482,10 @@
             <p><strong>Date:</strong> ${booking.date}</p>
             <p><strong>Time:</strong> ${booking.time}</p>
             <p><strong>Service:</strong> ${booking.service}</p>
+            <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
             <div class="action-buttons">
               <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
+              <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
             </div>
           </div>
         `;
@@ -621,6 +637,27 @@ firebase.auth().onAuthStateChanged(user => {
       alert("Failed to cancel reservation. Please try again.");
     });
     }
+
+    function updateDeposit(bookingId) {
+  const choice = prompt("Update Deposit Status:\n1 = $4,000 DEPOSIT MADE\n2 = No Deposit");
+
+  if (!choice) return;
+
+  let depositValue = "No";
+  if (choice === "1") depositValue = "Made";
+
+  db.collection('bookings').doc(bookingId).update({
+    deposit: depositValue
+  })
+  .then(() => {
+    alert("Deposit status updated to: " + depositValue);
+  })
+  .catch(error => {
+    console.error("Error updating deposit:", error);
+    alert("Failed to update deposit. Please try again.");
+  });
+}
+
   </script>
 </body>
 </html>
