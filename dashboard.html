@@ -401,129 +401,221 @@
     }
 
     function loadReservations() {
-      const tableBody = document.getElementById('reservationsTable');
-      tableBody.innerHTML = '';
-
-      db.collection('bookings').orderBy('date').onSnapshot((querySnapshot) => {
-        tableBody.innerHTML = '';
-
-        querySnapshot.forEach((doc) => {
-          const booking = doc.data();
-
-          tableBody.innerHTML += `
-            <tr>
-              <td>${booking.name}</td>
-              <td>${booking.phone}</td>
-              <td>${booking.date}</td>
-              <td>${booking.time}</td>
-              <td>${booking.service}</td>
-            </tr>
-          `;
-        });
-      });
+  const reservationsContainer = document.getElementById('reservationsList');
+  db.collection('bookings').orderBy("date", "asc").onSnapshot(snapshot => {
+    reservationsContainer.innerHTML = '';
+    if (snapshot.empty) {
+      reservationsContainer.innerHTML = "<p>No reservations found.</p>";
+      return;
     }
 
-    function clearReservations() {
-      const confirmInput = document.getElementById('clearInput').value.trim();
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = now.getMonth();
+    const todayD = now.getDate();
 
-      if (confirmInput !== 'CONFIRM') {
-        alert('TYPE "CONFIRM" TO CLEAR ALL RESERVATIONS.');
-        return;
-      }
+    const tomorrow = new Date(now);
+    tomorrow.setDate(todayD + 1);
+    const tomorrowY = tomorrow.getFullYear();
+    const tomorrowM = tomorrow.getMonth();
+    const tomorrowD = tomorrow.getDate();
 
-      db.collection('bookings').get().then((querySnapshot) => {
-        const batch = db.batch();
-
-        querySnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-
-        batch.commit().then(() => {
-          alert('All reservations cleared successfully.');
-          document.getElementById('clearInput').value = '';
-        });
-      });
+    // Helper: parse YYYY-MM-DD into plain {y,m,d}
+    function parseDateParts(str) {
+      if (!str) return null;
+      const [y, m, d] = str.split('-').map(Number);
+      return { y, m: m - 1, d };
     }
 
-    function addUnavailableDate() {
-      const dateInput = document.getElementById('unavailableDateInput').value;
-      const isAllDay = document.getElementById('allDayCheckbox').checked;
-      const startTime = document.getElementById('startTimeInput').value;
-      const endTime = document.getElementById('endTimeInput').value;
+    const todayList = [];
+    const tomorrowList = [];
+    const upcomingList = [];
+    const pastList = [];
 
-      if (!dateInput) {
-        alert('Please select a date.');
-        return;
-      }
+    snapshot.forEach(doc => {
+      const booking = doc.data();
+      const parts = parseDateParts(booking.date);
+      if (!parts) return;
+      const bDate = new Date(parts.y, parts.m, parts.d);
 
-      if (!isAllDay && (!startTime || !endTime)) {
-        alert('Please enter both start and end times.');
-        return;
-      }
-
-      db.collection('unavailableDays').add({
-        date: dateInput,
-        allDay: isAllDay,
-        startTime: isAllDay ? null : startTime,
-        endTime: isAllDay ? null : endTime
-      })
-        .then(() => {
-          alert('Unavailability added.');
-          loadUnavailableDates();
-          document.getElementById('unavailableDateInput').value = '';
-          document.getElementById('startTimeInput').value = '';
-          document.getElementById('endTimeInput').value = '';
-        })
-        .catch(error => {
-          console.error('Error adding unavailable date: ', error);
-          alert('Error adding date: ' + error.message);
-        });
-    }
-
-    function loadUnavailableDates() {
-      const list = document.getElementById('unavailableDatesList');
-      list.innerHTML = '';
-
-      db.collection('unavailableDays').orderBy('date').onSnapshot((querySnapshot) => {
-        list.innerHTML = '';
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          let displayText = `${data.date} - `;
-
-          if (data.allDay) {
-            displayText += 'All Day';
-          } else {
-            displayText += `${data.startTime} to ${data.endTime}`;
-          }
-
-          list.innerHTML += `
-            <li>
-              ${displayText}
-              <button onclick="removeUnavailableDate('${doc.id}')">Remove</button>
-            </li>
-          `;
-        });
-      });
-    }
-
-    function removeUnavailableDate(docId) {
-      db.collection('unavailableDays').doc(docId).delete().catch((error) => {
-        console.error("Error removing unavailable date: ", error);
-        alert('Error removing date: ' + error.message);
-      });
-    }
-
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        showSection('gallerySection');
-        loadGallery();
-        loadReservations();
-        loadUnavailableDates();
-      } else {
-        window.location.href = 'index.html';
+      if (parts.y === todayY && parts.m === todayM && parts.d === todayD) {
+        todayList.push({ id: doc.id, ...booking });
+      } else if (parts.y === tomorrowY && parts.m === tomorrowM && parts.d === tomorrowD) {
+        tomorrowList.push({ id: doc.id, ...booking });
+      } else if (bDate > tomorrow) {
+        upcomingList.push({ id: doc.id, ...booking });
+      } else if (bDate < new Date(todayY, todayM, todayD)) {
+        pastList.push({ id: doc.id, ...booking });
       }
     });
+
+    // Render groups
+    function renderGroup(title, list, badgeClass) {
+      if (!list.length) return;
+      reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
+      list.forEach(booking => {
+        reservationsContainer.innerHTML += `
+          <div class="reservation-card">
+            <div class="reservation-header">
+              <h3>${booking.name}</h3>
+              <span class="badge ${badgeClass}">${title}</span>
+            </div>
+            <p>📞 ${booking.phone}</p>
+            <p><strong>Date:</strong> ${booking.date}</p>
+            <p><strong>Time:</strong> ${booking.time}</p>
+            <p><strong>Service:</strong> ${booking.service}</p>
+            <div class="action-buttons">
+              <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    renderGroup("Today", todayList, "today");
+    renderGroup("Tomorrow", tomorrowList, "tomorrow");
+    renderGroup("Upcoming", upcomingList, "upcoming");
+    renderGroup("Past", pastList, "past");
+  });
+}
+
+
+function searchReservations() {
+  const query = document.getElementById("reservationSearch").value.toLowerCase();
+  const reservationsContainer = document.getElementById("reservationsList");
+
+  // Remove old highlights
+  document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
+
+  if (!query) return;
+
+  // Find first matching reservation card
+  const cards = reservationsContainer.querySelectorAll(".reservation-card");
+  for (let card of cards) {
+    const text = card.innerText.toLowerCase();
+    if (text.includes(query)) {
+      card.classList.add("highlighted");
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      break;
+    }
+  }
+}
+
+    
+function clearReservations() {
+  const confirmInput = document.getElementById('clearInput').value.trim();
+  if (confirmInput !== 'CONFIRM') { 
+    alert('TYPE "CONFIRM" TO CLEAR PAST RESERVATIONS.'); 
+    return; 
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // normalize
+
+  db.collection('bookings').get().then(snapshot => {
+    const batch = db.batch();
+
+    snapshot.forEach(doc => {
+      const booking = doc.data();
+      let bookingEnd = null;
+
+      if (booking.rentalDates?.includes(' to ')) {
+        const end = booking.rentalDates.split(' to ')[1];
+        const [year, month, day] = end.split('-').map(Number);
+        bookingEnd = new Date(year, month - 1, day);
+      } else if (booking.rentalDates) {
+        const [year, month, day] = booking.rentalDates.split('-').map(Number);
+        bookingEnd = new Date(year, month - 1, day);
+      }
+
+      if (bookingEnd) {
+        bookingEnd.setHours(0, 0, 0, 0);
+        if (bookingEnd < today) {
+          batch.delete(doc.ref);
+        }
+      }
+    });
+
+    return batch.commit();
+  }).then(() => {
+    alert('Past reservations cleared successfully.');
+    document.getElementById('clearInput').value = '';
+  });
+}
+
+    function addUnavailableDate() {
+  const date = document.getElementById('unavailableDateInput').value;
+  const allDay = document.getElementById('allDayCheckbox').checked;
+  const startTime = document.getElementById('startTimeInput').value;
+  const endTime = document.getElementById('endTimeInput').value;
+
+  if (!date) {
+    alert("Please select a date.");
+    return;
+  }
+
+  if (!allDay && (!startTime || !endTime)) {
+    alert("Please provide both start and end time.");
+    return;
+  }
+
+  // ✅ FIX: parse YYYY-MM-DD manually (no timezone conversion)
+  const [yyyy, mm, dd] = date.split("-");
+  const finalDate = `${yyyy}-${mm}-${dd}`;
+
+  db.collection("unavailableDays").add({
+    date: finalDate,
+    allDay,
+    startTime: allDay ? null : startTime,
+    endTime: allDay ? null : endTime,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    document.getElementById('unavailableDateInput').value = '';
+    document.getElementById('startTimeInput').value = '';
+    document.getElementById('endTimeInput').value = '';
+    document.getElementById('allDayCheckbox').checked = true;
+    document.getElementById('timeInputs').style.display = 'none';
+  });
+}
+
+
+function loadUnavailableDates() {
+  const list = document.getElementById('unavailableDatesList');
+  db.collection('unavailableDays').orderBy('date').onSnapshot(snapshot => {
+    list.innerHTML = '';
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      let text = `${d.date} - ${d.allDay ? 'All Day' : `${d.startTime} to ${d.endTime}`}`;
+      list.innerHTML += `<li>${text} <button onclick="removeUnavailableDate('${doc.id}')">Remove</button></li>`;
+    });
+  });
+}
+
+function removeUnavailableDate(id) { db.collection('unavailableDays').doc(id).delete(); }
+
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    loadGallery();   // ✅ add this
+    showSection('reservationsPage');
+    loadReservations();
+    loadUnavailableDates();
+  } else {
+    window.location.href = 'index.html';
+  }
+});
+
+    function cancelReservation(orderId) {
+  if (!confirm("Are you sure you want to cancel this order?")) return;
+
+  db.collection("bookings").doc(orderId).delete()
+    .then(() => {
+      alert("Reservation canceled successfully.");
+    })
+    .catch(err => {
+      console.error("Error canceling reservation:", err);
+      alert("Failed to cancel reservation. Please try again.");
+    });
+    }
   </script>
 </body>
 </html>
