@@ -1395,10 +1395,9 @@ if (!user) {
         snapshot.forEach(doc => {
           const b = doc.data();
           const bookingDate = b.date.toDate().toLocaleDateString(); // ✅ format timestamp
-
           bookingsHTML += `
-            <div style="background:#fff; border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:10px; text-align:left;">
-              <h4 style="margin:0; color:#6200ea;">Booking No: ${b.bookingNumber}</h4>
+            <div>
+              <h4>Booking No: ${b.bookingNumber}</h4>
               <p><strong>Date:</strong> ${bookingDate}</p>
               <p><strong>Time:</strong> ${b.time}</p>
               <p><strong>Service:</strong> ${b.service}</p>
@@ -1415,6 +1414,7 @@ if (!user) {
       alert("Failed to load bookings.");
     });
 }
+
 
 
   function closeMyBookings() {
