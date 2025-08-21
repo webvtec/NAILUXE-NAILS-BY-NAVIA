@@ -259,23 +259,22 @@
 <div id="gallerySection" class="admin-container content-section">
   <h2>INPUT CLOUDINARY URL</h2>
   <input type="text" id="photoUrlInput" placeholder="Enter image URL here">
-</div>
 
-    <label for="photoCategorySelect">SELECT CATEGORY</label>
-<select id="photoCategorySelect">
-  <option value="Nails">NAILS</option>
-  <option value="Manicure">MANICURE</option>
-  <option value="Pedicure">PEDICURE</option>
-  <option value="Gel Polish">GEL POLISH</option>
-  <option value="EXTENSIONS">EXTENSIONS</option>
-  <option value="Paraffin Wax">PARAFFIN WAX</option>
-</select>
+  <label for="photoCategorySelect">SELECT CATEGORY</label>
+  <select id="photoCategorySelect">
+    <option value="Nails">NAILS</option>
+    <option value="Manicure">MANICURE</option>
+    <option value="Pedicure">PEDICURE</option>
+    <option value="Gel Polish">GEL POLISH</option>
+    <option value="EXTENSIONS">EXTENSIONS</option>
+    <option value="Paraffin Wax">PARAFFIN WAX</option>
+  </select>
 
-    <button onclick="addPhotoUrl()">Add Photo</button>
+  <button onclick="addPhotoUrl()">Add Photo</button>
 
-    <h2></h2>
-    <div id="adminGallery"></div>
-  </div>
+  <div id="adminGallery"></div>
+</div> <!-- ✅ now closes correctly -->
+
 
     <!-- Reservations Section -->
 <div class="admin-container content-section" id="reservationsPage">
