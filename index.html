@@ -1171,17 +1171,19 @@ function submitBooking(event) {
         return;
       }
 
+      // ✅ Save booking to Firestore (with default deposit = "No")
       db.collection('bookings').add({
-  uid: user.uid,                  
-  bookingNumber: bookingNumber,   
-  name: name,
-  phone: phone,
-  date: firebase.firestore.Timestamp.fromDate(new Date(date)), // ✅ Timestamp
-  time: time,
-  service: service
-})
+        uid: user.uid,
+        bookingNumber: bookingNumber,
+        name: name,
+        phone: phone,
+        date: firebase.firestore.Timestamp.fromDate(new Date(date)), // Firestore Timestamp
+        time: time,
+        service: service,
+        deposit: "No"
+      })
       .then(() => {
-        // ✅ Message including booking number
+        // ✅ Send Telegram notification
         const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
         const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
@@ -1198,14 +1200,26 @@ function submitBooking(event) {
         })
         .then(response => {
           if (response.ok) {
-            // ✅ Show booking number in confirmation modal
+            // ✅ Show confirmation modal
             document.querySelector("#bookingModal h3").innerText = "Booking Confirmed";
             document.querySelector("#bookingModal p").innerHTML =
               `Thank you! We have received your booking.<br><br>
-               <strong>Booking Number:</strong> ${bookingNumber}<br>
+               <strong>Booking Number:</strong> ${bookingNumber}<br><br>
+               ⚠️ <strong>Important:</strong> If your deposit is not transferred within 
+               <strong>48 hours</strong>, your booking will be automatically 
+               <span style="color:red;">cancelled</span>.<br><br>
+               🏦 You can view our banking details anytime in the sidebar by clicking 
+               <strong>Payment Info</strong>.<br><br>
                You will be contacted shortly to confirm the details.`;
 
             document.getElementById('bookingModal').style.display = 'flex';
+
+            // ✅ Reset form after booking
+            document.querySelector("#bookingSection form").reset();
+            document.getElementById("estimateTimeMessage").innerHTML = "";
+            document.getElementById("periodConfirmation").innerHTML = "";
+            document.getElementById("amBtn").style.display = "inline-block";
+            document.getElementById("pmBtn").style.display = "inline-block";
           } else {
             alert("Failed to send booking to Telegram.");
           }
@@ -1227,6 +1241,7 @@ function submitBooking(event) {
       alert('Error validating time. Please try again.');
     });
 }
+
 
 
 
