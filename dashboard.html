@@ -187,47 +187,31 @@
     <div id="adminGallery"></div>
   </div>
 
-  <!-- Reservations Page -->
-  <div id="reservationsPage" class="admin-container content-section">
-    <h2>Reservations</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Service</th>
-        </tr>
-      </thead>
-      <tbody id="reservationsTable"></tbody>
-    </table>
-
-    <div class="clear-container">
-      <input type="text" id="clearInput" placeholder="Type CONFIRM to clear all style="width:90%;>
-      <button onclick="clearReservations()">Clear Reservations</button>
-    </div>
-  </div>
-
-  <!-- Unavailable Days Page -->
-  <div id="unavailableDaysSection" class="admin-container content-section">
-    <h2>Set Unavailable Days</h2>
-    <input type="date" id="unavailableDateInput">
-    <label><input type="checkbox" id="allDayCheckbox" checked onchange="toggleTimeInputs()"> All Day</label>
-
-    <div id="timeInputs" style="display: none;">
-  <label>FROM:</label>
-  <input type="time" id="startTimeInput">
-  <label>UNTIL:</label>
-  <input type="time" id="endTimeInput">
-    </div>
-
-    <button onclick="addUnavailableDate()">Add Unavailable Date</button>
-
-    <h3>Unavailable Dates</h3>
-    <ul id="unavailableDatesList"></ul>
-  </div>
-
+    <!-- Reservations Section -->
+<div class="admin-container content-section" id="reservationsPage">
+<h2>Reservations</h2>
+<div style="display:flex; gap:10px; margin-bottom:15px;"><input id="reservationSearch" placeholder="SEARCH ORDERS..." type="text"/><button onclick="searchReservations()">Search</button></div><div id="reservationsList"></div>
+<div class="clear-container">
+<input id="clearInput" placeholder='Type "CONFIRM" to clear past reservations' type="text"/>
+<button onclick="clearReservations()">Clear Past Reservations</button>
+</div>
+</div>
+<!-- Unavailable Days Page -->
+<div class="admin-container content-section" id="unavailableDaysSection">
+<h2>Set Unavailable Days</h2>
+<input id="unavailableDateInput" type="date"/>
+<label><input checked="" id="allDayCheckbox" onchange="toggleTimeInputs()" type="checkbox"/> All Day</label>
+<div id="timeInputs" style="display: none;">
+<label>FROM:</label>
+<input id="startTimeInput" type="time"/>
+<label>UNTIL:</label>
+<input id="endTimeInput" type="time"/>
+</div>
+<button onclick="addUnavailableDate()">Add Unavailable Date</button>
+<h3>Unavailable Dates</h3>
+<ul id="unavailableDatesList"></ul>
+</div>
+  
   <script>
     const firebaseConfig = {
   apiKey: "AIzaSyBx9_GrR4_ruM8v-GDOj4De1erg7nWsH08",
