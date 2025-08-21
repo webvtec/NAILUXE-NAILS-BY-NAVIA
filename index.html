@@ -344,6 +344,12 @@
       <p>Sunday: Closed</p>
     </div>
 
+    <a onclick="showBankInfo(); closeMenu();"
+   style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:blue; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;"
+   href="javascript:void(0);">
+   PAYMENT INFO
+    </a>
+
     <a onclick="showUserBookings(); closeMenu();" 
    class="admin-button"
    style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#6200ea; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
@@ -1587,6 +1593,29 @@ if (!user) {
   function closeBookingModal() {
     document.getElementById('bookingModal').style.display = 'none';
   }
+
+    function showBankInfo() {
+  Swal.fire({
+    title: "<div class='swal2-title-nowrap'>BANK TRANSER INFO</div>",
+    html: `
+      <div style="text-align:left; font-size:16px; line-height:1.6; color:white;">
+        <p><b>Bank Name:</b> First Caribbean Bank</p>
+        <p><b>Account Name:</b> John Doe</p>
+        <p><b>Account Number:</b> 123456789</p>
+        <p><b>Branch:</b> Kingston, Jamaica</p>
+        <p><b>Note:</b> Please use your Order # as the payment reference.</p>
+      </div>
+    `,
+    width: 600,  // ✅ slightly wider modal
+    confirmButtonText: "CLOSE",
+    background: "#1a73e8",
+    color: "white",
+    confirmButtonColor: "#0d47a1",
+    customClass: {
+      popup: "swal2-rounded"
+    }
+  });
+    }
 
 
   </script>
