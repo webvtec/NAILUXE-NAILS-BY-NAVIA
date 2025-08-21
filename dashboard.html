@@ -680,7 +680,17 @@ firebase.auth().onAuthStateChanged(user => {
     });
     }
 
-    )
+    function updateDeposit(bookingId) {
+  const choice = prompt("Update Deposit Status:\n1 = $4,000 DEPOSIT MADE\n2 = No Deposit");
+
+  if (!choice) return;
+
+  let depositValue = "No";
+  if (choice === "1") depositValue = "Made";
+
+  db.collection('bookings').doc(bookingId).update({
+    deposit: depositValue
+  })
   .then(() => {
     alert("Deposit status updated to: " + depositValue);
   })
@@ -694,10 +704,6 @@ firebase.auth().onAuthStateChanged(user => {
 
 function updateDeposit(bookingId) {
   currentBookingId = bookingId;
-
-  // Reset all radio buttons each time modal opens
-  document.querySelectorAll('input[name="depositChoice"]').forEach(r => r.checked = false);
-
   document.getElementById('depositModal').style.display = 'flex';
 }
 
@@ -712,20 +718,6 @@ function confirmDeposit() {
     alert("Please select an option.");
     return;
   }
-
-  const depositValue = choice.value; // always "Made" or "No"
-
-  db.collection('bookings').doc(currentBookingId).update({
-    deposit: depositValue
-  })
-  .then(() => {
-    closeDepositModal(); // just close modal after update
-  })
-  .catch(error => {
-    console.error("Error updating deposit:", error);
-    alert("Failed to update deposit. Please try again.");
-  });
-}
 
   const depositValue = choice.value;
 
