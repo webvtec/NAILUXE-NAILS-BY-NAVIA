@@ -1385,23 +1385,23 @@ if (!user) {
     .limit(5)
     .get()
     .then(snapshot => {
-      if (snapshot.empty) {
-        alert("You don’t have any bookings yet.");
-        return;
-      }
-
       let bookingsHTML = "";
-      snapshot.forEach(doc => {
-        const b = doc.data();
-        bookingsHTML += `
-          <div style="background:#fff; border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:10px; text-align:left;">
-            <h4 style="margin:0; color:#6200ea;">Booking No: ${b.bookingNumber}</h4>
-            <p><strong>Date:</strong> ${b.date}</p>
-            <p><strong>Time:</strong> ${b.time}</p>
-            <p><strong>Service:</strong> ${b.service}</p>
-          </div>
-        `;
-      });
+
+      if (snapshot.empty) {
+        bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
+      } else {
+        snapshot.forEach(doc => {
+          const b = doc.data();
+          bookingsHTML += `
+            <div style="background:#fff; border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:10px; text-align:left;">
+              <h4 style="margin:0; color:#6200ea;">Booking No: ${b.bookingNumber}</h4>
+              <p><strong>Date:</strong> ${b.date}</p>
+              <p><strong>Time:</strong> ${b.time}</p>
+              <p><strong>Service:</strong> ${b.service}</p>
+            </div>
+          `;
+        });
+      }
 
       document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
       document.getElementById('myBookingsModal').style.display = 'flex';
