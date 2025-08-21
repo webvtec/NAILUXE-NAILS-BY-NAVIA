@@ -654,11 +654,7 @@
   </div>
 </div>
 
-<script>
-  function closeBookingModal() {
-    document.getElementById('bookingModal').style.display = 'none';
-  }
-</script>
+
 
   <!-- ✅ Scripts -->
   <script>
@@ -1202,15 +1198,47 @@ function submitBooking(event) {
           if (response.ok) {
             // ✅ Show confirmation modal
             document.querySelector("#bookingModal h3").innerText = "Booking Confirmed";
-            document.querySelector("#bookingModal p").innerHTML =
-              `Thank you! We have received your booking.<br><br>
-               <strong>Booking Number:</strong> ${bookingNumber}<br><br>
-               ⚠️ <strong>Important:</strong> If your deposit is not transferred within 
-               <strong>48 hours</strong>, your booking will be automatically 
-               <span style="color:red;">cancelled</span>.<br><br>
-               🏦 You can view our banking details anytime in the sidebar by clicking 
-               <strong>Payment Info</strong>.<br><br>
-               You will be contacted shortly to confirm the details.`;
+document.querySelector("#bookingModal p").innerHTML = `
+  <div style="
+    text-align: left;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    color: #333;
+    line-height: 1.6;
+  ">
+    <p style="font-size: 16px;">Thank you! We have received your booking.</p>
+    
+    <p style="margin: 10px 0; font-size: 18px;">
+      🔑 <strong>Booking Number:</strong> 
+      <span style="color: #6200ea; font-weight: bold;">${bookingNumber}</span>
+    </p>
+
+    <div style="
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 15px 0;
+    ">
+      ⚠️ <strong>Important:</strong><br>
+      Please transfer your deposit within 
+      <strong>48 hours</strong> or your booking will be 
+      <span style="color: red; font-weight: bold;">cancelled</span>.
+    </div>
+
+    <p style="margin: 10px 0;">
+      🏦 <strong>Payment Info:</strong><br>
+      You can view our banking details anytime in the sidebar by clicking 
+      <strong>"Payment Info"</strong>.
+    </p>
+
+    <p style="margin-top: 15px;">
+      📞 You will be contacted shortly to confirm the details.
+    </p>
+  </div>
+`;
 
             document.getElementById('bookingModal').style.display = 'flex';
 
@@ -1553,6 +1581,11 @@ if (!user) {
 
   function closeMyBookings() {
     document.getElementById('myBookingsModal').style.display = 'none';
+  }
+
+  
+  function closeBookingModal() {
+    document.getElementById('bookingModal').style.display = 'none';
   }
 
 
