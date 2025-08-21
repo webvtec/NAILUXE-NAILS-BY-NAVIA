@@ -1430,8 +1430,8 @@ if (!user) {
               console.error("Date format issue:", err);
             }
 
-            // Neat booking card with fields from the form
-            bookingsHTML += `
+            // Build booking card
+            let cardHTML = `
               <div style="
                 border:1px solid #ccc;
                 border-radius:12px;
@@ -1445,14 +1445,26 @@ if (!user) {
                 <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
                 <p><strong>📅 Date:</strong> ${bookingDate}</p>
                 <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
-                <p><strong>💅 Pedicure:</strong> ${b.pedicureType || "None"}</p>
-                <p><strong>💅 Manicure:</strong> ${b.manicureType || "None"}</p>
-                <p><strong>✨ Nail Shape:</strong> ${b.nailExtensionShape || "None"}</p>
-                <p><strong>📏 Nail Length:</strong> ${b.nailExtensionLength || "None"}</p>
-                ${b.deposit ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>` : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`}
-                ${b.notes ? `<p><strong>📝 Notes:</strong> ${b.notes}</p>` : ""}
-              </div>
             `;
+
+            // Only show services if chosen
+            if (b.pedicureType) cardHTML += `<p><strong>💅 Pedicure:</strong> ${b.pedicureType}</p>`;
+            if (b.manicureType) cardHTML += `<p><strong>💅 Manicure:</strong> ${b.manicureType}</p>`;
+            if (b.nailExtensionShape) cardHTML += `<p><strong>✨ Nail Shape:</strong> ${b.nailExtensionShape}</p>`;
+            if (b.nailExtensionLength) cardHTML += `<p><strong>📏 Nail Length:</strong> ${b.nailExtensionLength}</p>`;
+
+            // Deposit status
+            cardHTML += b.deposit
+              ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>`
+              : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`;
+
+            // Notes if any
+            if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
+
+            // Close card
+            cardHTML += `</div>`;
+
+            bookingsHTML += cardHTML;
           });
         }
 
