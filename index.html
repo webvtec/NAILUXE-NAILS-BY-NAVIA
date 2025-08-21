@@ -304,10 +304,11 @@
       <p>Sunday: Closed</p>
     </div>
 
-    <a onclick="login(); closeMenu();" class="admin-button"
-       style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#6200ea; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
-       MY BOOKINGS
-    </a>
+    <a onclick="showUserBookings(); closeMenu();" 
+   class="admin-button"
+   style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#6200ea; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
+   MY BOOKINGS
+</a>
 
     <!-- Another Separator Line -->
     <div class="separator-line"></div>
@@ -352,6 +353,38 @@
     </a>
   </div>
 </div>
+
+
+  <!-- My Bookings Modal -->
+<div id="myBookingsModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+">
+  <div style="
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    max-width:400px;
+    width:90%;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    text-align:center;
+    position:relative;
+  ">
+    <span onclick="closeMyBookings()" style="
+      position:absolute; top:10px; right:15px;
+      cursor:pointer; font-size:18px; color:#888;
+    ">&times;</span>
+
+    <h3 style="margin-bottom:15px; color:#6200ea;">My Last 5 Bookings</h3>
+    <div id="myBookingsContent"></div>
+  </div>
+</div>
+
 
   <!-- ✅ Booking Section -->
   <div id="bookingSection" class="content-section">
@@ -1045,6 +1078,14 @@ function generateBookingNumber(name) {
 function submitBooking(event) {
   event.preventDefault();
 
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("You must be logged in to book an appointment. Click OK to log in.")) {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
@@ -1077,7 +1118,8 @@ function submitBooking(event) {
       }
 
       db.collection('bookings').add({
-        bookingNumber: bookingNumber, // ✅ Save booking number
+        uid: user.uid,                  // ✅ Save which user made the booking
+        bookingNumber: bookingNumber,   // ✅ Save booking number
         name: name,
         phone: phone,
         date: date,
@@ -1085,6 +1127,7 @@ function submitBooking(event) {
         service: service
       })
       .then(() => {
+        // ✅ Message including booking number
         const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
         const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
@@ -1101,6 +1144,13 @@ function submitBooking(event) {
         })
         .then(response => {
           if (response.ok) {
+            // ✅ Show booking number in confirmation modal
+            document.querySelector("#bookingModal h3").innerText = "Booking Confirmed";
+            document.querySelector("#bookingModal p").innerHTML =
+              `Thank you! We have received your booking.<br><br>
+               <strong>Booking Number:</strong> ${bookingNumber}<br>
+               You will be contacted shortly to confirm the details.`;
+
             document.getElementById('bookingModal').style.display = 'flex';
           } else {
             alert("Failed to send booking to Telegram.");
@@ -1123,6 +1173,7 @@ function submitBooking(event) {
       alert('Error validating time. Please try again.');
     });
 }
+
 
 
     function showSection(sectionId) {
@@ -1318,6 +1369,53 @@ if (!user) {
     });
 }
 
+
+    function showUserBookings() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("Please log in to view your bookings. Click OK to log in.")) {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+
+  db.collection('bookings')
+    .where("uid", "==", user.uid)
+    .orderBy("date", "desc")
+    .limit(5)
+    .get()
+    .then(snapshot => {
+      if (snapshot.empty) {
+        alert("You don’t have any bookings yet.");
+        return;
+      }
+
+      let bookingsHTML = "";
+      snapshot.forEach(doc => {
+        const b = doc.data();
+        bookingsHTML += `
+          <div style="background:#fff; border:1px solid #ddd; border-radius:10px; padding:15px; margin-bottom:10px; text-align:left;">
+            <h4 style="margin:0; color:#6200ea;">Booking No: ${b.bookingNumber}</h4>
+            <p><strong>Date:</strong> ${b.date}</p>
+            <p><strong>Time:</strong> ${b.time}</p>
+            <p><strong>Service:</strong> ${b.service}</p>
+          </div>
+        `;
+      });
+
+      document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
+      document.getElementById('myBookingsModal').style.display = 'flex';
+    })
+    .catch(error => {
+      console.error("Error fetching bookings:", error);
+      alert("Failed to load bookings.");
+    });
+}
+
+
+  function closeMyBookings() {
+    document.getElementById('myBookingsModal').style.display = 'none';
+  }
 
 
   </script>
