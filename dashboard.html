@@ -709,16 +709,16 @@ firebase.auth().onAuthStateChanged(user => {
   });
 }
 
+
     let currentBookingId = null;
 
 function updateDeposit(bookingId) {
   currentBookingId = bookingId;
-  document.getElementById('depositModal').style.display = 'flex';
-}
 
-function closeDepositModal() {
-  document.getElementById('depositModal').style.display = 'none';
-  currentBookingId = null;
+  // ✅ Reset radio buttons
+  document.querySelectorAll('input[name="depositChoice"]').forEach(r => r.checked = false);
+
+  document.getElementById('depositModal').style.display = 'flex';
 }
 
 function confirmDeposit() {
@@ -734,8 +734,8 @@ function confirmDeposit() {
     deposit: depositValue
   })
   .then(() => {
-    alert("Deposit status updated to: " + depositValue);
     closeDepositModal();
+    alert("Deposit status updated to: " + depositValue);
   })
   .catch(error => {
     console.error("Error updating deposit:", error);
@@ -743,6 +743,10 @@ function confirmDeposit() {
   });
 }
 
+function closeDepositModal() {
+  document.getElementById('depositModal').style.display = 'none';
+  currentBookingId = null;
+}
 
   </script>
 </body>
