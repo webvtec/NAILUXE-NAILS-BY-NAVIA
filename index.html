@@ -1396,14 +1396,11 @@ if (!user) {
           snapshot.forEach(doc => {
             const b = doc.data();
 
-            // ✅ Handle Firestore Timestamp or old string date
+            // ✅ Expect Firestore Timestamp only
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
                 bookingDate = b.date.toDate().toLocaleDateString();
-              } else if (typeof b.date === "string") {
-                const [y, m, d] = b.date.split("-").map(Number);
-                bookingDate = new Date(y, m - 1, d).toLocaleDateString();
               }
             } catch (err) {
               console.error("Date format issue:", err);
@@ -1434,6 +1431,7 @@ if (!user) {
     alert("⚠ An unexpected error occurred while loading your bookings.");
   }
 }
+
 
 
   function closeMyBookings() {
