@@ -1203,46 +1203,68 @@ function submitBooking(event) {
         .then(response => {
           if (response.ok) {
             // ✅ Show confirmation modal
-            document.querySelector("#bookingModal h3").innerText = "Booking Confirmed";
+            document.querySelector("#bookingModal h3").style.display = "none"; // hide old heading
 document.querySelector("#bookingModal p").innerHTML = `
   <div style="
-    text-align: left;
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
+    text-align: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
     color: #333;
-    line-height: 1.6;
   ">
-    <p style="font-size: 16px;">Thank you! We have received your booking.</p>
-    
-    <p style="margin: 10px 0; font-size: 18px;">
-      🔑 <strong>Booking Number:</strong> 
-      <span style="color: #6200ea; font-weight: bold;">${bookingNumber}</span>
+    <!-- ✅ Green Check -->
+    <div style="font-size: 60px; color: #28a745; margin-bottom: 15px;">✔️</div>
+
+    <!-- ✅ Title + Booking Number -->
+    <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
+    <p style="font-size: 18px; margin: 5px 0 15px 0;">
+      Booking #<strong>(${bookingNumber})</strong>
     </p>
 
-    <div style="
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      color: #856404;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 15px 0;
-    ">
-      ⚠️ <strong>Important:</strong><br>
-      Please transfer your deposit within 
-      <strong>48 hours</strong> or your booking will be 
-      <span style="color: red; font-weight: bold;">cancelled</span>.
-    </div>
+    <hr style="margin: 15px 0;">
 
-    <p style="margin: 10px 0;">
-      🏦 <strong>Payment Info:</strong><br>
-      You can view our banking details anytime in the sidebar by clicking 
-      <strong>"Payment Info"</strong>.
+    <!-- ✅ Deposit Warning -->
+    <p style="font-size: 15px; line-height: 1.5;">
+      <strong>50%</strong> of your booking deposit must be transferred 
+      to the account provided below within <strong>48 hours</strong> or your 
+      booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
     </p>
 
-    <p style="margin-top: 15px;">
-      THANK YOU FOR CHOOSING TISHAY NAILS PLACE.
+    <!-- ✅ Amount Due -->
+    <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
+      💵 Deposit Due Now: JMD $4,000.00
     </p>
+
+    <hr style="margin: 15px 0;">
+
+    <!-- ✅ Banking Details -->
+    <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
+    <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
+    <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
+    <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
+    <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
+
+    <hr style="margin: 15px 0;">
+
+    <!-- ✅ Sidebar Reminder -->
+    <p style="font-size: 14px; color: #555;">
+      ℹ️ If you need to see the banking info again, it’s always visible in the 
+      <strong>Payment Info</strong> section of the menu.
+    </p>
+
+    <!-- ✅ OK Button -->
+    <button onclick="document.getElementById('bookingModal').style.display='none'"
+      style="
+        margin-top: 15px;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      ">
+      OK
+    </button>
   </div>
 `;
 
