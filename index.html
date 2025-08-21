@@ -395,7 +395,7 @@
 </div>
 
 
-  <!-- My Bookings Modal -->
+ <!-- My Bookings Modal -->
 <div id="myBookingsModal" style="
   display:none;
   position: fixed;
@@ -405,32 +405,36 @@
   align-items: center;
   z-index: 10000;
 ">
-  <div style="
+  <div id="myBookingsBox" style="
     background:#fff;
     padding:20px;
     border-radius:12px;
     max-width:400px;
     width:90%;
+    max-height:80vh;       /* ✅ keeps inside screen */
+    overflow-y:auto;       /* ✅ scroll only content */
     box-shadow:0 4px 12px rgba(0,0,0,0.2);
-    text-align:center;
     position:relative;
   ">
-    <span onclick="closeMyBookings()" style="
-      position:absolute; top:10px; right:15px;
-      cursor:pointer; font-size:18px; color:#888;
-    ">&times;</span>
+    <!-- Close Button -->
+    <button onclick="closeMyBookings()" style="
+      position:sticky; top:0; right:0;
+      float:right;
+      background:#fff;
+      border:none;
+      font-size:24px;
+      cursor:pointer;
+      z-index:10001;
+    ">✖</button>
 
-    <h3 style="margin-bottom:15px; color:#6200ea;">My Last 5 Bookings</h3>
+    <h3 style="margin:10px 0; color:#6200ea; text-align:center;">
+      My Last 5 Bookings
+    </h3>
+
     <div id="myBookingsContent"></div>
   </div>
 </div>
 
-  <div id="myBookingsModal">
-  <div id="myBookingsBox">
-    <button id="closeBookings">✖</button>
-    <div id="myBookingsContent"></div>
-  </div>
-</div>
 
   
 
