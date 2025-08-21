@@ -1437,8 +1437,7 @@ if (!user) {
     db.collection('bookings')
       .where("uid", "==", user.uid)
       .limit(20) // fetch more, then sort manually
-      .get()
-      .then(snapshot => {
+      .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
         let bookings = [];
 
         snapshot.forEach(doc => {
@@ -1461,7 +1460,7 @@ if (!user) {
           bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
         } else {
           bookings.forEach(b => {
-            // ✅ Format date as "August 22, 2025"
+            // ✅ Format date
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
@@ -1482,7 +1481,7 @@ if (!user) {
               console.error("Date format issue:", err);
             }
 
-            // ✅ Clean services (remove NONE)
+            // ✅ Clean services
             let cleanService = "";
             if (b.service) {
               cleanService = b.service
@@ -1490,10 +1489,10 @@ if (!user) {
                 .replace(/,?\s*Pedicure:\s*NONE/gi, "")
                 .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
                 .trim()
-                .replace(/,\s*$/, ""); // remove trailing commas
+                .replace(/,\s*$/, "");
             }
 
-            // ✅ Build booking card
+            // ✅ Build card
             let cardHTML = `
               <div style="
                 border:1px solid #ccc;
@@ -1510,36 +1509,24 @@ if (!user) {
                 <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
             `;
 
-            // ✅ Only show services if not empty
             if (cleanService) {
               cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
             }
 
-            // ✅ Deposit status
-            cardHTML += b.deposit
+            // ✅ Deposit status (live now)
+            cardHTML += b.deposit === "Made"
               ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>`
               : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`;
 
-            // ✅ Notes if any
             if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
 
-            // ✅ Close card
             cardHTML += `</div>`;
-
             bookingsHTML += cardHTML;
           });
         }
 
         // ✅ Show in modal
         document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
-        document.getElementById('myBookingsModal').style.display = 'flex';
-      })
-      .catch(error => {
-        const errorMsg = `Firestore Error: ${error.code} - ${error.message}`;
-        console.error(errorMsg);
-        alert(errorMsg);
-        document.getElementById('myBookingsContent').innerHTML =
-          `<p style="color:red;">⚠ ${errorMsg}</p>`;
         document.getElementById('myBookingsModal').style.display = 'flex';
       });
   } catch (err) {
