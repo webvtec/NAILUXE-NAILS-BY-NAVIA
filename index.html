@@ -1461,7 +1461,7 @@ if (!user) {
           bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
         } else {
           bookings.forEach(b => {
-            // Format date in "July 4, 2025" style
+            // ✅ Format date as "August 22, 2025"
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
@@ -1482,7 +1482,18 @@ if (!user) {
               console.error("Date format issue:", err);
             }
 
-            // Build booking card
+            // ✅ Clean services (remove NONE)
+            let cleanService = "";
+            if (b.service) {
+              cleanService = b.service
+                .replace(/,?\s*Manicure:\s*NONE/gi, "")
+                .replace(/,?\s*Pedicure:\s*NONE/gi, "")
+                .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
+                .trim()
+                .replace(/,\s*$/, ""); // remove trailing commas
+            }
+
+            // ✅ Build booking card
             let cardHTML = `
               <div style="
                 border:1px solid #ccc;
@@ -1499,35 +1510,27 @@ if (!user) {
                 <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
             `;
 
-            // ✅ Only show services if chosen, checking both possible field names
-            if (b.pedicureType || b.pedicure) {
-              cardHTML += `<p><strong>💅 Pedicure:</strong> ${b.pedicureType || b.pedicure}</p>`;
-            }
-            if (b.manicureType || b.manicure) {
-              cardHTML += `<p><strong>💅 Manicure:</strong> ${b.manicureType || b.manicure}</p>`;
-            }
-            if (b.nailExtensionShape || b.shape) {
-              cardHTML += `<p><strong>✨ Nail Shape:</strong> ${b.nailExtensionShape || b.shape}</p>`;
-            }
-            if (b.nailExtensionLength || b.length) {
-              cardHTML += `<p><strong>📏 Nail Length:</strong> ${b.nailExtensionLength || b.length}</p>`;
+            // ✅ Only show services if not empty
+            if (cleanService) {
+              cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
             }
 
-            // Deposit status
+            // ✅ Deposit status
             cardHTML += b.deposit
               ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>`
               : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`;
 
-            // Notes if any
+            // ✅ Notes if any
             if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
 
-            // Close card
+            // ✅ Close card
             cardHTML += `</div>`;
 
             bookingsHTML += cardHTML;
           });
         }
 
+        // ✅ Show in modal
         document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
         document.getElementById('myBookingsModal').style.display = 'flex';
       })
