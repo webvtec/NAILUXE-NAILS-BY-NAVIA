@@ -1447,11 +1447,19 @@ if (!user) {
                 <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
             `;
 
-            // Only show services if chosen
-            if (b.pedicureType) cardHTML += `<p><strong>💅 Pedicure:</strong> ${b.pedicureType}</p>`;
-            if (b.manicureType) cardHTML += `<p><strong>💅 Manicure:</strong> ${b.manicureType}</p>`;
-            if (b.nailExtensionShape) cardHTML += `<p><strong>✨ Nail Shape:</strong> ${b.nailExtensionShape}</p>`;
-            if (b.nailExtensionLength) cardHTML += `<p><strong>📏 Nail Length:</strong> ${b.nailExtensionLength}</p>`;
+            // ✅ Only show services if chosen, checking both possible field names
+            if (b.pedicureType || b.pedicure) {
+              cardHTML += `<p><strong>💅 Pedicure:</strong> ${b.pedicureType || b.pedicure}</p>`;
+            }
+            if (b.manicureType || b.manicure) {
+              cardHTML += `<p><strong>💅 Manicure:</strong> ${b.manicureType || b.manicure}</p>`;
+            }
+            if (b.nailExtensionShape || b.shape) {
+              cardHTML += `<p><strong>✨ Nail Shape:</strong> ${b.nailExtensionShape || b.shape}</p>`;
+            }
+            if (b.nailExtensionLength || b.length) {
+              cardHTML += `<p><strong>📏 Nail Length:</strong> ${b.nailExtensionLength || b.length}</p>`;
+            }
 
             // Deposit status
             cardHTML += b.deposit
