@@ -419,13 +419,6 @@
     const tomorrowM = tomorrow.getMonth();
     const tomorrowD = tomorrow.getDate();
 
-    // Helper: parse YYYY-MM-DD into plain {y,m,d}
-    function parseDateParts(str) {
-      if (!str) return null;
-      const [y, m, d] = str.split('-').map(Number);
-      return { y, m: m - 1, d };
-    }
-
     const todayList = [];
     const tomorrowList = [];
     const upcomingList = [];
@@ -433,22 +426,34 @@
 
     snapshot.forEach(doc => {
       const booking = doc.data();
-      const parts = parseDateParts(booking.date);
-      if (!parts) return;
-      const bDate = new Date(parts.y, parts.m, parts.d);
 
-      if (parts.y === todayY && parts.m === todayM && parts.d === todayD) {
-        todayList.push({ id: doc.id, ...booking });
-      } else if (parts.y === tomorrowY && parts.m === tomorrowM && parts.d === tomorrowD) {
-        tomorrowList.push({ id: doc.id, ...booking });
+      // ✅ Handle both Timestamp and string-based dates
+      let bDate;
+      if (booking.date && booking.date.toDate) {
+        bDate = booking.date.toDate(); // Firestore Timestamp
+      } else if (typeof booking.date === "string") {
+        const [y, m, d] = booking.date.split('-').map(Number);
+        bDate = new Date(y, m - 1, d);
+      } else {
+        return; // Skip if invalid
+      }
+
+      const bY = bDate.getFullYear();
+      const bM = bDate.getMonth();
+      const bD = bDate.getDate();
+
+      if (bY === todayY && bM === todayM && bD === todayD) {
+        todayList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
+      } else if (bY === tomorrowY && bM === tomorrowM && bD === tomorrowD) {
+        tomorrowList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
       } else if (bDate > tomorrow) {
-        upcomingList.push({ id: doc.id, ...booking });
+        upcomingList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
       } else if (bDate < new Date(todayY, todayM, todayD)) {
-        pastList.push({ id: doc.id, ...booking });
+        pastList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
       }
     });
 
-    // Render groups
+    // ✅ Group renderer
     function renderGroup(title, list, badgeClass) {
       if (!list.length) return;
       reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
@@ -477,6 +482,7 @@
     renderGroup("Past", pastList, "past");
   });
 }
+
 
 
 function searchReservations() {
