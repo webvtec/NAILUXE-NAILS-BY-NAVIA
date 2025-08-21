@@ -1396,7 +1396,6 @@ if (!user) {
           snapshot.forEach(doc => {
             const b = doc.data();
 
-            // ✅ Expect Firestore Timestamp only
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
@@ -1421,18 +1420,20 @@ if (!user) {
         document.getElementById('myBookingsModal').style.display = 'flex';
       })
       .catch(error => {
-        console.error("Error fetching bookings:", error);
+        // 🔎 Show exact Firestore error on mobile
+        const errorMsg = `Firestore Error: ${error.code} - ${error.message}`;
+        console.error(errorMsg);
+        alert(errorMsg); // popup so you see it immediately
+
         document.getElementById('myBookingsContent').innerHTML =
-          `<p style="color:red;">⚠ Failed to load bookings. Please try again later.</p>`;
+          `<p style="color:red;">⚠ ${errorMsg}</p>`;
         document.getElementById('myBookingsModal').style.display = 'flex';
       });
   } catch (err) {
     console.error("Unexpected error:", err);
-    alert("⚠ An unexpected error occurred while loading your bookings.");
+    alert("⚠ An unexpected error occurred while loading your bookings: " + err.message);
   }
 }
-
-
 
   function closeMyBookings() {
     document.getElementById('myBookingsModal').style.display = 'none';
