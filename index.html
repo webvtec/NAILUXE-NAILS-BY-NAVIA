@@ -1740,17 +1740,23 @@ function selectSlot(time, btn) {
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // Fetch existing bookings for that day
+  // Fetch existing bookings
   const snapshot = await db.collection("bookings")
     .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
     .get();
 
-  const bookedTimes = snapshot.docs.map(doc => convertToMinutes(doc.data().time));
-  const buffer = getBufferForSelectedServices();
+  // Each booking should block its own duration + buffer AFTER its start
+  const bookings = snapshot.docs.map(doc => {
+    const bookedTime = convertToMinutes(doc.data().time);
+    const serviceDuration = getServiceDuration(); // use service-specific duration
+    const buffer = getBufferForSelectedServices();
+    return { start: bookedTime, end: bookedTime + serviceDuration + buffer };
+  });
 
   // Loop every 5 minutes
-  for (let t = openMinutes; t < closeMinutes; t += 5) {
-    let conflict = bookedTimes.some(bt => Math.abs(bt - t) < buffer);
+  for (let t = openMinutes; t <= closeMinutes; t += 5) {
+    // Check if this slot starts inside any booking block
+    let conflict = bookings.some(b => t >= b.start && t < b.end);
 
     if (!conflict) {
       const hours = Math.floor(t / 60);
@@ -1773,7 +1779,6 @@ function selectSlot(time, btn) {
     timeSelect.appendChild(option);
   }
 }
-
 
   </script>
 
