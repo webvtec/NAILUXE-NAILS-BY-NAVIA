@@ -1603,36 +1603,35 @@ async function loadAvailableSlots() {
   });
 
   // ✅ Generate slots (exclude booked + unavailable)
-  for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
-    const end = t + duration;
+for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+  const end = t + duration;
 
-    let conflict =
-      bookings.some(b => !(end <= b.start || t >= b.end)) ||
-      unavailableRanges.some(r => !(end <= r.start || t >= r.end));
+  let conflict =
+    bookings.some(b => (t < b.end && end > b.start)) ||
+    unavailableRanges.some(r => (t < r.end && end > r.start));
 
-    if (!conflict) {
-      const hours = Math.floor(t / 60);
-      const minutes = t % 60;
-      const ampm = hours >= 12 ? "PM" : "AM";
-      const displayHours = ((hours + 11) % 12 + 1);
-      const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+  if (!conflict) {
+    const hours = Math.floor(t / 60);
+    const minutes = t % 60;
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = ((hours + 11) % 12 + 1);
+    const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 
-      // 🚫 Extra safeguard: don’t add if Firestore already has a booking starting at this exact time
-      if (!bookings.some(b => b.start === t)) {
-        let option = document.createElement("option");
-        option.value = displayTime;
-        option.textContent = displayTime;
-        timeSelect.appendChild(option);
-      }
+    // 🚫 Extra safeguard: don’t add if Firestore already has a booking starting at this exact time
+    if (!bookings.some(b => b.start === t)) {
+      let option = document.createElement("option");
+      option.value = displayTime;
+      option.textContent = displayTime;
+      timeSelect.appendChild(option);
     }
   }
+}
 
-  if (timeSelect.options.length === 1) {
-    let option = document.createElement("option");
-    option.value = "";
-    option.textContent = "No available slots";
-    timeSelect.appendChild(option);
-  }
+if (timeSelect.options.length === 1) {
+  let option = document.createElement("option");
+  option.value = "";
+  option.textContent = "No available slots";
+  timeSelect.appendChild(option);
 }
 
     
