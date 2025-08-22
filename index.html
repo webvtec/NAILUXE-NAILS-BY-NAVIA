@@ -1586,6 +1586,7 @@ async function loadAvailableSlots() {
   const timeSelect = document.getElementById('selectedTime');
   timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
 
+  // Must have a date + at least one service
   if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
     timeSelect.innerHTML = "<option value=''>Pick date & service first</option>";
     return;
@@ -1605,17 +1606,16 @@ async function loadAvailableSlots() {
 
   // ✅ Fetch all bookings for that date
   const snapshot = await db.collection("bookings")
-    .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
-    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
+    .where("date", "==", date) // since we save plain string now
     .get();
 
   const bookings = snapshot.docs.map(doc => {
     const bookedTime = convertToMinutes(doc.data().time);
-    const bookedDuration = doc.data().duration || 60;
+    const bookedDuration = doc.data().duration || 60; // fallback
     return { start: bookedTime, end: bookedTime + bookedDuration };
   });
 
-  // ✅ Fetch unavailable day ranges for that date
+  // ✅ Fetch unavailable ranges for that date
   const unavailableSnapshot = await db.collection("unavailableDays")
     .where("date", "==", date)
     .get();
@@ -1632,10 +1632,11 @@ async function loadAvailableSlots() {
     }
   });
 
-// ✅ Generate slots (exclude booked + unavailable)
+  // ✅ Generate slots every 5 minutes
   for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
     const end = t + duration;
 
+    // Skip if overlaps with any booking or unavailable range
     let conflict =
       bookings.some(b => !(end <= b.start || t >= b.end)) ||
       unavailableRanges.some(r => !(end <= r.start || t >= r.end));
@@ -1647,16 +1648,14 @@ async function loadAvailableSlots() {
       const displayHours = ((hours + 11) % 12 + 1);
       const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 
-      // 🚫 Extra safeguard: don’t add if Firestore already has a booking starting at this exact time
-      if (!bookings.some(b => b.start === t)) {
-        let option = document.createElement("option");
-        option.value = displayTime;
-        option.textContent = displayTime;
-        timeSelect.appendChild(option);
-      }
+      let option = document.createElement("option");
+      option.value = displayTime;
+      option.textContent = displayTime;
+      timeSelect.appendChild(option);
     }
   }
 
+  // If no slots remain
   if (timeSelect.options.length === 1) {
     let option = document.createElement("option");
     option.value = "";
