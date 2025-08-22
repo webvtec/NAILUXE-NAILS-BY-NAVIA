@@ -1712,10 +1712,10 @@ async function loadAvailableTimes() {
 
   timesList.innerHTML = "<p>Loading available times...</p>";
 
-// Generate all slots for the day (every minute, 9AM - 6PM)
+// Generate slots every 5 minutes (9AM - 6PM)
 const slots = [];
 for (let hour = 9; hour <= 18; hour++) {
-  for (let min = 0; min < 60; min++) {
+  for (let min = 0; min < 60; min += 5) {   // ⬅ step = 5 mins
     let period = hour >= 12 ? "PM" : "AM";
     let displayHour = hour % 12 || 12;
     let displayMin = min.toString().padStart(2, "0");
