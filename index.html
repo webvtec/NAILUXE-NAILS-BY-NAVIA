@@ -1723,12 +1723,45 @@ function selectSlot(time, btn) {
 
 
 
-    async function loadAvailableSlots() {
+    // Example durations in minutes (extend as needed)
+const serviceDurations = {
+  "Regular Pedicure": 60,
+  "Spa Pedicure": 90,
+  "Deluxe Pedicure": 90,
+  "Gel Pedicure": 120,
+  "Regular Manicure": 60,
+  "Spa Manicure": 90,
+  "Deluxe Manicure": 90,
+  "Gel Manicure": 120,
+  "Acrylic Powder Manicure": 120,
+  "NONE": 0
+};
+
+function getSelectedServiceDuration() {
+  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
+  const manicure = document.getElementById('manicureType')?.value || "NONE";
+  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
+
+  let duration = 0;
+
+  if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 60;
+  if (manicure !== "NONE") duration += serviceDurations[manicure] || 60;
+  if (nailExtension !== "NONE") duration += 60; // default for extensions, adjust if needed
+
+  return duration || 60; // fallback
+}
+
+async function loadAvailableSlots() {
   const date = document.getElementById('date').value;
   const timeSelect = document.getElementById('selectedTime');
   timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
 
-  if (!date) return;
+  // Require service selection
+  const duration = getSelectedServiceDuration();
+  if (!date || duration === 0) {
+    timeSelect.innerHTML = "<option value=''>Select service first</option>";
+    return;
+  }
 
   const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
@@ -1740,23 +1773,24 @@ function selectSlot(time, btn) {
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // Fetch existing bookings
+  // Fetch all bookings for that date
   const snapshot = await db.collection("bookings")
     .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
     .get();
 
-  // Each booking should block its own duration + buffer AFTER its start
+  // Build booked intervals
   const bookings = snapshot.docs.map(doc => {
     const bookedTime = convertToMinutes(doc.data().time);
-    const serviceDuration = getServiceDuration(); // use service-specific duration
-    const buffer = getBufferForSelectedServices();
-    return { start: bookedTime, end: bookedTime + serviceDuration + buffer };
+    const bookedDuration = doc.data().duration || 60;
+    return { start: bookedTime, end: bookedTime + bookedDuration };
   });
 
-  // Loop every 5 minutes
-  for (let t = openMinutes; t <= closeMinutes; t += 5) {
-    // Check if this slot starts inside any booking block
-    let conflict = bookings.some(b => t >= b.start && t < b.end);
+  // Generate 5-min slots
+  for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+    const end = t + duration;
+
+    // Check overlap with existing bookings
+    let conflict = bookings.some(b => !(end <= b.start || t >= b.end));
 
     if (!conflict) {
       const hours = Math.floor(t / 60);
