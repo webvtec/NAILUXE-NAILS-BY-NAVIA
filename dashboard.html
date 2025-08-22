@@ -668,11 +668,27 @@ function loadUnavailableDates() {
     list.innerHTML = '';
     snapshot.forEach(doc => {
       const d = doc.data();
-      let text = `${d.date} - ${d.allDay ? 'All Day' : `${d.startTime} to ${d.endTime}`}`;
+
+      // ✅ Convert YYYY-MM-DD to a readable format
+      let formattedDate;
+      if (d.date && d.date.includes("-")) {
+        const [yyyy, mm, dd] = d.date.split("-");
+        const tempDate = new Date(yyyy, mm - 1, dd);
+        formattedDate = tempDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+      } else {
+        formattedDate = d.date; // fallback
+      }
+
+      let text = `${formattedDate} - ${d.allDay ? 'All Day' : `${d.startTime} to ${d.endTime}`}`;
       list.innerHTML += `<li>${text} <button onclick="removeUnavailableDate('${doc.id}')">Remove</button></li>`;
     });
   });
 }
+
 
 function removeUnavailableDate(id) { db.collection('unavailableDays').doc(id).delete(); }
 
