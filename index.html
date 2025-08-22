@@ -1696,26 +1696,32 @@ if (!user) {
   });
 
   // Generate slots
-  let optionsHTML = "";
-  for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
-    let end = start + serviceDuration;
+let optionsHTML = "";
+for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
+  let end = start + serviceDuration;
 
-    // Check conflict with booked slots
-    let conflict = bookedSlots.some(b => Math.abs(b - start) < serviceDuration);
-    if (!conflict) {
-      let hours = Math.floor(start / 60);
-      let minutes = start % 60;
-      let period = hours >= 12 ? "PM" : "AM";
-      if (hours > 12) hours -= 12;
-      if (hours === 0) hours = 12;
+  // ✅ Proper overlap check (instead of Math.abs)
+  let conflict = bookedSlots.some(b => {
+    let bookedStart = b;
+    let bookedEnd = bookedStart + serviceDuration; // assuming same duration for now
 
-      let timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
-      optionsHTML += `<option value="${timeStr}">${timeStr}</option>`;
-    }
+    // Overlap only if times actually intersect
+    return (start < bookedEnd && end > bookedStart);
+  });
+
+  if (!conflict) {
+    let hours = Math.floor(start / 60);
+    let minutes = start % 60;
+    let period = hours >= 12 ? "PM" : "AM";
+    if (hours > 12) hours -= 12;
+    if (hours === 0) hours = 12;
+
+    let timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+    optionsHTML += `<option value="${timeStr}">${timeStr}</option>`;
   }
-
-  slotSelect.innerHTML = optionsHTML || `<option value="">No slots available</option>`;
 }
+
+slotSelect.innerHTML = optionsHTML || `<option value="">No slots available</option>`;
 
 // Recalculate slots whenever date or services change
 document.getElementById("date").addEventListener("change", generateAvailableSlots);
