@@ -21,7 +21,7 @@
       padding: 0;
     }
         .header-bar {
-      background-color: #61134A;
+      background-color: #FFD1DC;
       padding: 8px;
       text-align: center;
       font-size: 27px;
@@ -40,7 +40,7 @@
 
 .top-menu button {
   background-color: white;
-  color: #61134A;
+  color: #6200ea;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -50,7 +50,7 @@
 }
 
 .top-menu button:hover {
-  background-color: #FE5DC7;
+  background-color: #FFD1DC;
 }
 
     .admin-container {
@@ -62,7 +62,7 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
     h2 {
-      color: #FE5DC7;
+      color: #6200ea;
       text-align: center;
     }
     input[type="text"], input[type="date"], input[type="time"], select {
@@ -73,7 +73,7 @@
       border-radius: 5px;
     }
     button {
-      background-color: #61134A;
+      background-color: #6200ea;
       color: white;
       padding: 10px 20px;
       border: none;
@@ -82,7 +82,7 @@
       margin-bottom: 20px;
     }
     button:hover {
-      background-color: #61134A;
+      background-color: #3700b3;
     }
     .gallery-category {
       margin-top: 40px;
@@ -91,7 +91,7 @@
       text-align: center;
       margin-bottom: 15px;
       font-size: 22px;
-      color: #FE5DC7;
+      color: #6200ea;
       text-transform: uppercase;
     }
     .gallery-wrapper {
@@ -174,7 +174,7 @@
 
 .reservation-header h3 {
   margin: 0;
-  color: #FE5DC7;
+  color: #6200ea;
 }
 
 .badge {
@@ -191,7 +191,7 @@
   margin-top: 30px;
   margin-bottom: 10px;
   padding: 8px 14px;
-  background: #FE5DC7;
+  background: #6200ea;
   color: #fff;
   border-radius: 6px;
   font-size: 1.1rem;
@@ -500,7 +500,7 @@ box-sizing: border-box;
 
     function loadReservations() {
   const reservationsContainer = document.getElementById('reservationsList');
-  db.collection('bookings').orderBy("dateRaw", "asc").onSnapshot(snapshot => {
+  db.collection('bookings').orderBy("date", "asc").onSnapshot(snapshot => {
     reservationsContainer.innerHTML = '';
     if (snapshot.empty) {
       reservationsContainer.innerHTML = "<p>No reservations found.</p>";
@@ -526,42 +526,27 @@ box-sizing: border-box;
     snapshot.forEach(doc => {
       const booking = doc.data();
 
-      let formattedDate;
+      // ✅ Handle both Timestamp and string-based dates
       let bDate;
-
-      if (booking.dateFormatted) {
-        // ✅ Preferred: human-readable date
-        formattedDate = booking.dateFormatted;
-
-        // Also build a Date object from dateRaw for grouping
-        if (booking.dateRaw) {
-          const [y, m, d] = booking.dateRaw.split("-").map(Number);
-          bDate = new Date(y, m - 1, d);
-        }
+      if (booking.date && booking.date.toDate) {
+        bDate = booking.date.toDate(); // Firestore Timestamp
       } else if (typeof booking.date === "string") {
-        // ✅ Old string-based bookings
-        const [y, m, d] = booking.date.split("-").map(Number);
+        const [y, m, d] = booking.date.split('-').map(Number);
         bDate = new Date(y, m - 1, d);
-        formattedDate = bDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        });
-      } else if (booking.date && booking.date.toDate) {
-        // ✅ Old Firestore Timestamp
-        bDate = booking.date.toDate();
-        formattedDate = bDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        });
       } else {
-        return; // skip invalid
+        return; // Skip if invalid
       }
 
       const bY = bDate.getFullYear();
       const bM = bDate.getMonth();
       const bD = bDate.getDate();
+
+      // ✅ Use full formatted date: August 21, 2025
+      const formattedDate = bDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
 
       if (bY === todayY && bM === todayM && bD === todayD) {
         todayList.push({ id: doc.id, ...booking, date: formattedDate });
@@ -620,37 +605,13 @@ function searchReservations() {
   const cards = reservationsContainer.querySelectorAll(".reservation-card");
   for (let card of cards) {
     const text = card.innerText.toLowerCase();
-
-    // ✅ also normalize dates for search
-    let matchFound = false;
-
-    // check regular text
     if (text.includes(query)) {
-      matchFound = true;
-    } else {
-      // check for formatted vs raw date mismatch
-      const dateElement = card.querySelector("p strong")?.parentElement?.innerText.toLowerCase();
-      if (dateElement) {
-        // Example: "Date: July 6, 2025"
-        const rawDateMatch = dateElement.match(/(\w+ \d{1,2}, \d{4})/); // July 6, 2025
-        if (rawDateMatch) {
-          const parsedDate = new Date(rawDateMatch[1]);
-          const rawDate = parsedDate.toISOString().split("T")[0]; // 2025-07-06
-          if (rawDate.includes(query)) {
-            matchFound = true;
-          }
-        }
-      }
-    }
-
-    if (matchFound) {
       card.classList.add("highlighted");
       card.scrollIntoView({ behavior: "smooth", block: "center" });
       break;
     }
   }
 }
-
 
     
 function clearReservations() {
@@ -842,7 +803,6 @@ function closeDepositModal() {
   document.getElementById('depositModal').style.display = 'none';
   currentBookingId = null;
 }
-
 
   </script>
 </body>
