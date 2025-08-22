@@ -512,14 +512,21 @@
       const bM = bDate.getMonth();
       const bD = bDate.getDate();
 
+      // ✅ Use full formatted date: August 21, 2025
+      const formattedDate = bDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+
       if (bY === todayY && bM === todayM && bD === todayD) {
-        todayList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
+        todayList.push({ id: doc.id, ...booking, date: formattedDate });
       } else if (bY === tomorrowY && bM === tomorrowM && bD === tomorrowD) {
-        tomorrowList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
+        tomorrowList.push({ id: doc.id, ...booking, date: formattedDate });
       } else if (bDate > tomorrow) {
-        upcomingList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
+        upcomingList.push({ id: doc.id, ...booking, date: formattedDate });
       } else if (bDate < new Date(todayY, todayM, todayD)) {
-        pastList.push({ id: doc.id, ...booking, date: bDate.toLocaleDateString() });
+        pastList.push({ id: doc.id, ...booking, date: formattedDate });
       }
     });
 
@@ -554,7 +561,6 @@
     renderGroup("Past", pastList, "past");
   });
 }
-
 
 
 function searchReservations() {
