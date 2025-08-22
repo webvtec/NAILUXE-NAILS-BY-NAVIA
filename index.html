@@ -1665,6 +1665,77 @@ if (!user) {
     }
 
 
+    function getBufferForSelectedServices() {
+  let buffer = 30; // default
+
+  const pedicureType = document.getElementById('pedicureType')?.value || "NONE";
+  const manicureType = document.getElementById('manicureType')?.value || "NONE";
+  const nailExtensionType = document.getElementById('nailExtensionType')?.value || "NONE";
+
+  // Example buffer logic — adjust if needed
+  if (pedicureType === "Gel Pedicure") buffer = 60;
+  if (manicureType === "Gel Manicure") buffer = 50;
+  if (nailExtensionType !== "NONE") buffer = 40;
+
+  return buffer;
+}
+
+async function loadAvailableSlots() {
+  const date = document.getElementById('date').value;
+  const slotsContainer = document.getElementById('timeSlots');
+  slotsContainer.innerHTML = "";
+
+  if (!date) return;
+
+  const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+  if (!business) {
+    slotsContainer.innerHTML = "<p style='color:red;'>Closed this day</p>";
+    return;
+  }
+
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  // Fetch bookings for that date
+  const snapshot = await db.collection("bookings")
+    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .get();
+
+  const bookedTimes = snapshot.docs.map(doc => convertToMinutes(doc.data().time));
+
+  // Get buffer based on selected service
+  let buffer = getBufferForSelectedServices();
+
+  let html = "<h3>Select a Time:</h3><div style='display:flex; flex-wrap:wrap; gap:10px;'>";
+  for (let t = openMinutes; t <= closeMinutes - buffer; t += 30) {
+    let isTaken = bookedTimes.some(bt => Math.abs(bt - t) < buffer);
+
+    if (!isTaken) {
+      const hours = Math.floor(t / 60);
+      const minutes = t % 60;
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = ((hours + 11) % 12 + 1);
+      const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+
+      html += `<button type="button" onclick="selectSlot('${displayTime}', this)"
+                 style="padding:8px 12px; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
+                 ${displayTime}</button>`;
+    }
+  }
+  html += "</div>";
+  slotsContainer.innerHTML = html;
+}
+
+function selectSlot(time, btn) {
+  document.getElementById("selectedTime").value = time;
+  // Highlight the selected button
+  document.querySelectorAll("#timeSlots button").forEach(b => b.style.background = "");
+  btn.style.background = "#98FF98";
+}
+
+
+
     async function loadAvailableSlots() {
   const date = document.getElementById('date').value;
   const slotsContainer = document.getElementById('timeSlots');
