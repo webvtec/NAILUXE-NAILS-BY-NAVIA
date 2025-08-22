@@ -1818,10 +1818,14 @@ function getServiceDurationFromData(data) {
 // 🔹 Main: show available times
 async function loadAvailableTimes() {
   const dateInput = document.getElementById("availableDatePicker").value;
+  const pedicure = document.getElementById("pedicureType").value;
+  const manicure = document.getElementById("manicureType").value;
+  const extension = document.getElementById("nailExtensionType").value;
   const timesList = document.getElementById("availableTimesList");
 
-  if (!dateInput) {
-    alert("Please select a date first.");
+  // Require date + service
+  if (!dateInput || (pedicure === "NONE" && manicure === "NONE" && extension === "NONE")) {
+    timesList.innerHTML = "<p style='color:red;'>⚠ Please select a date and at least one service to see available times.</p>";
     return;
   }
 
@@ -1829,50 +1833,67 @@ async function loadAvailableTimes() {
 
   const serviceDuration = getServiceDuration();
 
-  // Generate slots every 15 minutes (9AM–6PM)
-  const slots = [];
-  for (let hour = 9; hour <= 18; hour++) {
-    for (let min = 0; min < 60; min += 15) {
-      let period = hour >= 12 ? "PM" : "AM";
-      let displayHour = hour % 12 || 12;
-      let displayMin = min.toString().padStart(2, "0");
-      slots.push(`${displayHour}:${displayMin} ${period}`);
-    }
-  }
-
   try {
-    // 1️⃣ Get existing bookings
+    // 1️⃣ Get all bookings for this day
     const bookingSnap = await db.collection("bookings")
       .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(dateInput)))
       .get();
 
-    let existingBookings = [];
+    let bookings = [];
     bookingSnap.forEach(doc => {
       const data = doc.data();
       const bookedStart = convertToMinutes(data.time);
       const bookedDuration = getServiceDurationFromData(data);
-      existingBookings.push({ start: bookedStart, end: bookedStart + bookedDuration });
+      bookings.push({ start: bookedStart, end: bookedStart + bookedDuration });
     });
 
-    // 2️⃣ Filter slots: only keep if service fits fully
-    let availableSlots = slots.filter(slot => {
-      const slotStart = convertToMinutes(slot);
-      const slotEnd = slotStart + serviceDuration;
+    // Sort bookings by start time
+    bookings.sort((a, b) => a.start - b.start);
 
-      for (let booking of existingBookings) {
-        if (slotStart < booking.end && slotEnd > booking.start) {
-          return false; // overlap → not available
+    // 2️⃣ Define salon hours (9AM – 6PM)
+    const opening = 9 * 60;   // 540 minutes
+    const closing = 18 * 60;  // 1080 minutes
+
+    // Build free intervals
+    let intervals = [];
+    let prevEnd = opening;
+
+    for (let b of bookings) {
+      if (b.start > prevEnd) {
+        intervals.push({ start: prevEnd, end: b.start });
+      }
+      prevEnd = b.end;
+    }
+    if (prevEnd < closing) {
+      intervals.push({ start: prevEnd, end: closing, isLast: true });
+    }
+
+    // 3️⃣ Check which intervals fit the service
+    let availableSlots = [];
+    intervals.forEach(interval => {
+      const freeTime = interval.end - interval.start;
+
+      if (interval.isLast) {
+        // Last interval → allow if it fits before closing
+        if (serviceDuration <= freeTime) {
+          availableSlots.push(minutesToTime(interval.start));
+        }
+      } else {
+        // Normal interval → only allow exact fit
+        if (serviceDuration === freeTime) {
+          availableSlots.push(minutesToTime(interval.start));
         }
       }
-      return true;
     });
 
-    // 3️⃣ Show results
+    // 4️⃣ Show results
     if (availableSlots.length === 0) {
       timesList.innerHTML = "<p style='color:red;'>No available times for this day.</p>";
     } else {
       timesList.innerHTML = "<h4>Available Times:</h4>" +
-        availableSlots.map(t => `<p>⏰ ${t}</p>`).join("");
+        availableSlots.map(t => 
+          `<p style="cursor:pointer; color:#007bff;" onclick="selectTime('${t}')">⏰ ${t}</p>`
+        ).join("");
     }
 
   } catch (err) {
@@ -1881,6 +1902,15 @@ async function loadAvailableTimes() {
   }
 }
 
+// 🔹 Helper: convert minutes → readable time
+function minutesToTime(totalMinutes) {
+  let hour = Math.floor(totalMinutes / 60);
+  let minutes = totalMinutes % 60;
+  let period = hour >= 12 ? "PM" : "AM";
+  let displayHour = hour % 12 || 12;
+  let displayMin = minutes.toString().padStart(2, "0");
+  return `${displayHour}:${displayMin} ${period}`;
+}
 
   </script>
 
