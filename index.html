@@ -1712,16 +1712,16 @@ async function loadAvailableTimes() {
 
   timesList.innerHTML = "<p>Loading available times...</p>";
 
-  // Generate all slots for the day (every minute, 9AM - 6PM)
-  const slots = [];
-  for (let hour = 9; hour <= 18; hour++) {
-    for (let min = 0; min < 60; min++) {
-      let period = hour >= 12 ? "PM" : "AM";
-      let displayHour = hour % 12 || 12;
-      let displayMin = min.toString().padStart(2, "0");
-      slots.push(`${displayHour}:${displayMin} ${period}`);
-    }
+ // Generate slots every 15 minutes (9AM - 6PM)
+const slots = [];
+for (let hour = 9; hour <= 18; hour++) {
+  for (let min = 0; min < 60; min += 15) {   // ⬅ step = 15 mins
+    let period = hour >= 12 ? "PM" : "AM";
+    let displayHour = hour % 12 || 12;
+    let displayMin = min.toString().padStart(2, "0");
+    slots.push(`${displayHour}:${displayMin} ${period}`);
   }
+}
 
   let availableSlots = [...slots];
 
