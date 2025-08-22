@@ -1074,7 +1074,6 @@ function generateBookingNumber(name) {
   return initials + digits;
 }
 
-
 async function submitBooking(event) {
   event.preventDefault();
 
@@ -1099,7 +1098,9 @@ async function submitBooking(event) {
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
-  let extensionLength = nailExtensionType !== 'NONE' ? document.getElementById('extensionLength').value : "";
+  let extensionLength = nailExtensionType !== 'NONE'
+    ? document.getElementById('extensionLength').value
+    : "";
 
   let service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
   if (nailExtensionType !== 'NONE') {
@@ -1117,13 +1118,13 @@ async function submitBooking(event) {
       return;
     }
 
-    // ✅ Store both a string and a safe Firestore timestamp
+    // ✅ Store booking in Firestore
     const bookingData = {
       uid: user.uid,
       bookingNumber,
       name,
       phone,
-      dateString: date, // keep the raw "YYYY-MM-DD"
+      dateString: date,
       date: firebase.firestore.Timestamp.fromDate(new Date(date + "T00:00:00")),
       time,
       service,
@@ -1133,47 +1134,21 @@ async function submitBooking(event) {
 
     await db.collection('bookings').add(bookingData);
 
-    // ✅ Telegram notify
+    // ✅ Telegram notification (safe, no errors shown to user)
     const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
     const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
     const telegramChatId = "-1002734216867";
 
     try {
-  const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: telegramChatId, text: message })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        console.error("Telegram API error:", data);
-      }
-    } catch (err) {
-      console.error("Telegram send failed:", err);
+      await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: telegramChatId, text: message })
+      });
+    } catch (err) {
+      // Silent fail — don’t show any error to user
     }
-
-    // ✅ Show confirmation modal
-    document.querySelector("#bookingModal h3").style.display = "none";
-    document.querySelector("#bookingModal p").innerHTML = `
-      <div style="text-align:center;padding:20px;font-family:Arial;color:#333;">
-        <h2 style="margin:0;font-size:22px;font-weight:bold;">BOOKING CONFIRMED</h2>
-        <p style="font-size:18px;margin:5px 0 15px 0;">Booking #<strong>${bookingNumber}</strong></p>
-        <hr style="margin:15px 0;">
-        <p><strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong>
-        or your booking will be <span style="color:red;font-weight:bold;">cancelled</span>.</p>
-        <p style="font-size:17px;color:#6c2eb9;font-weight:bold;">💵 Deposit Due: JMD $4,000.00</p>
-        <hr style="margin:15px 0;">
-        <h3 style="font-size:16px;margin:10px 0;">Banking Details:</h3>
-        <p>🏦 Bank: <strong>Your Bank Name</strong></p>
-        <p>👤 Account Name: <strong>Your Account Name</strong></p>
-        <p>#️⃣ Account Number: <strong>123456789</strong></p>
-        <p>🏢 Branch: <strong>Your Branch Name</strong></p>
-        <hr style="margin:15px 0;">
-        <p style="font-size:14px;color:#555;">ℹ️ Banking info is also available in the <strong>Payment Info</strong> section.</p>
-      </div>
-    `;
-    document.getElementById('bookingModal').style.display = 'flex';
 
     // ✅ Reset form
     document.querySelector("#bookingSection form").reset();
@@ -1182,10 +1157,12 @@ async function submitBooking(event) {
     document.getElementById("amBtn").style.display = "inline-block";
     document.getElementById("pmBtn").style.display = "inline-block";
 
-  } catch (error) {
-  // Silently ignore errors so user doesn’t see unnecessary alerts
-}
+    alert("✅ Booking successful!");
 
+  } catch (error) {
+    alert("⚠ Booking failed: " + (error.message || error));
+  }
+}
 
 
     function showSection(sectionId) {
