@@ -1253,17 +1253,20 @@ function submitBooking(event) {
         return;
       }
 
-      // ✅ Save booking to Firestore
       db.collection('bookings').add({
-        uid: user.uid,
-        bookingNumber: bookingNumber,
-        name: name,
-        phone: phone,
-        date: firebase.firestore.Timestamp.fromDate(new Date(date)),
-        time: time,
-        service: service,
-        deposit: "No"
-      })
+  uid: user.uid,
+  bookingNumber: bookingNumber,
+  name: name,
+  phone: phone,
+  date: firebase.firestore.Timestamp.fromDate(new Date(date)),
+  time: time,
+  service: service,
+  pedicureType: pedicureType,          // ✅ save separately
+  manicureType: manicureType,          // ✅ save separately
+  nailExtensionType: nailExtensionType,// ✅ save separately
+  extensionLength: extensionLength,    // ✅ optional but useful
+  deposit: "No"
+})
       .then(() => {
         // ✅ Telegram notification
         const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${formattedDate}\n⏰ Time: ${time}\n💅 Service: ${service}`;
