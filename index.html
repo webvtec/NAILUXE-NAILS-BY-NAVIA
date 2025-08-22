@@ -1604,63 +1604,68 @@ async function loadAvailableSlots() {
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // ✅ Fetch all bookings for that date
-  const snapshot = await db.collection("bookings")
-    .where("date", "==", date) // since we save plain string now
-    .get();
+  try {
+    // ✅ Fetch all bookings for that date
+    const snapshot = await db.collection("bookings")
+      .where("date", "==", date)
+      .get();
 
-  const bookings = snapshot.docs.map(doc => {
-    const bookedTime = convertToMinutes(doc.data().time);
-    const bookedDuration = doc.data().duration || 60; // fallback
-    return { start: bookedTime, end: bookedTime + bookedDuration };
-  });
+    const bookings = snapshot.docs.map(doc => {
+      const bookedTime = convertToMinutes(doc.data().time);
+      const bookedDuration = doc.data().duration || 60; // fallback
+      return { start: bookedTime, end: bookedTime + bookedDuration };
+    });
 
-  // ✅ Fetch unavailable ranges for that date
-  const unavailableSnapshot = await db.collection("unavailableDays")
-    .where("date", "==", date)
-    .get();
+    // ✅ Fetch unavailable ranges for that date
+    const unavailableSnapshot = await db.collection("unavailableDays")
+      .where("date", "==", date)
+      .get();
 
-  let unavailableRanges = [];
-  unavailableSnapshot.forEach(doc => {
-    const data = doc.data();
-    if (data.allDay) {
-      unavailableRanges.push({ start: openMinutes, end: closeMinutes });
-    } else {
-      const start = convertToMinutes(data.startTime);
-      const end = convertToMinutes(data.endTime);
-      unavailableRanges.push({ start, end });
+    let unavailableRanges = [];
+    unavailableSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.allDay) {
+        unavailableRanges.push({ start: openMinutes, end: closeMinutes });
+      } else {
+        const start = convertToMinutes(data.startTime);
+        const end = convertToMinutes(data.endTime);
+        unavailableRanges.push({ start, end });
+      }
+    });
+
+    // ✅ Generate slots every 5 minutes
+    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+      const end = t + duration;
+
+      // Skip if overlaps with any booking or unavailable range
+      let conflict =
+        bookings.some(b => !(end <= b.start || t >= b.end)) ||
+        unavailableRanges.some(r => !(end <= r.start || t >= r.end));
+
+      if (!conflict) {
+        const hours = Math.floor(t / 60);
+        const minutes = t % 60;
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayHours = ((hours + 11) % 12 + 1);
+        const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+
+        let option = document.createElement("option");
+        option.value = displayTime;
+        option.textContent = displayTime;
+        timeSelect.appendChild(option);
+      }
     }
-  });
 
-  // ✅ Generate slots every 5 minutes
-  for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
-    const end = t + duration;
-
-    // Skip if overlaps with any booking or unavailable range
-    let conflict =
-      bookings.some(b => !(end <= b.start || t >= b.end)) ||
-      unavailableRanges.some(r => !(end <= r.start || t >= r.end));
-
-    if (!conflict) {
-      const hours = Math.floor(t / 60);
-      const minutes = t % 60;
-      const ampm = hours >= 12 ? "PM" : "AM";
-      const displayHours = ((hours + 11) % 12 + 1);
-      const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
-
+    // If no slots remain
+    if (timeSelect.options.length === 1) {
       let option = document.createElement("option");
-      option.value = displayTime;
-      option.textContent = displayTime;
+      option.value = "";
+      option.textContent = "No available slots";
       timeSelect.appendChild(option);
     }
-  }
-
-  // If no slots remain
-  if (timeSelect.options.length === 1) {
-    let option = document.createElement("option");
-    option.value = "";
-    option.textContent = "No available slots";
-    timeSelect.appendChild(option);
+  } catch (err) {
+    console.error("Error loading slots:", err);
+    timeSelect.innerHTML = "<option value=''>Error loading slots</option>";
   }
 }
 
