@@ -1723,7 +1723,7 @@ async function loadAvailableTimes() {
     }
   }
 
-  let availableSlots = [...slots]; // start assuming all are free
+  let availableSlots = [...slots];
 
   try {
     // 1️⃣ Get bookings for that date
@@ -1731,33 +1731,44 @@ async function loadAvailableTimes() {
       .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(dateInput)))
       .get();
 
-    const bookedTimes = bookingSnap.docs.map(doc => doc.data().time.trim());
+    let blockedMinutes = new Set();
+
+    bookingSnap.forEach(doc => {
+      const data = doc.data();
+      const bookedTime = data.time.trim();
+      const bookedMinutes = convertToMinutes(bookedTime);
+
+      // Estimate buffer based on service type
+      const buffer = estimateServiceDuration(data.service);
+
+      // Block all minutes in that service duration
+      for (let i = 0; i < buffer; i++) {
+        blockedMinutes.add(bookedMinutes + i);
+      }
+    });
 
     // 2️⃣ Get unavailable periods for that date
     const unavailableSnap = await db.collection("unavailableDays")
       .where("date", "==", dateInput)
       .get();
 
-    let unavailableRanges = [];
     unavailableSnap.forEach(doc => {
       const data = doc.data();
       if (data.allDay) {
         availableSlots = []; // whole day blocked
       } else {
-        unavailableRanges.push({
-          start: convertToMinutes(data.startTime),
-          end: convertToMinutes(data.endTime)
-        });
+        const start = convertToMinutes(data.startTime);
+        const end = convertToMinutes(data.endTime);
+        for (let i = start; i <= end; i++) {
+          blockedMinutes.add(i);
+        }
       }
     });
 
-    // 3️⃣ Remove booked slots
-    availableSlots = availableSlots.filter(slot => !bookedTimes.includes(slot));
-
-    // 4️⃣ Remove slots inside unavailable ranges
+    // 3️⃣ Remove all blocked slots
     availableSlots = availableSlots.filter(slot => {
       const slotMinutes = convertToMinutes(slot);
-      return !unavailableRanges.some(r => slotMinutes >= r.start && slotMinutes <= r.end);
+      return !blockedMinutes.has(slotMinutes);
     });
 
     // ✅ Show results
@@ -1772,6 +1783,25 @@ async function loadAvailableTimes() {
     console.error("Error loading times:", err);
     timesList.innerHTML = "<p style='color:red;'>Error loading available times.</p>";
   }
+}
+
+
+    function estimateServiceDuration(serviceText) {
+  let buffer = 60; // default 60 mins
+
+  if (!serviceText) return buffer;
+
+  if (serviceText.includes("Regular Pedicure")) buffer = 60;
+  if (serviceText.includes("Spa Pedicure")) buffer = 90;
+  if (serviceText.includes("Deluxe Pedicure")) buffer = 90;
+  if (serviceText.includes("Gel Pedicure")) buffer = 120;
+  if (serviceText.includes("Paraffin Pedicure")) buffer = 60;
+  if (serviceText.includes("Hot Stone Pedicure")) buffer = 90;
+  if (serviceText.includes("Shellac Pedicure")) buffer = 90;
+  if (serviceText.includes("Acrylic Powder Manicure")) buffer = 120;
+  if (serviceText.includes("Nail Extension")) buffer = 90;
+
+  return buffer;
 }
 
 
