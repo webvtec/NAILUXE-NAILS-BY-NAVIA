@@ -1656,22 +1656,23 @@ if (!user) {
   const nailExtensionType = document.getElementById('nailExtensionType').value;
   const slotSelect = document.getElementById('timeSelect');
 
+  // Reset dropdown to loading state
   slotSelect.innerHTML = `<option value="">Loading available times...</option>`;
 
+  // Make sure user selected a date and at least one service
   if (!date || (pedicureType === "NONE" && manicureType === "NONE" && nailExtensionType === "NONE")) {
     slotSelect.innerHTML = `<option value="">Choose a date and service first</option>`;
     return;
   }
 
-  // Get service duration estimate (minutes)
-  let serviceDuration = 60; // default
+  // Estimate service duration (base 60 mins)
+  let serviceDuration = 60;
   if (pedicureType === "Gel Pedicure" || manicureType === "Gel Manicure") serviceDuration = 120;
   if (pedicureType === "Spa Pedicure" || manicureType === "Deluxe Manicure") serviceDuration = 90;
-  if (nailExtensionType !== "NONE") serviceDuration += 45; // add time for extensions
+  if (nailExtensionType !== "NONE") serviceDuration += 45; // add extra time for extensions
 
   // Add buffer
-  let buffer = 20;
-  serviceDuration += buffer;
+  serviceDuration += 20;
 
   // Get business hours for selected day
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
@@ -1684,47 +1685,62 @@ if (!user) {
   const openMins = convertToMinutes(business.open);
   const closeMins = convertToMinutes(business.close);
 
-  // Get existing bookings for that date
-  const snapshot = await db.collection("bookings")
-    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
-    .get();
-
+  // Query Firestore for bookings on this date
   let bookedSlots = [];
-  snapshot.forEach(doc => {
-    let bookedTime = doc.data().time.trim();
-    bookedSlots.push(convertToMinutes(bookedTime));
-  });
+  try {
+    const snapshot = await db.collection("bookings")
+      .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+      .get();
 
-  // Always start with a default "please select"
-let optionsHTML = `<option value="">-- Please select a time --</option>`;
+    snapshot.forEach(doc => {
+      let bookedTime = (doc.data().time || "").trim();
+      if (bookedTime) {
+        bookedSlots.push(convertToMinutes(bookedTime));
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+    slotSelect.innerHTML = `<option value="">Error loading bookings</option>`;
+    return;
+  }
 
-// Generate slots
-for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
-  let end = start + serviceDuration;
+  // Always start with a default option
+  let optionsHTML = `<option value="">-- Please select a time --</option>`;
+  let availableCount = 0;
 
-  // Check overlap
-  let conflict = bookedSlots.some(b => {
-    let bookedStart = b;
-    let bookedEnd = bookedStart + serviceDuration; // assuming same duration
-    return (start < bookedEnd && end > bookedStart);
-  });
+  // Generate time slots every 15 minutes
+  for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
+    let end = start + serviceDuration;
 
-  if (!conflict) {
-    let hours = Math.floor(start / 60);
-    let minutes = start % 60;
-    let period = hours >= 12 ? "PM" : "AM";
-    if (hours > 12) hours -= 12;
-    if (hours === 0) hours = 12;
+    // Check if overlaps with a booked slot
+    let conflict = bookedSlots.some(b => {
+      let bookedStart = b;
+      let bookedEnd = bookedStart + serviceDuration; // assuming same duration
+      return (start < bookedEnd && end > bookedStart);
+    });
 
-    let timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
-    optionsHTML += `<option value="${timeStr}">${timeStr}</option>`;
+    if (!conflict) {
+      let hours = Math.floor(start / 60);
+      let minutes = start % 60;
+      let period = hours >= 12 ? "PM" : "AM";
+      if (hours > 12) hours -= 12;
+      if (hours === 0) hours = 12;
+
+      let timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+      optionsHTML += `<option value="${timeStr}">${timeStr}</option>`;
+      availableCount++;
+    }
+  }
+
+  // If no slots found, display message
+  if (availableCount === 0) {
+    slotSelect.innerHTML = `<option value="">No available times</option>`;
+  } else {
+    slotSelect.innerHTML = optionsHTML;
   }
 }
 
-// Insert into dropdown
-slotSelect.innerHTML = optionsHTML;
-
-// Recalculate slots whenever date or services change
+// Attach listeners (only once!)
 document.getElementById("date").addEventListener("change", generateAvailableSlots);
 document.getElementById("pedicureType").addEventListener("change", generateAvailableSlots);
 document.getElementById("manicureType").addEventListener("change", generateAvailableSlots);
