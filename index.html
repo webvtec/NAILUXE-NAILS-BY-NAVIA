@@ -318,7 +318,7 @@
 <body>
 
   <div class="header-bar">
-    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <button id="menu-toggle" onclick="toggleMenu()">☰</button>
     <div class="header-title">TISHAYS NAILPLACE</div>
     <a href="https://maps.app.goo.gl/Y5KEuKuHc6AVJY1BA" target="_blank" class="location-button">📍</a>
   </div>
@@ -794,6 +794,19 @@ function closeMenu() {
   const menu = document.getElementById('menu');
   menu.classList.remove('show');
 }
+
+    // ✅ Close menu when clicking outside
+document.addEventListener("click", function(event) {
+  const menu = document.getElementById("menu");          // sidebar
+  const toggleBtn = document.getElementById("menu-toggle"); // ☰ button
+
+  if (menu.classList.contains("show") &&
+      !menu.contains(event.target) &&
+      !toggleBtn.contains(event.target)) {
+    closeMenu();
+  }
+});
+
 
 function formatTimeInput() {
   let input = document.getElementById('timeInput');
