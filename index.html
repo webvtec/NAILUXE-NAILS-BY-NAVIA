@@ -449,6 +449,13 @@
   <!-- ✅ Booking Section -->
   <div id="bookingSection" class="content-section">
     <h1>BOOK APPOINTMENT</h1>
+    <div style="text-align:center; margin-bottom:15px;">
+  <button type="button" onclick="showAvailableDays()" 
+    style="background-color:#007bff; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+    📅 Available Days
+  </button>
+</div>
+
     <form onsubmit="submitBooking(event)">
       <label for="name">Name:</label>
       <input type="text" id="name" required />
@@ -605,6 +612,51 @@
     ">OK</button>
   </div>
 </div>
+
+
+  <!-- Available Days Modal -->
+<div id="availableDaysModal" style="
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background-color:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:10000;">
+  
+  <div style="
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    max-width:400px;
+    width:90%;
+    max-height:80vh;
+    overflow-y:auto;
+    text-align:center;
+    position:relative;">
+    
+    <!-- Close Button -->
+    <button onclick="closeAvailableDays()" style="
+      position:absolute; top:10px; right:15px;
+      background:none; border:none; font-size:22px; cursor:pointer;">✖</button>
+    
+    <h3 style="margin-bottom:15px; color:#6200ea;">Find Available Times</h3>
+    
+    <!-- Date Picker -->
+    <input type="date" id="availableDatePicker" style="
+      padding:8px; border:1px solid #ccc; border-radius:6px; margin-bottom:15px; width:80%;">
+    
+    <button onclick="loadAvailableTimes()" style="
+      background-color:#007bff; color:white; border:none;
+      padding:8px 15px; border-radius:6px; cursor:pointer; margin-bottom:15px;">
+      Show Available Times
+    </button>
+    
+    <!-- Times will appear here -->
+    <div id="availableTimesList" style="text-align:left;"></div>
+  </div>
+</div>
+
 
 
   <!-- Admin Login Modal -->
@@ -1637,6 +1689,55 @@ if (!user) {
     }
   });
     }
+
+
+    function showAvailableDays() {
+  document.getElementById('availableDaysModal').style.display = 'flex';
+  document.getElementById('availableTimesList').innerHTML = "";
+}
+
+function closeAvailableDays() {
+  document.getElementById('availableDaysModal').style.display = 'none';
+  document.getElementById('availableTimesList').innerHTML = "";
+}
+
+async function loadAvailableTimes() {
+  const dateInput = document.getElementById("availableDatePicker").value;
+  const timesList = document.getElementById("availableTimesList");
+
+  if (!dateInput) {
+    alert("Please select a date first.");
+    return;
+  }
+
+  timesList.innerHTML = "<p>Loading available times...</p>";
+
+  // Generate slots for every MINUTE from 9:00 AM to 6:00 PM
+  const slots = [];
+  for (let hour = 9; hour <= 18; hour++) {
+    for (let min = 0; min < 60; min++) {
+      let period = hour >= 12 ? "PM" : "AM";
+      let displayHour = hour % 12 || 12;
+      let displayMin = min.toString().padStart(2, "0");
+      slots.push(`${displayHour}:${displayMin} ${period}`);
+    }
+  }
+
+  let availableSlots = [];
+
+  for (let slot of slots) {
+    let isAvailable = await validateTimeSlot(dateInput, slot);
+    if (isAvailable) availableSlots.push(slot);
+  }
+
+  if (availableSlots.length === 0) {
+    timesList.innerHTML = "<p style='color:red;'>No available times for this day.</p>";
+  } else {
+    timesList.innerHTML = "<h4>Available Times for " + dateInput + ":</h4>" +
+      availableSlots.map(t => `<p>⏰ ${t}</p>`).join("");
+  }
+}
+
 
 
   </script>
