@@ -924,7 +924,7 @@ function validateTimeSlot(date, selectedTime) {
     return Promise.resolve(false);
   }
 
-  // ✅ First check unavailableDays
+  // ✅ Check unavailable days
   return db.collection('unavailableDays').where('date', '==', date).get()
     .then((unavailableSnapshot) => {
       let isUnavailable = false;
@@ -946,9 +946,9 @@ function validateTimeSlot(date, selectedTime) {
         return false;
       }
 
-      // ✅ Check against existing bookings
+      // ✅ Query bookings by string date
       return db.collection('bookings')
-        .where('date', '==', firebase.firestore.Timestamp.fromDate(new Date(date)))
+        .where('date', '==', date)
         .get()
         .then((querySnapshot) => {
           const selectedDuration = getSelectedServiceDuration();
@@ -958,19 +958,19 @@ function validateTimeSlot(date, selectedTime) {
             const booking = doc.data();
 
             let bookedMinutes = convertToMinutes(booking.time.trim().replace(/\s+/g, ' '));
-            let bookedDuration = booking.duration || 60; // fallback
+            let bookedDuration = booking.duration || 60;
             let bookedEnd = bookedMinutes + bookedDuration;
 
-            // ✅ Overlap check
+            // Overlap check
             if (!(selectedEnd <= bookedMinutes || selectedMinutes >= bookedEnd)) {
-              return false; // conflict
+              return false;
             }
           }
-
-          return true; // ✅ No conflicts
+          return true;
         });
     });
 }
+
 
           // Calculate buffer for Pedicure
           if (pedicureType !== 'NONE') {
@@ -1622,9 +1622,9 @@ async function loadAvailableSlots() {
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // ✅ Fetch all bookings for that date (exact match now)
+  // ✅ Query bookings by string date
   const snapshot = await db.collection("bookings")
-    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .where("date", "==", date)
     .get();
 
   const bookings = snapshot.docs.map(doc => {
@@ -1633,7 +1633,7 @@ async function loadAvailableSlots() {
     return { start: bookedTime, end: bookedTime + bookedDuration };
   });
 
-  // ✅ Fetch unavailable day ranges for that date
+  // ✅ Query unavailable day ranges (still string)
   const unavailableSnapshot = await db.collection("unavailableDays")
     .where("date", "==", date)
     .get();
@@ -1650,7 +1650,7 @@ async function loadAvailableSlots() {
     }
   });
 
-  // ✅ Generate slots (exclude booked + unavailable)
+  // ✅ Generate slots
   for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
     const end = t + duration;
 
@@ -1665,7 +1665,6 @@ async function loadAvailableSlots() {
       const displayHours = ((hours + 11) % 12 + 1);
       const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 
-      // 🚫 Extra safeguard: don’t add if Firestore already has a booking starting at this exact time
       if (!bookings.some(b => b.start === t)) {
         let option = document.createElement("option");
         option.value = displayTime;
