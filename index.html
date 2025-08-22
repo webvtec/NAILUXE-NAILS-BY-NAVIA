@@ -1092,8 +1092,8 @@ function submitBooking(event) {
 
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
-  const date = document.getElementById('date').value;
-  const time = document.getElementById('selectedTime').value; // ✅ FIXED
+  const date = document.getElementById('date').value; // YYYY-MM-DD
+  const time = document.getElementById('selectedTime').value;
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
@@ -1112,79 +1112,83 @@ function submitBooking(event) {
   // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
 
-  validateTimeSlot(date, time)
-    .then((isAvailable) => {
-      if (!isAvailable) {
-        alert('This time is not available. Please choose another time.');
-        return;
-      }
+  // ✅ Convert to pretty format: July 6, 2025
+  const [y, m, d] = date.split('-').map(Number);
+  const formattedDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
 
-      // ✅ Save booking to Firestore (with default deposit = "No")
-      db.collection('bookings').add({
-        uid: user.uid,
-        bookingNumber,
-        name,
-        phone,
-        date: firebase.firestore.Timestamp.fromDate(new Date(date)),
-        time,
-        service,
-        deposit: "No"
-      })
-      .then(() => {
-        // ✅ Send Telegram notification
-        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+  validateTimeSlot(date, time).then((isAvailable) => {
+    if (!isAvailable) {
+      alert('This time is not available. Please choose another time.');
+      return;
+    }
 
-        const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
-        const telegramChatId = "-1002734216867";
+    // ✅ Save booking to Firestore (string date + formatted date)
+    db.collection('bookings').add({
+      uid: user.uid,
+      bookingNumber,
+      name,
+      phone,
+      dateRaw: date,          // "2025-07-06"
+      dateFormatted: formattedDate, // "July 6, 2025"
+      time,
+      service,
+      deposit: "No"
+    })
+    .then(() => {
+      // ✅ Send Telegram notification
+      const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${formattedDate}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
-        return fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: telegramChatId,
-            text: message,
-            parse_mode: "HTML"
-          })
-        });
-      })
-      .then(response => {
-        if (response.ok) {
-          // ✅ Show confirmation modal with booking number
-          document.querySelector("#bookingModal h3").style.display = "none";
-          document.querySelector("#bookingModal p").innerHTML = `
-            <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
-              <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
-              <p style="font-size:18px; margin:5px 0 15px 0;">
-                Booking #<strong>${bookingNumber}</strong>
-              </p>
-              <hr style="margin:15px 0;">
-              <p style="font-size:15px; line-height:1.5;">
-                <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
-                or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
-              </p>
-              <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
-                💵 Deposit Due Now: JMD $4,000.00
-              </p>
-              <hr style="margin:15px 0;">
-              <h3 style="font-size:16px; margin:10px 0;">Banking Details:</h3>
-              <p>🏦 Bank: <strong>Your Bank Name</strong></p>
-              <p>👤 Account Name: <strong>Your Account Name</strong></p>
-              <p>#️⃣ Account Number: <strong>123456789</strong></p>
-              <p>🏢 Branch: <strong>Your Branch Name</strong></p>
-              <hr style="margin:15px 0;">
-              <p style="font-size:14px; color:#555;">
-                ℹ️ You can always see banking info in the <strong>Payment Info</strong> menu.
-              </p>
-            </div>
-          `;
-          document.getElementById('bookingModal').style.display = 'flex';
-        }
-      })
-      .catch((err) => {
-        console.error("Booking error:", err);
-        alert("Failed to save booking. Please try again.");
+      const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
+      const telegramChatId = "-1002734216867";
+
+      return fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: message,
+          parse_mode: "HTML"
+        })
       });
+    })
+    .then(response => {
+      if (response.ok) {
+        // ✅ Show confirmation modal
+        document.querySelector("#bookingModal h3").style.display = "none";
+        document.querySelector("#bookingModal p").innerHTML = `
+          <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
+            <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
+            <p style="font-size:18px; margin:5px 0 15px 0;">
+              Booking #<strong>${bookingNumber}</strong>
+            </p>
+            <p style="font-size:15px; margin:5px 0;">
+              <strong>Date:</strong> ${formattedDate}
+            </p>
+            <p style="font-size:15px; margin:5px 0;">
+              <strong>Time:</strong> ${time}
+            </p>
+            <hr style="margin:15px 0;">
+            <p style="font-size:15px; line-height:1.5;">
+              <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
+              or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
+            </p>
+            <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
+              💵 Deposit Due Now: JMD $4,000.00
+            </p>
+          </div>
+        `;
+        document.getElementById('bookingModal').style.display = 'flex';
+      }
+    })
+    .catch((err) => {
+      console.error("Booking error:", err);
+      alert("Failed to save booking. Please try again.");
     });
+  });
 }
 
 
