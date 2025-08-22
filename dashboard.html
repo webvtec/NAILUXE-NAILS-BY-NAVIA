@@ -620,13 +620,37 @@ function searchReservations() {
   const cards = reservationsContainer.querySelectorAll(".reservation-card");
   for (let card of cards) {
     const text = card.innerText.toLowerCase();
+
+    // ✅ also normalize dates for search
+    let matchFound = false;
+
+    // check regular text
     if (text.includes(query)) {
+      matchFound = true;
+    } else {
+      // check for formatted vs raw date mismatch
+      const dateElement = card.querySelector("p strong")?.parentElement?.innerText.toLowerCase();
+      if (dateElement) {
+        // Example: "Date: July 6, 2025"
+        const rawDateMatch = dateElement.match(/(\w+ \d{1,2}, \d{4})/); // July 6, 2025
+        if (rawDateMatch) {
+          const parsedDate = new Date(rawDateMatch[1]);
+          const rawDate = parsedDate.toISOString().split("T")[0]; // 2025-07-06
+          if (rawDate.includes(query)) {
+            matchFound = true;
+          }
+        }
+      }
+    }
+
+    if (matchFound) {
       card.classList.add("highlighted");
       card.scrollIntoView({ behavior: "smooth", block: "center" });
       break;
     }
   }
 }
+
 
     
 function clearReservations() {
