@@ -459,8 +459,10 @@
     <input type="date" id="date" min="" required onchange="loadAvailableSlots()" />
 
     <!-- ✅ Time slots will appear here -->
-    <div id="timeSlots" style="margin: 15px 0;"></div>
-    <input type="hidden" id="selectedTime" required />
+    <label for="selectedTime">Available Times:</label>
+    <select id="selectedTime" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
+    <option value="">-- Select a time --</option>
+    </select>
 
     <label for="pedicureType">Select Pedicure Type:</label>
     <select id="pedicureType" onchange="showEstimateTime(); loadAvailableSlots();">
@@ -1723,35 +1725,30 @@ function selectSlot(time, btn) {
 
     async function loadAvailableSlots() {
   const date = document.getElementById('date').value;
-  const slotsContainer = document.getElementById('timeSlots');
-  slotsContainer.innerHTML = "Loading available times...";
+  const timeSelect = document.getElementById('selectedTime');
+  timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
 
   if (!date) return;
 
-  // Get business hours for that day
   const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
   if (!business) {
-    slotsContainer.innerHTML = "<p style='color:red;'>Closed this day</p>";
+    timeSelect.innerHTML = "<option value=''>Closed this day</option>";
     return;
   }
 
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // Get all existing bookings for that date
+  // Fetch bookings for that date
   const snapshot = await db.collection("bookings")
     .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
     .get();
 
   const bookedTimes = snapshot.docs.map(doc => convertToMinutes(doc.data().time));
+  const buffer = getBufferForSelectedServices();
 
-  // Service buffer (you already calculate this in validateTimeSlot — reuse logic here!)
-  let buffer = getBufferForSelectedServices();
-
-  // Build slots
-  let html = "<h3>Select a Time:</h3><div style='display:flex; flex-wrap:wrap; gap:10px;'>";
-  for (let t = openMinutes; t <= closeMinutes - buffer; t += 30) { // step = 30min
+  for (let t = openMinutes; t <= closeMinutes - buffer; t += 30) {
     let isTaken = bookedTimes.some(bt => Math.abs(bt - t) < buffer);
 
     if (!isTaken) {
@@ -1761,21 +1758,13 @@ function selectSlot(time, btn) {
       const displayHours = ((hours + 11) % 12 + 1);
       const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 
-      html += `<button type="button" onclick="selectSlot('${displayTime}')"
-                 style="padding:8px 12px; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
-                 ${displayTime}</button>`;
+      let option = document.createElement("option");
+      option.value = displayTime;
+      option.textContent = displayTime;
+      timeSelect.appendChild(option);
     }
   }
-  html += "</div>";
-  slotsContainer.innerHTML = html;
 }
-
-function selectSlot(time) {
-  document.getElementById("selectedTime").value = time;
-  [...document.querySelectorAll("#timeSlots button")].forEach(btn => btn.style.background = "");
-  event.target.style.background = "#98FF98"; // highlight selected
-}
-
 
 
   </script>
