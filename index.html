@@ -1712,7 +1712,7 @@ async function loadAvailableTimes() {
 
   timesList.innerHTML = "<p>Loading available times...</p>";
 
-  // Generate slots for every MINUTE from 9:00 AM to 6:00 PM
+  // Generate all slots for the day (every minute, 9AM - 6PM)
   const slots = [];
   for (let hour = 9; hour <= 18; hour++) {
     for (let min = 0; min < 60; min++) {
@@ -1723,21 +1723,56 @@ async function loadAvailableTimes() {
     }
   }
 
-  let availableSlots = [];
+  let availableSlots = [...slots]; // start assuming all are free
 
-  for (let slot of slots) {
-    let isAvailable = await validateTimeSlot(dateInput, slot);
-    if (isAvailable) availableSlots.push(slot);
-  }
+  try {
+    // 1️⃣ Get bookings for that date
+    const bookingSnap = await db.collection("bookings")
+      .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(dateInput)))
+      .get();
 
-  if (availableSlots.length === 0) {
-    timesList.innerHTML = "<p style='color:red;'>No available times for this day.</p>";
-  } else {
-    timesList.innerHTML = "<h4>Available Times for " + dateInput + ":</h4>" +
-      availableSlots.map(t => `<p>⏰ ${t}</p>`).join("");
+    const bookedTimes = bookingSnap.docs.map(doc => doc.data().time.trim());
+
+    // 2️⃣ Get unavailable periods for that date
+    const unavailableSnap = await db.collection("unavailableDays")
+      .where("date", "==", dateInput)
+      .get();
+
+    let unavailableRanges = [];
+    unavailableSnap.forEach(doc => {
+      const data = doc.data();
+      if (data.allDay) {
+        availableSlots = []; // whole day blocked
+      } else {
+        unavailableRanges.push({
+          start: convertToMinutes(data.startTime),
+          end: convertToMinutes(data.endTime)
+        });
+      }
+    });
+
+    // 3️⃣ Remove booked slots
+    availableSlots = availableSlots.filter(slot => !bookedTimes.includes(slot));
+
+    // 4️⃣ Remove slots inside unavailable ranges
+    availableSlots = availableSlots.filter(slot => {
+      const slotMinutes = convertToMinutes(slot);
+      return !unavailableRanges.some(r => slotMinutes >= r.start && slotMinutes <= r.end);
+    });
+
+    // ✅ Show results
+    if (availableSlots.length === 0) {
+      timesList.innerHTML = "<p style='color:red;'>No available times for this day.</p>";
+    } else {
+      timesList.innerHTML = "<h4>Available Times for " + dateInput + ":</h4>" +
+        availableSlots.map(t => `<p>⏰ ${t}</p>`).join("");
+    }
+
+  } catch (err) {
+    console.error("Error loading times:", err);
+    timesList.innerHTML = "<p style='color:red;'>Error loading available times.</p>";
   }
 }
-
 
 
   </script>
