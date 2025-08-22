@@ -11,7 +11,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
@@ -449,13 +448,6 @@
   <!-- ✅ Booking Section -->
   <div id="bookingSection" class="content-section">
     <h1>BOOK APPOINTMENT</h1>
-    <div style="text-align:center; margin-bottom:15px;">
-  <button type="button" onclick="showAvailableDays()" 
-    style="background-color:#007bff; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-    📅 Available Days
-  </button>
-</div>
-
     <form onsubmit="submitBooking(event)">
       <label for="name">Name:</label>
       <input type="text" id="name" required />
@@ -614,51 +606,6 @@
 </div>
 
 
-  <!-- Available Days Modal -->
-<div id="availableDaysModal" style="
-  display:none;
-  position:fixed;
-  top:0; left:0; right:0; bottom:0;
-  background-color:rgba(0,0,0,0.5);
-  justify-content:center;
-  align-items:center;
-  z-index:10000;">
-  
-  <div style="
-    background:#fff;
-    padding:20px;
-    border-radius:12px;
-    max-width:400px;
-    width:90%;
-    max-height:80vh;
-    overflow-y:auto;
-    text-align:center;
-    position:relative;">
-    
-    <!-- Close Button -->
-    <button onclick="closeAvailableDays()" style="
-      position:absolute; top:10px; right:15px;
-      background:none; border:none; font-size:22px; cursor:pointer;">✖</button>
-    
-    <h3 style="margin-bottom:15px; color:#6200ea;">Find Available Times</h3>
-    
-    <!-- Date Picker -->
-    <input type="date" id="availableDatePicker" style="
-      padding:8px; border:1px solid #ccc; border-radius:6px; margin-bottom:15px; width:80%;">
-    
-    <button onclick="loadAvailableTimes()" style="
-      background-color:#007bff; color:white; border:none;
-      padding:8px 15px; border-radius:6px; cursor:pointer; margin-bottom:15px;">
-      Show Available Times
-    </button>
-    
-    <!-- Times will appear here -->
-    <div id="availableTimesList" style="text-align:left;"></div>
-  </div>
-</div>
-
-
-
   <!-- Admin Login Modal -->
 <div id="adminLoginModal" style="
   display:none;
@@ -786,32 +733,14 @@ function attemptAdminLogin() {
 }
 
       function toggleMenu() {
-  const menu = document.getElementById("menu");
-  const button = document.querySelector(".menu-button");
-
-  if (menu.classList.contains("show")) {
-    closeMenu();
-  } else {
-    menu.classList.add("show");
-
-    // ✅ Enable outside click listener
-    document.addEventListener("click", outsideClickHandler);
-  }
-
-  function outsideClickHandler(event) {
-    if (!menu.contains(event.target) && !button.contains(event.target)) {
-      closeMenu();
-      document.removeEventListener("click", outsideClickHandler);
-    }
-  }
+  const menu = document.getElementById('menu');
+  menu.classList.toggle('show');
 }
 
 function closeMenu() {
-  const menu = document.getElementById("menu");
-  menu.classList.remove("show");
+  const menu = document.getElementById('menu');
+  menu.classList.remove('show');
 }
-
-
 
 function formatTimeInput() {
   let input = document.getElementById('timeInput');
@@ -1203,7 +1132,6 @@ function generateBookingNumber(name) {
   return initials + digits;
 }
 
-
 function submitBooking(event) {
   event.preventDefault();
 
@@ -1239,13 +1167,6 @@ function submitBooking(event) {
   // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
 
-  // ✅ Format date for both Telegram + Modal
-  const formattedDate = new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-
   validateTimeSlot(date, time)
     .then((isAvailable) => {
       if (!isAvailable) {
@@ -1253,23 +1174,20 @@ function submitBooking(event) {
         return;
       }
 
+      // ✅ Save booking to Firestore (with default deposit = "No")
       db.collection('bookings').add({
-  uid: user.uid,
-  bookingNumber: bookingNumber,
-  name: name,
-  phone: phone,
-  date: firebase.firestore.Timestamp.fromDate(new Date(date)),
-  time: time,
-  service: service,
-  pedicureType: pedicureType,          // ✅ save separately
-  manicureType: manicureType,          // ✅ save separately
-  nailExtensionType: nailExtensionType,// ✅ save separately
-  extensionLength: extensionLength,    // ✅ optional but useful
-  deposit: "No"
-})
+        uid: user.uid,
+        bookingNumber: bookingNumber,
+        name: name,
+        phone: phone,
+        date: firebase.firestore.Timestamp.fromDate(new Date(date)), // Firestore Timestamp
+        time: time,
+        service: service,
+        deposit: "No"
+      })
       .then(() => {
-        // ✅ Telegram notification
-        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${formattedDate}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+        // ✅ Send Telegram notification
+        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
         const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
         const telegramChatId = "-1002734216867";
@@ -1285,65 +1203,68 @@ function submitBooking(event) {
         })
         .then(response => {
           if (response.ok) {
-            // ✅ Confirmation Modal with formattedDate
-            document.querySelector("#bookingModal h3").style.display = "none";
-            document.querySelector("#bookingModal p").innerHTML = `
-              <div style="
-                text-align: center;
-                padding: 20px;
-                font-family: Arial, sans-serif;
-                color: #333;
-              ">
-                <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
-                <p style="font-size: 18px; margin: 5px 0 15px 0;">
-                  Booking #<strong>${bookingNumber}</strong>
-                </p>
-                <p style="font-size: 16px; margin: 5px 0 15px 0; color:#444;">
-                  📅 ${formattedDate} — ⏰ ${time}
-                </p>
+            // ✅ Show confirmation modal
+            document.querySelector("#bookingModal h3").style.display = "none"; // hide old heading
+document.querySelector("#bookingModal p").innerHTML = `
+  <div style="
+    text-align: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+  ">
+    <!-- ✅ Title + Booking Number -->
+    <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
+    <p style="font-size: 18px; margin: 5px 0 15px 0;">
+      Booking #<strong>(${bookingNumber})</strong>
+    </p>
 
-                <hr style="margin: 15px 0;">
+    <hr style="margin: 15px 0;">
 
-                <p style="font-size: 15px; line-height: 1.5;">
-                  <strong>$4,000 (JMD)</strong> must be transferred 
-                  to the account provided below within <strong>48 hours</strong> or your 
-                  booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
-                </p>
+    <!-- ✅ Deposit Warning -->
+    <p style="font-size: 15px; line-height: 1.5;">
+      <strong>$4,000 (JMD)</strong> must be transferred 
+      to the account provided below within <strong>48 hours</strong> or your 
+      booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
+    </p>
 
-                <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
-                  💵 Deposit Due Now: JMD $4,000.00
-                </p>
+    <!-- ✅ Amount Due -->
+    <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
+      💵 Deposit Due Now: JMD $4,000.00
+    </p>
 
-                <hr style="margin: 15px 0;">
+    <hr style="margin: 15px 0;">
 
-                <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
-                <p>🏦 Bank: <strong>Your Bank Name</strong></p>
-                <p>👤 Account Name: <strong>Your Account Name</strong></p>
-                <p>#️⃣ Account Number: <strong>123456789</strong></p>
-                <p>🏢 Branch: <strong>Your Branch Name</strong></p>
+    <!-- ✅ Banking Details -->
+    <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
+    <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
+    <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
+    <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
+    <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
 
-                <hr style="margin: 15px 0;">
+    <hr style="margin: 15px 0;">
 
-                <p style="font-size: 14px; color: #555;">
-                  ℹ️ You can always see this info again in the 
-                  <strong>Payment Info</strong> section of the menu.
-                </p>
+    <!-- ✅ Sidebar Reminder -->
+    <p style="font-size: 14px; color: #555;">
+      ℹ️ If you need to see the banking info again, it’s always visible in the 
+      <strong>Payment Info</strong> section of the menu.
+    </p>
 
-                <button onclick="document.getElementById('bookingModal').style.display='none'"
-                  style="
-                    margin-top: 15px;
-                    background-color: #007bff;
-                    color: white;
-                    padding: 10px 25px;
-                    border: none;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    cursor: pointer;
-                  ">
-                  OK
-                </button>
-              </div>
-            `;
+    <!-- ✅ OK Button -->
+    <button onclick="document.getElementById('bookingModal').style.display='none'"
+      style="
+        margin-top: 15px;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      ">
+      OK
+    </button>
+  </div>
+`;
 
             document.getElementById('bookingModal').style.display = 'flex';
 
@@ -1374,6 +1295,8 @@ function submitBooking(event) {
       alert('Error validating time. Please try again.');
     });
 }
+
+
 
 
     function showSection(sectionId) {
@@ -1714,202 +1637,6 @@ if (!user) {
   });
     }
 
-
-    function showAvailableDays() {
-  document.getElementById('availableDaysModal').style.display = 'flex';
-  document.getElementById('availableTimesList').innerHTML = "";
-}
-
-function closeAvailableDays() {
-  document.getElementById('availableDaysModal').style.display = 'none';
-  document.getElementById('availableTimesList').innerHTML = "";
-}
-
-
-// 🔹 Helper: get total service duration based on current selections
-function getServiceDuration() {
-  let duration = 0;
-
-  const pedicure = document.getElementById('pedicureType').value;
-  const manicure = document.getElementById('manicureType').value;
-  const extension = document.getElementById('nailExtensionType').value;
-
-  // Pedicure durations (in minutes)
-  switch (pedicure) {
-    case 'Regular Pedicure': duration += 60; break;
-    case 'Spa Pedicure': duration += 90; break;
-    case 'Deluxe Pedicure': duration += 90; break;
-    case 'Gel Pedicure': duration += 120; break;
-    case 'Paraffin Pedicure': duration += 60; break;
-    case 'Hot Stone Pedicure': duration += 90; break;
-    case 'French Pedicure': duration += 60; break;
-    case 'Shellac Pedicure': duration += 90; break;
-    case 'Fish Pedicure': duration += 60; break;
-    case 'Athletic Pedicure': duration += 90; break;
-  }
-
-  // Manicure durations
-  switch (manicure) {
-    case 'Regular Manicure': duration += 60; break;
-    case 'Spa Manicure': duration += 90; break;
-    case 'Deluxe Manicure': duration += 90; break;
-    case 'Gel Manicure': duration += 120; break;
-    case 'Paraffin Manicure': duration += 60; break;
-    case 'French Manicure': duration += 60; break;
-    case 'Shellac Manicure': duration += 90; break;
-    case 'Hot Oil Manicure': duration += 90; break;
-    case 'Acrylic Powder Manicure': duration += 120; break;
-    case 'Athletic Manicure': duration += 90; break;
-  }
-
-  // Nail Extensions
-  switch (extension) {
-    case 'Almond': duration += 40; break;
-    case 'Stiletto': duration += 50; break;
-    case 'Square': duration += 30; break;
-    case 'Coffin': duration += 50; break;
-    case 'Oval': duration += 40; break;
-  }
-
-  return duration || 30; // default 30 mins if none selected
-}
-
-// 🔹 Helper: duration for already-saved bookings
-function getServiceDurationFromData(data) {
-  let duration = 0;
-
-  switch (data.pedicureType) {
-    case 'Regular Pedicure': duration += 60; break;
-    case 'Spa Pedicure': duration += 90; break;
-    case 'Deluxe Pedicure': duration += 90; break;
-    case 'Gel Pedicure': duration += 120; break;
-    case 'Paraffin Pedicure': duration += 60; break;
-    case 'Hot Stone Pedicure': duration += 90; break;
-    case 'French Pedicure': duration += 60; break;
-    case 'Shellac Pedicure': duration += 90; break;
-    case 'Fish Pedicure': duration += 60; break;
-    case 'Athletic Pedicure': duration += 90; break;
-  }
-
-  switch (data.manicureType) {
-    case 'Regular Manicure': duration += 60; break;
-    case 'Spa Manicure': duration += 90; break;
-    case 'Deluxe Manicure': duration += 90; break;
-    case 'Gel Manicure': duration += 120; break;
-    case 'Paraffin Manicure': duration += 60; break;
-    case 'French Manicure': duration += 60; break;
-    case 'Shellac Manicure': duration += 90; break;
-    case 'Hot Oil Manicure': duration += 90; break;
-    case 'Acrylic Powder Manicure': duration += 120; break;
-    case 'Athletic Manicure': duration += 90; break;
-  }
-
-  switch (data.nailExtensionType) {
-    case 'Almond': duration += 40; break;
-    case 'Stiletto': duration += 50; break;
-    case 'Square': duration += 30; break;
-    case 'Coffin': duration += 50; break;
-    case 'Oval': duration += 40; break;
-  }
-
-  return duration || 30;
-}
-
-// 🔹 Main: show available times
-async function loadAvailableTimes() {
-  const dateInput = document.getElementById("availableDatePicker").value;
-  const pedicure = document.getElementById("pedicureType").value;
-  const manicure = document.getElementById("manicureType").value;
-  const extension = document.getElementById("nailExtensionType").value;
-  const timesList = document.getElementById("availableTimesList");
-
-  // Require date + service
-  if (!dateInput || (pedicure === "NONE" && manicure === "NONE" && extension === "NONE")) {
-    timesList.innerHTML = "<p style='color:red;'>⚠ Please select a date and at least one service to see available times.</p>";
-    return;
-  }
-
-  timesList.innerHTML = "<p>Loading available times...</p>";
-
-  const serviceDuration = getServiceDuration();
-
-  try {
-    // 1️⃣ Get all bookings for this day
-    const bookingSnap = await db.collection("bookings")
-      .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(dateInput)))
-      .get();
-
-    let bookings = [];
-    bookingSnap.forEach(doc => {
-      const data = doc.data();
-      const bookedStart = convertToMinutes(data.time);
-      const bookedDuration = getServiceDurationFromData(data);
-      bookings.push({ start: bookedStart, end: bookedStart + bookedDuration });
-    });
-
-    // Sort bookings by start time
-    bookings.sort((a, b) => a.start - b.start);
-
-    // 2️⃣ Define salon hours (9AM – 6PM)
-    const opening = 9 * 60;   // 540 minutes
-    const closing = 18 * 60;  // 1080 minutes
-
-    // Build free intervals
-    let intervals = [];
-    let prevEnd = opening;
-
-    for (let b of bookings) {
-      if (b.start > prevEnd) {
-        intervals.push({ start: prevEnd, end: b.start });
-      }
-      prevEnd = b.end;
-    }
-    if (prevEnd < closing) {
-      intervals.push({ start: prevEnd, end: closing, isLast: true });
-    }
-
-    // 3️⃣ Check which intervals fit the service
-    let availableSlots = [];
-    intervals.forEach(interval => {
-      const freeTime = interval.end - interval.start;
-
-      if (serviceDuration <= freeTime) {
-        if (interval.isLast) {
-          // Last interval → allow service to fit even if leftover before closing
-          availableSlots.push(minutesToTime(interval.start));
-        } else {
-          // Middle intervals → allow service to start at interval.start if it ends before next booking
-          if (interval.start + serviceDuration <= interval.end) {
-            availableSlots.push(minutesToTime(interval.start));
-          }
-        }
-      }
-    });
-
-    // 4️⃣ Show results
-    if (availableSlots.length === 0) {
-      timesList.innerHTML = "<p style='color:red;'>No available times for this day.</p>";
-    } else {
-      timesList.innerHTML = "<h4>Available Times:</h4>" +
-        availableSlots.map(t => 
-          `<p style="cursor:pointer; color:#007bff;" onclick="selectTime('${t}')">⏰ ${t}</p>`
-        ).join("");
-    }
-
-  } catch (err) {
-    console.error("Error loading times:", err);
-    timesList.innerHTML = "<p style='color:red;'>Error loading available times.</p>";
-  }
-}
-
-function minutesToTime(totalMinutes) {
-  let hour = Math.floor(totalMinutes / 60);
-  let minutes = totalMinutes % 60;
-  let period = hour >= 12 ? "PM" : "AM";
-  let displayHour = hour % 12 || 12;
-  let displayMin = minutes.toString().padStart(2, "0");
-  return `${displayHour}:${displayMin} ${period}`;
-}
 
   </script>
 
