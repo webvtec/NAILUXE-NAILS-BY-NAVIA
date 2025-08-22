@@ -1699,8 +1699,6 @@ if (!user) {
 let optionsHTML = `<option value="">-- Please select a time --</option>`;
 
 // Generate slots
-let optionsHTML = `<option value="">-- Please select a time --</option>`; // default placeholder
-
 for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
   let end = start + serviceDuration;
 
@@ -1725,7 +1723,6 @@ for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
 
 // Insert into dropdown
 slotSelect.innerHTML = optionsHTML;
-
 
 // Recalculate slots whenever date or services change
 document.getElementById("date").addEventListener("change", generateAvailableSlots);
