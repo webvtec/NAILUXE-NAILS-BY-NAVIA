@@ -1125,7 +1125,7 @@ function submitBooking(event) {
         bookingNumber,
         name,
         phone,
-        date: firebase.firestore.Timestamp.fromDate(new Date(date)),
+        date: date, // save as plain "YYYY-MM-DD" string
         time,
         service,
         deposit: "No"
