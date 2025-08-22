@@ -1656,47 +1656,61 @@ if (!user) {
   const nailExtensionType = document.getElementById('nailExtensionType').value;
   const slotSelect = document.getElementById('timeSelect');
 
-  // Reset dropdown to loading state
   slotSelect.innerHTML = `<option value="">Loading available times...</option>`;
 
-  // Make sure user selected a date and at least one service
   if (!date || (pedicureType === "NONE" && manicureType === "NONE" && nailExtensionType === "NONE")) {
     slotSelect.innerHTML = `<option value="">Choose a date and service first</option>`;
     return;
   }
 
-  // Estimate service duration (base 60 mins)
-  let serviceDuration = 60;
-  if (pedicureType === "Gel Pedicure" || manicureType === "Gel Manicure") serviceDuration = 120;
-  if (pedicureType === "Spa Pedicure" || manicureType === "Deluxe Manicure") serviceDuration = 90;
-  if (nailExtensionType !== "NONE") serviceDuration += 45; // add extra time for extensions
+  // Helper: estimate duration
+  function getDuration(pedi, mani, extension) {
+    let duration = 60; // base
+    if (pedi === "Gel Pedicure" || mani === "Gel Manicure") duration = 120;
+    if (pedi === "Spa Pedicure" || mani === "Deluxe Manicure") duration = 90;
+    if (extension !== "NONE") duration += 45;
+    return duration + 20; // buffer
+  }
 
-  // Add buffer
-  serviceDuration += 20;
+  // Duration for new booking
+  const selectedServiceDuration = getDuration(pedicureType, manicureType, nailExtensionType);
 
-  // Get business hours for selected day
+  // Business hours
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
   if (!business) {
     slotSelect.innerHTML = `<option value="">Closed on ${dayName}</option>`;
     return;
   }
-
   const openMins = convertToMinutes(business.open);
   const closeMins = convertToMinutes(business.close);
 
-  // Query Firestore for bookings on this date
+  // --- Firestore range query ---
+  const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+
   let bookedSlots = [];
   try {
     const snapshot = await db.collection("bookings")
-      .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+      .where("date", ">=", firebase.firestore.Timestamp.fromDate(dayStart))
+      .where("date", "<=", firebase.firestore.Timestamp.fromDate(dayEnd))
       .get();
 
     snapshot.forEach(doc => {
-      let bookedTime = (doc.data().time || "").trim();
-      if (bookedTime) {
-        bookedSlots.push(convertToMinutes(bookedTime));
-      }
+      const data = doc.data();
+      const bookedTime = (data.time || "").trim();
+      if (!bookedTime) return;
+
+      const bookedStart = convertToMinutes(bookedTime);
+
+      // Estimate this booking’s duration (or use data.duration if you save it!)
+      const bDuration = getDuration(
+        data.service.includes("Pedicure") ? data.service : "NONE",
+        data.service.includes("Manicure") ? data.service : "NONE",
+        data.service.includes("Nail Extension") ? data.service : "NONE"
+      );
+
+      bookedSlots.push({ start: bookedStart, end: bookedStart + bDuration });
     });
   } catch (err) {
     console.error("Error fetching bookings:", err);
@@ -1704,20 +1718,15 @@ if (!user) {
     return;
   }
 
-  // Always start with a default option
+  // Generate slots
   let optionsHTML = `<option value="">-- Please select a time --</option>`;
   let availableCount = 0;
 
-  // Generate time slots every 15 minutes
-  for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
-    let end = start + serviceDuration;
+  for (let start = openMins; start + selectedServiceDuration <= closeMins; start += 15) {
+    let end = start + selectedServiceDuration;
 
-    // Check if overlaps with a booked slot
-    let conflict = bookedSlots.some(b => {
-      let bookedStart = b;
-      let bookedEnd = bookedStart + serviceDuration; // assuming same duration
-      return (start < bookedEnd && end > bookedStart);
-    });
+    // Conflict check
+    let conflict = bookedSlots.some(b => start < b.end && end > b.start);
 
     if (!conflict) {
       let hours = Math.floor(start / 60);
@@ -1732,20 +1741,10 @@ if (!user) {
     }
   }
 
-  // If no slots found, display message
-  if (availableCount === 0) {
-    slotSelect.innerHTML = `<option value="">No available times</option>`;
-  } else {
-    slotSelect.innerHTML = optionsHTML;
-  }
+  slotSelect.innerHTML = availableCount > 0
+    ? optionsHTML
+    : `<option value="">No available times</option>`;
 }
-
-// Attach listeners (only once!)
-document.getElementById("date").addEventListener("change", generateAvailableSlots);
-document.getElementById("pedicureType").addEventListener("change", generateAvailableSlots);
-document.getElementById("manicureType").addEventListener("change", generateAvailableSlots);
-document.getElementById("nailExtensionType").addEventListener("change", generateAvailableSlots);
-
 
   </script>
 
