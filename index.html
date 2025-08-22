@@ -1784,10 +1784,11 @@ async function loadAvailableSlots() {
 
   // Build booked intervals
   const bookings = snapshot.docs.map(doc => {
-    const bookedTime = convertToMinutes(doc.data().time);
-    const bookedDuration = doc.data().duration || 60;
-    return { start: bookedTime, end: bookedTime + bookedDuration };
-  });
+  const bookedTime = convertToMinutes(doc.data().time);
+  const bookedDuration = doc.data().duration || 60; // now this will be real
+  return { start: bookedTime, end: bookedTime + bookedDuration };
+});
+
 
   // Generate 5-min slots
   for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
