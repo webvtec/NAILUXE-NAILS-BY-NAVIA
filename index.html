@@ -1203,6 +1203,7 @@ function generateBookingNumber(name) {
   return initials + digits;
 }
 
+
 function submitBooking(event) {
   event.preventDefault();
 
@@ -1238,6 +1239,13 @@ function submitBooking(event) {
   // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
 
+  // ✅ Format date for both Telegram + Modal
+  const formattedDate = new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+
   validateTimeSlot(date, time)
     .then((isAvailable) => {
       if (!isAvailable) {
@@ -1245,20 +1253,20 @@ function submitBooking(event) {
         return;
       }
 
-      // ✅ Save booking to Firestore (with default deposit = "No")
+      // ✅ Save booking to Firestore
       db.collection('bookings').add({
         uid: user.uid,
         bookingNumber: bookingNumber,
         name: name,
         phone: phone,
-        date: firebase.firestore.Timestamp.fromDate(new Date(date)), // Firestore Timestamp
+        date: firebase.firestore.Timestamp.fromDate(new Date(date)),
         time: time,
         service: service,
         deposit: "No"
       })
       .then(() => {
-        // ✅ Send Telegram notification
-        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+        // ✅ Telegram notification
+        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${formattedDate}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
         const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
         const telegramChatId = "-1002734216867";
@@ -1274,68 +1282,65 @@ function submitBooking(event) {
         })
         .then(response => {
           if (response.ok) {
-            // ✅ Show confirmation modal
-            document.querySelector("#bookingModal h3").style.display = "none"; // hide old heading
-document.querySelector("#bookingModal p").innerHTML = `
-  <div style="
-    text-align: center;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    color: #333;
-  ">
-    <!-- ✅ Title + Booking Number -->
-    <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
-    <p style="font-size: 18px; margin: 5px 0 15px 0;">
-      Booking #<strong>(${bookingNumber})</strong>
-    </p>
+            // ✅ Confirmation Modal with formattedDate
+            document.querySelector("#bookingModal h3").style.display = "none";
+            document.querySelector("#bookingModal p").innerHTML = `
+              <div style="
+                text-align: center;
+                padding: 20px;
+                font-family: Arial, sans-serif;
+                color: #333;
+              ">
+                <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
+                <p style="font-size: 18px; margin: 5px 0 15px 0;">
+                  Booking #<strong>${bookingNumber}</strong>
+                </p>
+                <p style="font-size: 16px; margin: 5px 0 15px 0; color:#444;">
+                  📅 ${formattedDate} — ⏰ ${time}
+                </p>
 
-    <hr style="margin: 15px 0;">
+                <hr style="margin: 15px 0;">
 
-    <!-- ✅ Deposit Warning -->
-    <p style="font-size: 15px; line-height: 1.5;">
-      <strong>$4,000 (JMD)</strong> must be transferred 
-      to the account provided below within <strong>48 hours</strong> or your 
-      booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
-    </p>
+                <p style="font-size: 15px; line-height: 1.5;">
+                  <strong>$4,000 (JMD)</strong> must be transferred 
+                  to the account provided below within <strong>48 hours</strong> or your 
+                  booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
+                </p>
 
-    <!-- ✅ Amount Due -->
-    <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
-      💵 Deposit Due Now: JMD $4,000.00
-    </p>
+                <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
+                  💵 Deposit Due Now: JMD $4,000.00
+                </p>
 
-    <hr style="margin: 15px 0;">
+                <hr style="margin: 15px 0;">
 
-    <!-- ✅ Banking Details -->
-    <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
-    <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
-    <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
-    <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
-    <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
+                <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
+                <p>🏦 Bank: <strong>Your Bank Name</strong></p>
+                <p>👤 Account Name: <strong>Your Account Name</strong></p>
+                <p>#️⃣ Account Number: <strong>123456789</strong></p>
+                <p>🏢 Branch: <strong>Your Branch Name</strong></p>
 
-    <hr style="margin: 15px 0;">
+                <hr style="margin: 15px 0;">
 
-    <!-- ✅ Sidebar Reminder -->
-    <p style="font-size: 14px; color: #555;">
-      ℹ️ If you need to see the banking info again, it’s always visible in the 
-      <strong>Payment Info</strong> section of the menu.
-    </p>
+                <p style="font-size: 14px; color: #555;">
+                  ℹ️ You can always see this info again in the 
+                  <strong>Payment Info</strong> section of the menu.
+                </p>
 
-    <!-- ✅ OK Button -->
-    <button onclick="document.getElementById('bookingModal').style.display='none'"
-      style="
-        margin-top: 15px;
-        background-color: #007bff;
-        color: white;
-        padding: 10px 25px;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-      ">
-      OK
-    </button>
-  </div>
-`;
+                <button onclick="document.getElementById('bookingModal').style.display='none'"
+                  style="
+                    margin-top: 15px;
+                    background-color: #007bff;
+                    color: white;
+                    padding: 10px 25px;
+                    border: none;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                  ">
+                  OK
+                </button>
+              </div>
+            `;
 
             document.getElementById('bookingModal').style.display = 'flex';
 
@@ -1366,8 +1371,6 @@ document.querySelector("#bookingModal p").innerHTML = `
       alert('Error validating time. Please try again.');
     });
 }
-
-
 
 
     function showSection(sectionId) {
