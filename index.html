@@ -924,20 +924,19 @@ function validateTimeSlot(date, selectedTime) {
     return Promise.resolve(false);
   }
 
+  // ✅ First check unavailableDays
   return db.collection('unavailableDays').where('date', '==', date).get()
     .then((unavailableSnapshot) => {
       let isUnavailable = false;
 
       unavailableSnapshot.forEach((doc) => {
         const data = doc.data();
-
         if (data.allDay) {
           isUnavailable = true;
         } else {
           const startMinutes = convertToMinutes(data.startTime);
           const endMinutes = convertToMinutes(data.endTime);
-
-          if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
+          if (selectedMinutes >= startMinutes && selectedMinutes < endMinutes) {
             isUnavailable = true;
           }
         }
@@ -947,16 +946,31 @@ function validateTimeSlot(date, selectedTime) {
         return false;
       }
 
+      // ✅ Check against existing bookings
       return db.collection('bookings')
         .where('date', '==', firebase.firestore.Timestamp.fromDate(new Date(date)))
         .get()
         .then((querySnapshot) => {
-          // Dynamically calculate buffer based on the selected service type
-          const pedicureType = document.getElementById('pedicureType').value;
-          const manicureType = document.getElementById('manicureType').value;
-          const nailExtensionType = document.getElementById('nailExtensionType').value;
+          const selectedDuration = getSelectedServiceDuration();
+          const selectedEnd = selectedMinutes + selectedDuration;
 
-          let buffer = 0; // Initialize buffer time
+          for (let doc of querySnapshot.docs) {
+            const booking = doc.data();
+
+            let bookedMinutes = convertToMinutes(booking.time.trim().replace(/\s+/g, ' '));
+            let bookedDuration = booking.duration || 60; // fallback
+            let bookedEnd = bookedMinutes + bookedDuration;
+
+            // ✅ Overlap check
+            if (!(selectedEnd <= bookedMinutes || selectedMinutes >= bookedEnd)) {
+              return false; // conflict
+            }
+          }
+
+          return true; // ✅ No conflicts
+        });
+    });
+}
 
           // Calculate buffer for Pedicure
           if (pedicureType !== 'NONE') {
@@ -1093,7 +1107,7 @@ function submitBooking(event) {
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const date = document.getElementById('date').value;
-  const time = document.getElementById('selectedTime').value; // ✅ FIXED
+  const time = document.getElementById('selectedTime').value;
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
@@ -1112,6 +1126,9 @@ function submitBooking(event) {
   // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
 
+  // ✅ Calculate service duration (includes buffer)
+  const duration = getSelectedServiceDuration();
+
   validateTimeSlot(date, time)
     .then((isAvailable) => {
       if (!isAvailable) {
@@ -1119,15 +1136,16 @@ function submitBooking(event) {
         return;
       }
 
-      // ✅ Save booking to Firestore (with default deposit = "No")
+      // ✅ Save booking to Firestore (with duration + timestamp date)
       db.collection('bookings').add({
         uid: user.uid,
         bookingNumber,
         name,
         phone,
-        date: date, // save as plain "YYYY-MM-DD" string
+        date: firebase.firestore.Timestamp.fromDate(new Date(date)), // ✅ Timestamp
         time,
         service,
+        duration,   // ✅ Store duration (service + buffer)
         deposit: "No"
       })
       .then(() => {
@@ -1186,6 +1204,7 @@ function submitBooking(event) {
       });
     });
 }
+
 
 
 
@@ -1564,12 +1583,17 @@ function getSelectedServiceDuration() {
 
   let duration = 0;
 
+  // Base durations
   if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 60;
   if (manicure !== "NONE") duration += serviceDurations[manicure] || 60;
   if (nailExtension !== "NONE") duration += 60; // default for extensions
 
+  // Add buffer time
+  duration += getBufferForSelectedServices();
+
   return duration || 60; // fallback
 }
+
 
 // ✅ FINAL version — only one loadAvailableSlots() now
 async function loadAvailableSlots() {
@@ -1598,10 +1622,9 @@ async function loadAvailableSlots() {
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // ✅ Fetch all bookings for that date
+  // ✅ Fetch all bookings for that date (exact match now)
   const snapshot = await db.collection("bookings")
-    .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
-    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
+    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
     .get();
 
   const bookings = snapshot.docs.map(doc => {
@@ -1627,7 +1650,7 @@ async function loadAvailableSlots() {
     }
   });
 
-// ✅ Generate slots (exclude booked + unavailable)
+  // ✅ Generate slots (exclude booked + unavailable)
   for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
     const end = t + duration;
 
@@ -1659,7 +1682,6 @@ async function loadAvailableSlots() {
     timeSelect.appendChild(option);
   }
 }
-
 
     
   </script>
