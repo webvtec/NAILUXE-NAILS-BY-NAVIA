@@ -1146,7 +1146,7 @@ function generateBookingNumber(name) {
 }
 
 
-    function submitBooking(event) {
+    async function submitBooking(event) {
   event.preventDefault();
 
   const user = firebase.auth().currentUser;
@@ -1161,6 +1161,7 @@ function generateBookingNumber(name) {
   const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
   const time = document.getElementById('selectedTime').value;
+
   if (!time) {
     alert("Please select a time slot");
     return;
@@ -1180,127 +1181,107 @@ function generateBookingNumber(name) {
     service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
   }
 
-  // ✅ Service duration (for saving in Firestore & slot validation)
+  // ✅ Service duration
   const duration = getSelectedServiceDuration();
 
-  // ✅ Generate booking number
+  // ✅ Booking number
   const bookingNumber = generateBookingNumber(name);
 
-  validateTimeSlot(date, time)
-    .then((isAvailable) => {
-      if (!isAvailable) {
-        alert('This time is not available. Please choose another time.');
-        return;
-      }
+  try {
+    // ✅ Validate slot
+    const isAvailable = await validateTimeSlot(date, time);
+    if (!isAvailable) {
+      alert('This time is not available. Please choose another time.');
+      return;
+    }
 
-      // ✅ Save booking to Firestore (with service duration & default deposit = "No")
-      db.collection('bookings').add({
-        uid: user.uid,
-        bookingNumber: bookingNumber,
-        name: name,
-        phone: phone,
-        date: firebase.firestore.Timestamp.fromDate(new Date(date)), // Firestore Timestamp
-        time: time,
-        service: service,
-        duration: duration,   // <-- important fix
-        deposit: "No"
-      })
-      .then(() => {
-        // ✅ Send Telegram notification
-        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+    // ✅ Save booking in Firestore
+    await db.collection('bookings').add({
+      uid: user.uid,
+      bookingNumber,
+      name,
+      phone,
+      date: firebase.firestore.Timestamp.fromDate(new Date(date)),
+      time,
+      service,
+      duration,
+      deposit: "No"
+    });
 
-        const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
-        const telegramChatId = "-1002734216867";
+    // ✅ Send Telegram notification
+    const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
-        fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: telegramChatId,
-            text: message   // ✅ removed parse_mode to prevent errors
-          })
-        })
-        .then(response => {
-          if (response.ok) {
-            // ✅ Show confirmation modal
-            document.querySelector("#bookingModal h3").style.display = "none"; // hide old heading
-            document.querySelector("#bookingModal p").innerHTML = `
-              <div style="
-                text-align: center;
-                padding: 20px;
-                font-family: Arial, sans-serif;
-                color: #333;
-              ">
-                <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
-                <p style="font-size: 18px; margin: 5px 0 15px 0;">
-                  Booking #<strong>(${bookingNumber})</strong>
-                </p>
-                <hr style="margin: 15px 0;">
-                <p style="font-size: 15px; line-height: 1.5;">
-                  <strong>$4,000 (JMD)</strong> must be transferred 
-                  to the account provided below within <strong>48 hours</strong> or your 
-                  booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
-                </p>
-                <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
-                  💵 Deposit Due Now: JMD $4,000.00
-                </p>
-                <hr style="margin: 15px 0;">
-                <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
-                <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
-                <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
-                <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
-                <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
-                <hr style="margin: 15px 0;">
-                <p style="font-size: 14px; color: #555;">
-                  ℹ️ If you need to see the banking info again, it’s always visible in the 
-                  <strong>Payment Info</strong> section of the menu.
-                </p>
-                <button onclick="document.getElementById('bookingModal').style.display='none'"
-                  style="
-                    margin-top: 15px;
-                    background-color: #007bff;
-                    color: white;
-                    padding: 10px 25px;
-                    border: none;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    cursor: pointer;
-                  ">
-                  OK
-                </button>
-              </div>
-            `;
+    const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
+    const telegramChatId = "-1002734216867";
 
-            document.getElementById('bookingModal').style.display = 'flex';
-
-            // ✅ Reset form after booking
-            document.querySelector("#bookingSection form").reset();
-            document.getElementById("estimateTimeMessage").innerHTML = "";
-            document.getElementById("periodConfirmation").innerHTML = "";
-            document.getElementById("amBtn").style.display = "inline-block";
-            document.getElementById("pmBtn").style.display = "inline-block";
-          } else {
-            alert("Failed to send booking to Telegram.");
-          }
-        })
-        .catch(error => {
-          console.error("Error sending to Telegram:", error);
-          alert("Error sending booking to Telegram.");
-        });
-
-      })
-      .catch((error) => {
-        console.error('Error saving booking:', error);
-        alert('Error saving booking. Please try again.');
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: telegramChatId, text: message })
       });
 
-    })
-    .catch((error) => {
-      console.error('Error during time validation:', error);
-      alert('Error validating time. Please try again.');
-    });
-}
+      const data = await response.json();
 
+      if (!response.ok) {
+        console.error("Telegram API error:", data);
+        document.getElementById("bookingMessage").innerText =
+          "⚠ Booking saved, but Telegram notification failed.";
+      }
+    } catch (err) {
+      console.error("Network error sending to Telegram:", err);
+      document.getElementById("bookingMessage").innerText =
+        "⚠ Booking saved, but could not notify via Telegram.";
+    }
+
+    // ✅ Show confirmation modal
+    document.querySelector("#bookingModal h3").style.display = "none";
+    document.querySelector("#bookingModal p").innerHTML = `
+      <div style="text-align: center; padding: 20px; font-family: Arial, sans-serif; color: #333;">
+        <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
+        <p style="font-size: 18px; margin: 5px 0 15px 0;">
+          Booking #<strong>${bookingNumber}</strong>
+        </p>
+        <hr style="margin: 15px 0;">
+        <p style="font-size: 15px; line-height: 1.5;">
+          <strong>$4,000 (JMD)</strong> must be transferred 
+          to the account provided below within <strong>48 hours</strong> or your 
+          booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
+        </p>
+        <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
+          💵 Deposit Due Now: JMD $4,000.00
+        </p>
+        <hr style="margin: 15px 0;">
+        <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
+        <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
+        <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
+        <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
+        <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
+        <hr style="margin: 15px 0;">
+        <p style="font-size: 14px; color: #555;">
+          ℹ️ If you need to see the banking info again, it’s always visible in the 
+          <strong>Payment Info</strong> section of the menu.
+        </p>
+        <button type="button" onclick="closeBookingModal()" 
+          style="margin-top: 15px; background-color: #007bff; color: white; padding: 10px 25px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+          OK
+        </button>
+      </div>
+    `;
+    document.getElementById('bookingModal').style.display = 'flex';
+
+    // ✅ Reset form
+    document.querySelector("#bookingSection form").reset();
+    document.getElementById("estimateTimeMessage").innerHTML = "";
+    document.getElementById("periodConfirmation").innerHTML = "";
+    document.getElementById("amBtn").style.display = "inline-block";
+    document.getElementById("pmBtn").style.display = "inline-block";
+
+  } catch (error) {
+    console.error("Error during booking:", error);
+    alert("⚠ Something went wrong. Please try again.");
+  }
+}
 
 
     function showSection(sectionId) {
@@ -1745,74 +1726,89 @@ function selectSlot(time, btn) {
 
   // ✅ FINAL version — only one loadAvailableSlots() now
   async function loadAvailableSlots() {
-    const date = document.getElementById('date').value;
-    const pedicure = document.getElementById('pedicureType')?.value || "NONE";
-    const manicure = document.getElementById('manicureType')?.value || "NONE";
-    const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
+  const date = document.getElementById('date').value;
+  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
+  const manicure = document.getElementById('manicureType')?.value || "NONE";
+  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
 
-    const timeSelect = document.getElementById('selectedTime');
-    timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
+  const timeSelect = document.getElementById('selectedTime');
+  timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
 
-    // ✅ Require both date and at least one service
-    if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
-      timeSelect.innerHTML = "<option value=''>Pick date & service first</option>";
-      return;
+  if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
+    timeSelect.innerHTML = "<option value=''>Pick date & service first</option>";
+    return;
+  }
+
+  const duration = getSelectedServiceDuration();
+
+  const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+  if (!business) {
+    timeSelect.innerHTML = "<option value=''>Closed this day</option>";
+    return;
+  }
+
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  // ✅ Fetch all bookings for that date
+  const snapshot = await db.collection("bookings")
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
+    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
+    .get();
+
+  const bookings = snapshot.docs.map(doc => {
+    const bookedTime = convertToMinutes(doc.data().time);
+    const bookedDuration = doc.data().duration || 60;
+    return { start: bookedTime, end: bookedTime + bookedDuration };
+  });
+
+  // ✅ Fetch unavailable day ranges for that date
+  const unavailableSnapshot = await db.collection("unavailableDays")
+    .where("date", "==", date)
+    .get();
+
+  let unavailableRanges = [];
+  unavailableSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.allDay) {
+      unavailableRanges.push({ start: openMinutes, end: closeMinutes });
+    } else {
+      const start = convertToMinutes(data.startTime);
+      const end = convertToMinutes(data.endTime);
+      unavailableRanges.push({ start, end });
     }
+  });
 
-    // ✅ Get the required service duration
-    const duration = getSelectedServiceDuration();
+  // ✅ Generate slots (exclude booked + unavailable)
+  for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+    const end = t + duration;
 
-    const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
-    const business = businessHours[dayName];
-    if (!business) {
-      timeSelect.innerHTML = "<option value=''>Closed this day</option>";
-      return;
-    }
+    let conflict =
+      bookings.some(b => !(end <= b.start || t >= b.end)) ||
+      unavailableRanges.some(r => !(end <= r.start || t >= r.end));
 
-    const openMinutes = convertToMinutes(business.open);
-    const closeMinutes = convertToMinutes(business.close);
+    if (!conflict) {
+      const hours = Math.floor(t / 60);
+      const minutes = t % 60;
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = ((hours + 11) % 12 + 1);
+      const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 
-    // Fetch all bookings for that date
-    const snapshot = await db.collection("bookings")
-      .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
-      .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
-      .get();
-
-    // Build booked intervals
-    const bookings = snapshot.docs.map(doc => {
-      const bookedTime = convertToMinutes(doc.data().time);
-      const bookedDuration = doc.data().duration || 60;
-      return { start: bookedTime, end: bookedTime + bookedDuration };
-    });
-
-    // Generate 5-min slots
-    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
-      const end = t + duration;
-
-      // Check overlap with existing bookings
-      let conflict = bookings.some(b => !(end <= b.start || t >= b.end));
-
-      if (!conflict) {
-        const hours = Math.floor(t / 60);
-        const minutes = t % 60;
-        const ampm = hours >= 12 ? "PM" : "AM";
-        const displayHours = ((hours + 11) % 12 + 1);
-        const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
-
-        let option = document.createElement("option");
-        option.value = displayTime;
-        option.textContent = displayTime;
-        timeSelect.appendChild(option);
-      }
-    }
-
-    if (timeSelect.options.length === 1) {
       let option = document.createElement("option");
-      option.value = "";
-      option.textContent = "No available slots";
+      option.value = displayTime;
+      option.textContent = displayTime;
       timeSelect.appendChild(option);
     }
   }
+
+  if (timeSelect.options.length === 1) {
+    let option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No available slots";
+    timeSelect.appendChild(option);
+  }
+}
 
   </script>
 
