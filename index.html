@@ -1146,7 +1146,7 @@ function generateBookingNumber(name) {
 }
 
 
-    async function submitBooking(event) {
+async function submitBooking(event) {
   event.preventDefault();
 
   const user = firebase.auth().currentUser;
@@ -1157,58 +1157,54 @@ function generateBookingNumber(name) {
     return;
   }
 
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
   const date = document.getElementById('date').value;
   const time = document.getElementById('selectedTime').value;
 
-  if (!time) {
-    alert("Please select a time slot");
+  if (!date || !time) {
+    alert("Please select a date and time slot");
     return;
   }
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
-
-  let extensionLength = '';
-  if (nailExtensionType !== 'NONE') {
-    extensionLength = document.getElementById('extensionLength').value;
-  }
+  let extensionLength = nailExtensionType !== 'NONE' ? document.getElementById('extensionLength').value : "";
 
   let service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
   if (nailExtensionType !== 'NONE') {
     service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
   }
 
-  // ✅ Service duration
   const duration = getSelectedServiceDuration();
-
-  // ✅ Booking number
   const bookingNumber = generateBookingNumber(name);
 
   try {
-    // ✅ Validate slot
+    // ✅ Validate availability
     const isAvailable = await validateTimeSlot(date, time);
     if (!isAvailable) {
       alert('This time is not available. Please choose another time.');
       return;
     }
 
-    // ✅ Save booking in Firestore
-    await db.collection('bookings').add({
+    // ✅ Store both a string and a safe Firestore timestamp
+    const bookingData = {
       uid: user.uid,
       bookingNumber,
       name,
       phone,
-      date: firebase.firestore.Timestamp.fromDate(new Date(date)),
+      dateString: date, // keep the raw "YYYY-MM-DD"
+      date: firebase.firestore.Timestamp.fromDate(new Date(date + "T00:00:00")),
       time,
       service,
       duration,
       deposit: "No"
-    });
+    };
 
-    // ✅ Send Telegram notification
+    await db.collection('bookings').add(bookingData);
+
+    // ✅ Telegram notify
     const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
     const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
@@ -1220,50 +1216,34 @@ function generateBookingNumber(name) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chat_id: telegramChatId, text: message })
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         console.error("Telegram API error:", data);
-        document.getElementById("bookingMessage").innerText =
-          "⚠ Booking saved, but Telegram notification failed.";
       }
     } catch (err) {
-      console.error("Network error sending to Telegram:", err);
-      document.getElementById("bookingMessage").innerText =
-        "⚠ Booking saved, but could not notify via Telegram.";
+      console.error("Telegram send failed:", err);
     }
 
     // ✅ Show confirmation modal
     document.querySelector("#bookingModal h3").style.display = "none";
     document.querySelector("#bookingModal p").innerHTML = `
-      <div style="text-align: center; padding: 20px; font-family: Arial, sans-serif; color: #333;">
-        <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
-        <p style="font-size: 18px; margin: 5px 0 15px 0;">
-          Booking #<strong>${bookingNumber}</strong>
-        </p>
-        <hr style="margin: 15px 0;">
-        <p style="font-size: 15px; line-height: 1.5;">
-          <strong>$4,000 (JMD)</strong> must be transferred 
-          to the account provided below within <strong>48 hours</strong> or your 
-          booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
-        </p>
-        <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
-          💵 Deposit Due Now: JMD $4,000.00
-        </p>
-        <hr style="margin: 15px 0;">
-        <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
-        <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
-        <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
-        <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
-        <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
-        <hr style="margin: 15px 0;">
-        <p style="font-size: 14px; color: #555;">
-          ℹ️ If you need to see the banking info again, it’s always visible in the 
-          <strong>Payment Info</strong> section of the menu.
-        </p>
-        <button type="button" onclick="closeBookingModal()" 
-          style="margin-top: 15px; background-color: #007bff; color: white; padding: 10px 25px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+      <div style="text-align:center;padding:20px;font-family:Arial;color:#333;">
+        <h2 style="margin:0;font-size:22px;font-weight:bold;">BOOKING CONFIRMED</h2>
+        <p style="font-size:18px;margin:5px 0 15px 0;">Booking #<strong>${bookingNumber}</strong></p>
+        <hr style="margin:15px 0;">
+        <p><strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong>
+        or your booking will be <span style="color:red;font-weight:bold;">cancelled</span>.</p>
+        <p style="font-size:17px;color:#6c2eb9;font-weight:bold;">💵 Deposit Due: JMD $4,000.00</p>
+        <hr style="margin:15px 0;">
+        <h3 style="font-size:16px;margin:10px 0;">Banking Details:</h3>
+        <p>🏦 Bank: <strong>Your Bank Name</strong></p>
+        <p>👤 Account Name: <strong>Your Account Name</strong></p>
+        <p>#️⃣ Account Number: <strong>123456789</strong></p>
+        <p>🏢 Branch: <strong>Your Branch Name</strong></p>
+        <hr style="margin:15px 0;">
+        <p style="font-size:14px;color:#555;">ℹ️ Banking info is also available in the <strong>Payment Info</strong> section.</p>
+        <button type="button" onclick="closeBookingModal()"
+          style="margin-top:15px;background:#007bff;color:white;padding:10px 25px;border:none;border-radius:5px;font-size:16px;cursor:pointer;">
           OK
         </button>
       </div>
@@ -1278,8 +1258,8 @@ function generateBookingNumber(name) {
     document.getElementById("pmBtn").style.display = "inline-block";
 
   } catch (error) {
-    console.error("Error during booking:", error);
-    alert("⚠ Something went wrong. Please try again.");
+    console.error("Booking failed:", error);
+    alert("⚠ Booking failed: " + (error.message || error));
   }
 }
 
