@@ -1676,7 +1676,8 @@ async function loadAvailableSlots() {
 
   // Fetch bookings for that date
   const snapshot = await db.collection("bookings")
-    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
+    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
     .get();
 
   const bookedTimes = snapshot.docs.map(doc => convertToMinutes(doc.data().time));
@@ -1769,7 +1770,8 @@ async function loadAvailableSlots() {
 
   // Fetch all bookings for that date
   const snapshot = await db.collection("bookings")
-    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
+    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
     .get();
 
   // Build booked intervals
