@@ -1504,9 +1504,9 @@ if (!user) {
     document.getElementById('bookingModal').style.display = 'none';
   }
 
-    function openPaymentInfo() {
+function openPaymentInfo() {
   Swal.fire({
-    title: "<div class='swal2-title-nowrap'>BANK TRANSFER INFO</div>",
+    title: "<div style='font-size:32px; margin-bottom:10px;'>🏦</div><div class='swal2-title-nowrap'>BANK TRANSFER INFO</div>",
     html: `
       <div style="text-align:left; font-size:16px; line-height:1.6; color:black;">
         <p><b>Bank Name:</b> First Caribbean Bank</p>
@@ -1516,16 +1516,17 @@ if (!user) {
         <p><b>Note:</b> Please use your Order # as the payment reference.</p>
       </div>
     `,
-    width: 600,  
+    width: 600,
     confirmButtonText: "CLOSE",
     background: "#FFFFFF",   // white modal background
-    color: "black",          // default text color inside modal
-    confirmButtonColor: "#61134A",  // button stays branded
+    color: "black",          // text color
+    confirmButtonColor: "#61134A", // brand button
     customClass: {
       popup: "swal2-rounded"
     }
   });
 }
+
 
 function getBufferForSelectedServices() {
   let buffer = 30; // default
