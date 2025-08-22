@@ -458,8 +458,10 @@
       <label for="date">Preferred Date:</label>
       <input type="date" id="date" min="" required />
 
-      <label for="timeInput">Preferred Time:</label>
-<input type="text" id="timeInput" placeholder="ENTER TIME" maxlength="5" oninput="formatTimeInput()" required />
+      <label for="timeSelect">Available Times:</label>
+<select id="timeSelect" required>
+  <option value="">-- Choose date and service to see times --</option>
+</select>
 
 <div style="margin: 10px 0;">
   <button type="button" onclick="selectPeriod('AM')" id="amBtn" style="margin-right: 10px;">AM</button>
@@ -1162,10 +1164,7 @@ function submitBooking(event) {
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
-  const timeInput = document.getElementById('timeInput').value.trim();
-  const timePeriod = document.getElementById('timePeriod').value;
-  const time = `${timeInput} ${timePeriod}`;
-
+  const time = document.getElementById('timeSelect').value;
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
@@ -1652,6 +1651,81 @@ if (!user) {
     }
   });
     }
+
+
+    async function generateAvailableSlots() {
+  const date = document.getElementById('date').value;
+  const pedicureType = document.getElementById('pedicureType').value;
+  const manicureType = document.getElementById('manicureType').value;
+  const nailExtensionType = document.getElementById('nailExtensionType').value;
+  const slotSelect = document.getElementById('timeSelect');
+
+  slotSelect.innerHTML = `<option value="">Loading available times...</option>`;
+
+  if (!date || (pedicureType === "NONE" && manicureType === "NONE" && nailExtensionType === "NONE")) {
+    slotSelect.innerHTML = `<option value="">Choose a date and service first</option>`;
+    return;
+  }
+
+  // Get service duration estimate (minutes)
+  let serviceDuration = 60; // default
+  if (pedicureType === "Gel Pedicure" || manicureType === "Gel Manicure") serviceDuration = 120;
+  if (pedicureType === "Spa Pedicure" || manicureType === "Deluxe Manicure") serviceDuration = 90;
+  if (nailExtensionType !== "NONE") serviceDuration += 45; // add time for extensions
+
+  // Add buffer
+  let buffer = 20;
+  serviceDuration += buffer;
+
+  // Get business hours for selected day
+  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+  if (!business) {
+    slotSelect.innerHTML = `<option value="">Closed on ${dayName}</option>`;
+    return;
+  }
+
+  const openMins = convertToMinutes(business.open);
+  const closeMins = convertToMinutes(business.close);
+
+  // Get existing bookings for that date
+  const snapshot = await db.collection("bookings")
+    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .get();
+
+  let bookedSlots = [];
+  snapshot.forEach(doc => {
+    let bookedTime = doc.data().time.trim();
+    bookedSlots.push(convertToMinutes(bookedTime));
+  });
+
+  // Generate slots
+  let optionsHTML = "";
+  for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
+    let end = start + serviceDuration;
+
+    // Check conflict with booked slots
+    let conflict = bookedSlots.some(b => Math.abs(b - start) < serviceDuration);
+    if (!conflict) {
+      let hours = Math.floor(start / 60);
+      let minutes = start % 60;
+      let period = hours >= 12 ? "PM" : "AM";
+      if (hours > 12) hours -= 12;
+      if (hours === 0) hours = 12;
+
+      let timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+      optionsHTML += `<option value="${timeStr}">${timeStr}</option>`;
+    }
+  }
+
+  slotSelect.innerHTML = optionsHTML || `<option value="">No slots available</option>`;
+}
+
+// Recalculate slots whenever date or services change
+document.getElementById("date").addEventListener("change", generateAvailableSlots);
+document.getElementById("pedicureType").addEventListener("change", generateAvailableSlots);
+document.getElementById("manicureType").addEventListener("change", generateAvailableSlots);
+document.getElementById("nailExtensionType").addEventListener("change", generateAvailableSlots);
 
 
   </script>
