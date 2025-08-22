@@ -1713,103 +1713,106 @@ function selectSlot(time, btn) {
 }
 
 
+  // ... keep all your other functions above this ...
 
-    // Example durations in minutes (extend as needed)
-const serviceDurations = {
-  "Regular Pedicure": 60,
-  "Spa Pedicure": 90,
-  "Deluxe Pedicure": 90,
-  "Gel Pedicure": 120,
-  "Regular Manicure": 60,
-  "Spa Manicure": 90,
-  "Deluxe Manicure": 90,
-  "Gel Manicure": 120,
-  "Acrylic Powder Manicure": 120,
-  "NONE": 0
-};
+  // ✅ Service durations in minutes
+  const serviceDurations = {
+    "Regular Pedicure": 60,
+    "Spa Pedicure": 90,
+    "Deluxe Pedicure": 90,
+    "Gel Pedicure": 120,
+    "Regular Manicure": 60,
+    "Spa Manicure": 90,
+    "Deluxe Manicure": 90,
+    "Gel Manicure": 120,
+    "Acrylic Powder Manicure": 120,
+    "NONE": 0
+  };
 
-function getSelectedServiceDuration() {
-  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
-  const manicure = document.getElementById('manicureType')?.value || "NONE";
-  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
+  function getSelectedServiceDuration() {
+    const pedicure = document.getElementById('pedicureType')?.value || "NONE";
+    const manicure = document.getElementById('manicureType')?.value || "NONE";
+    const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
 
-  let duration = 0;
+    let duration = 0;
 
-  if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 60;
-  if (manicure !== "NONE") duration += serviceDurations[manicure] || 60;
-  if (nailExtension !== "NONE") duration += 60; // default for extensions, adjust if needed
+    if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 60;
+    if (manicure !== "NONE") duration += serviceDurations[manicure] || 60;
+    if (nailExtension !== "NONE") duration += 60; // default for extensions
 
-  return duration || 60; // fallback
-}
-
-async function loadAvailableSlots() {
-  const date = document.getElementById('date').value;
-  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
-  const manicure = document.getElementById('manicureType')?.value || "NONE";
-  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
-
-  const timeSelect = document.getElementById('selectedTime');
-  timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
-
-  // ✅ Require both date and at least one service
-  if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
-    timeSelect.innerHTML = "<option value=''>Pick date & service first</option>";
-    return;
+    return duration || 60; // fallback
   }
 
+  // ✅ FINAL version — only one loadAvailableSlots() now
+  async function loadAvailableSlots() {
+    const date = document.getElementById('date').value;
+    const pedicure = document.getElementById('pedicureType')?.value || "NONE";
+    const manicure = document.getElementById('manicureType')?.value || "NONE";
+    const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
 
-  const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
-  const business = businessHours[dayName];
-  if (!business) {
-    timeSelect.innerHTML = "<option value=''>Closed this day</option>";
-    return;
-  }
+    const timeSelect = document.getElementById('selectedTime');
+    timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
 
-  const openMinutes = convertToMinutes(business.open);
-  const closeMinutes = convertToMinutes(business.close);
+    // ✅ Require both date and at least one service
+    if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
+      timeSelect.innerHTML = "<option value=''>Pick date & service first</option>";
+      return;
+    }
 
-  // Fetch all bookings for that date
-  const snapshot = await db.collection("bookings")
-    .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
-    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
-    .get();
+    // ✅ Get the required service duration
+    const duration = getSelectedServiceDuration();
 
-  // Build booked intervals
-  const bookings = snapshot.docs.map(doc => {
-  const bookedTime = convertToMinutes(doc.data().time);
-  const bookedDuration = doc.data().duration || 60; // now this will be real
-  return { start: bookedTime, end: bookedTime + bookedDuration };
-});
+    const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
+    const business = businessHours[dayName];
+    if (!business) {
+      timeSelect.innerHTML = "<option value=''>Closed this day</option>";
+      return;
+    }
 
+    const openMinutes = convertToMinutes(business.open);
+    const closeMinutes = convertToMinutes(business.close);
 
-  // Generate 5-min slots
-  for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
-    const end = t + duration;
+    // Fetch all bookings for that date
+    const snapshot = await db.collection("bookings")
+      .where("date", ">=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T00:00:00')))
+      .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(date + 'T23:59:59')))
+      .get();
 
-    // Check overlap with existing bookings
-    let conflict = bookings.some(b => !(end <= b.start || t >= b.end));
+    // Build booked intervals
+    const bookings = snapshot.docs.map(doc => {
+      const bookedTime = convertToMinutes(doc.data().time);
+      const bookedDuration = doc.data().duration || 60;
+      return { start: bookedTime, end: bookedTime + bookedDuration };
+    });
 
-    if (!conflict) {
-      const hours = Math.floor(t / 60);
-      const minutes = t % 60;
-      const ampm = hours >= 12 ? "PM" : "AM";
-      const displayHours = ((hours + 11) % 12 + 1);
-      const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+    // Generate 5-min slots
+    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+      const end = t + duration;
 
+      // Check overlap with existing bookings
+      let conflict = bookings.some(b => !(end <= b.start || t >= b.end));
+
+      if (!conflict) {
+        const hours = Math.floor(t / 60);
+        const minutes = t % 60;
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayHours = ((hours + 11) % 12 + 1);
+        const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+
+        let option = document.createElement("option");
+        option.value = displayTime;
+        option.textContent = displayTime;
+        timeSelect.appendChild(option);
+      }
+    }
+
+    if (timeSelect.options.length === 1) {
       let option = document.createElement("option");
-      option.value = displayTime;
-      option.textContent = displayTime;
+      option.value = "";
+      option.textContent = "No available slots";
       timeSelect.appendChild(option);
     }
   }
-
-  if (timeSelect.options.length === 1) {
-    let option = document.createElement("option");
-    option.value = "";
-    option.textContent = "No available slots";
-    timeSelect.appendChild(option);
-  }
-}
 
   </script>
 
