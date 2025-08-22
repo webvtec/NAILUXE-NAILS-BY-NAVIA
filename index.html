@@ -446,76 +446,86 @@
   
 
   <!-- ✅ Booking Section -->
-  <div id="bookingSection" class="content-section">
-    <h1>BOOK APPOINTMENT</h1>
-    <form onsubmit="submitBooking(event)">
-      <label for="name">Name:</label>
-      <input type="text" id="name" required />
+<div id="bookingSection" class="content-section">
+  <h1>BOOK APPOINTMENT</h1>
+  <form onsubmit="submitBooking(event)">
+    <label for="name">Name:</label>
+    <input type="text" id="name" required />
 
-      <label for="phone">Phone Number:</label>
-      <input type="text" id="phone" required />
+    <label for="phone">Phone Number:</label>
+    <input type="text" id="phone" required />
 
-      <label for="date">Preferred Date:</label>
-      <input type="date" id="date" min="" required />
+    <label for="date">Preferred Date:</label>
+    <input type="date" id="date" min="" required onchange="loadAvailableSlots()" />
 
-      <label for="timeInput">Preferred Time:</label>
-<input type="text" id="timeInput" placeholder="ENTER TIME" maxlength="5" oninput="formatTimeInput()" required />
+    <!-- ✅ Time slots will appear here -->
+    <div id="timeSlots" style="margin: 15px 0;"></div>
+    <input type="hidden" id="selectedTime" required />
 
-<div style="margin: 10px 0;">
-  <button type="button" onclick="selectPeriod('AM')" id="amBtn" style="margin-right: 10px;">AM</button>
-  <button type="button" onclick="selectPeriod('PM')" id="pmBtn">PM</button>
-<div id="periodConfirmation" style="margin-bottom: 10px;"></div>
+    <label for="pedicureType">Select Pedicure Type:</label>
+    <select id="pedicureType" onchange="showEstimateTime(); loadAvailableSlots();">
+      <option value="NONE">NONE</option>
+      <option value="Regular Pedicure">Regular Pedicure</option>
+      <option value="Spa Pedicure">Spa Pedicure</option>
+      <option value="Deluxe Pedicure">Deluxe Pedicure</option>
+      <option value="Gel Pedicure">Gel Pedicure</option>
+      <option value="Paraffin Pedicure">Paraffin Pedicure</option>
+      <option value="Hot Stone Pedicure">Hot Stone Pedicure</option>
+      <option value="French Pedicure">French Pedicure</option>
+      <option value="Shellac Pedicure">Shellac Pedicure</option>
+      <option value="Fish Pedicure">Fish Pedicure</option>
+      <option value="Athletic Pedicure">Athletic Pedicure</option>
+    </select>
+
+    <label for="manicureType">Select Manicure Type:</label>
+    <select id="manicureType" onchange="showEstimateTime(); loadAvailableSlots();">
+      <option value="NONE">NONE</option>
+      <option value="Regular Manicure">Regular Manicure</option>
+      <option value="Spa Manicure">Spa Manicure</option>
+      <option value="Deluxe Manicure">Deluxe Manicure</option>
+      <option value="Gel Manicure">Gel Manicure</option>
+      <option value="Paraffin Manicure">Paraffin Manicure</option>
+      <option value="French Manicure">French Manicure</option>
+      <option value="Shellac Manicure">Shellac Manicure</option>
+      <option value="Hot Oil Manicure">Hot Oil Manicure</option>
+      <option value="Acrylic Powder Manicure">Acrylic Powder Manicure</option>
+      <option value="Athletic Manicure">Athletic Manicure</option>
+    </select>
+
+    <label for="nailExtensionType">Select Nail Extension Shape:</label>
+    <select id="nailExtensionType" onchange="showExtensionLengthOptions(); loadAvailableSlots();">
+      <option value="NONE">NONE</option>
+      <option value="Almond">Almond</option>
+      <option value="Stiletto">Stiletto</option>
+      <option value="Square">Square</option>
+      <option value="Coffin">Coffin</option>
+      <option value="Oval">Oval</option>
+    </select>
+
+    <div id="extensionLengthContainer" style="display: none; margin-top: 15px;">
+      <label for="extensionLength">Select Length:</label>
+      <select id="extensionLength" onchange="loadAvailableSlots()">
+        <option value="LONG">LONG</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="SHORT">SHORT</option>
+      </select>
+    </div>
+
+    <p id="estimateTimeMessage" style="color: #6200ea; font-weight: bold;"></p>
+
+    <div style="margin: 15px 0; display: flex; align-items: center;">
+      <input type="checkbox" id="lateAgreement" required style="margin-right: 3px;" />
+      <label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
+        I agree to make an online deposit of <strong>$4,000 (JMD)</strong> within the next 48 Hours to secure my booking.
+      </label>
+    </div>
+
+    <button type="submit">Book Now</button>
+  </form>
+
+  <p id="bookingMessage"></p>
 </div>
 
-<input type="hidden" id="timePeriod" value="AM" />
-
-      <label for="pedicureType">Select Pedicure Type:</label>
-<select id="pedicureType" onchange="showEstimateTime()">
-    <option value="NONE">NONE</option>
-    <option value="Regular Pedicure">Regular Pedicure</option>
-    <option value="Spa Pedicure">Spa Pedicure</option>
-    <option value="Deluxe Pedicure">Deluxe Pedicure</option>
-    <option value="Gel Pedicure">Gel Pedicure</option>
-    <option value="Paraffin Pedicure">Paraffin Pedicure</option>
-    <option value="Hot Stone Pedicure">Hot Stone Pedicure</option>
-    <option value="French Pedicure">French Pedicure</option>
-    <option value="Shellac Pedicure">Shellac Pedicure</option>
-    <option value="Fish Pedicure">Fish Pedicure</option>
-    <option value="Athletic Pedicure">Athletic Pedicure</option>
-</select>
-
-<label for="manicureType">Select Manicure Type:</label>
-<select id="manicureType" onchange="showEstimateTime()">
-    <option value="NONE">NONE</option>
-    <option value="Regular Manicure">Regular Manicure</option>
-    <option value="Spa Manicure">Spa Manicure</option>
-    <option value="Deluxe Manicure">Deluxe Manicure</option>
-    <option value="Gel Manicure">Gel Manicure</option>
-    <option value="Paraffin Manicure">Paraffin Manicure</option>
-    <option value="French Manicure">French Manicure</option>
-    <option value="Shellac Manicure">Shellac Manicure</option>
-    <option value="Hot Oil Manicure">Hot Oil Manicure</option>
-    <option value="Acrylic Powder Manicure">Acrylic Powder Manicure</option>
-    <option value="Athletic Manicure">Athletic Manicure</option>
-</select>
-
-      <label for="nailExtensionType">Select Nail Extension Shape:</label>
-<select id="nailExtensionType" onchange="showExtensionLengthOptions()">
-  <option value="NONE">NONE</option>
-  <option value="Almond">Almond</option>
-  <option value="Stiletto">Stiletto</option>
-  <option value="Square">Square</option>
-  <option value="Coffin">Coffin</option>
-  <option value="Oval">Oval</option>
-</select>
-<div id="extensionLengthContainer" style="display: none; margin-top: 15px;">
-  <label for="extensionLength">Select Length:</label>
-  <select id="extensionLength">
-    <option value="LONG">LONG</option>
-    <option value="MEDIUM">MEDIUM</option>
-    <option value="SHORT">SHORT</option>
-  </select>
-</div>
       <p id="estimateTimeMessage" style="color: #6200ea; font-weight: bold;"></p>
 
       <div style="margin: 15px 0; display: flex; align-items: center;">
@@ -1162,10 +1172,11 @@ function submitBooking(event) {
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
-  const timeInput = document.getElementById('timeInput').value.trim();
-  const timePeriod = document.getElementById('timePeriod').value;
-  const time = `${timeInput} ${timePeriod}`;
-
+  const time = document.getElementById('selectedTime').value;
+  if (!time) {
+  alert("Please select a time slot");
+  return;
+}
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
@@ -1652,6 +1663,63 @@ if (!user) {
     }
   });
     }
+
+
+    async function loadAvailableSlots() {
+  const date = document.getElementById('date').value;
+  const slotsContainer = document.getElementById('timeSlots');
+  slotsContainer.innerHTML = "Loading available times...";
+
+  if (!date) return;
+
+  // Get business hours for that day
+  const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+  if (!business) {
+    slotsContainer.innerHTML = "<p style='color:red;'>Closed this day</p>";
+    return;
+  }
+
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  // Get all existing bookings for that date
+  const snapshot = await db.collection("bookings")
+    .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .get();
+
+  const bookedTimes = snapshot.docs.map(doc => convertToMinutes(doc.data().time));
+
+  // Service buffer (you already calculate this in validateTimeSlot — reuse logic here!)
+  let buffer = getBufferForSelectedServices();
+
+  // Build slots
+  let html = "<h3>Select a Time:</h3><div style='display:flex; flex-wrap:wrap; gap:10px;'>";
+  for (let t = openMinutes; t <= closeMinutes - buffer; t += 30) { // step = 30min
+    let isTaken = bookedTimes.some(bt => Math.abs(bt - t) < buffer);
+
+    if (!isTaken) {
+      const hours = Math.floor(t / 60);
+      const minutes = t % 60;
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = ((hours + 11) % 12 + 1);
+      const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+
+      html += `<button type="button" onclick="selectSlot('${displayTime}')"
+                 style="padding:8px 12px; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
+                 ${displayTime}</button>`;
+    }
+  }
+  html += "</div>";
+  slotsContainer.innerHTML = html;
+}
+
+function selectSlot(time) {
+  document.getElementById("selectedTime").value = time;
+  [...document.querySelectorAll("#timeSlots button")].forEach(btn => btn.style.background = "");
+  event.target.style.background = "#98FF98"; // highlight selected
+}
+
 
 
   </script>
