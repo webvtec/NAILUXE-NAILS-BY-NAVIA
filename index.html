@@ -1149,44 +1149,49 @@ function submitBooking(event) {
         });
       })
       .then(response => {
-        if (response.ok) {
-          // ✅ Show confirmation modal with booking number
-          document.querySelector("#bookingModal h3").style.display = "none";
-          document.querySelector("#bookingModal p").innerHTML = `
-            <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
-              <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
-              <p style="font-size:18px; margin:5px 0 15px 0;">
-                Booking #<strong>${bookingNumber}</strong>
-              </p>
-              <hr style="margin:15px 0;">
-              <p style="font-size:15px; line-height:1.5;">
-                <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
-                or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
-              </p>
-              <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
-                💵 Deposit Due Now: JMD $4,000.00
-              </p>
-              <hr style="margin:15px 0;">
-              <h3 style="font-size:16px; margin:10px 0;">Banking Details:</h3>
-              <p>🏦 Bank: <strong>Your Bank Name</strong></p>
-              <p>👤 Account Name: <strong>Your Account Name</strong></p>
-              <p>#️⃣ Account Number: <strong>123456789</strong></p>
-              <p>🏢 Branch: <strong>Your Branch Name</strong></p>
-              <hr style="margin:15px 0;">
-              <p style="font-size:14px; color:#555;">
-                ℹ️ You can always see banking info in the <strong>Payment Info</strong> menu.
-              </p>
-            </div>
-          `;
-          document.getElementById('bookingModal').style.display = 'flex';
-        }
-      })
-      .catch((err) => {
-        console.error("Booking error:", err);
-        alert("Failed to save booking. Please try again.");
-      });
-    });
-}
+  if (response.ok) {
+    // ✅ Clear the form after booking
+    document.querySelector("#bookingSection form").reset();
+    document.getElementById("estimateTimeMessage").innerHTML = "";
+    document.getElementById("selectedTime").innerHTML = "<option value=''>Pick date & service first</option>";
+
+    // ✅ Show confirmation modal with booking number only
+    document.querySelector("#bookingModal h3").style.display = "none";
+    document.querySelector("#bookingModal p").innerHTML = `
+      <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
+        <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
+        <p style="font-size:18px; margin:5px 0 15px 0;">
+          Booking #<strong>${bookingNumber}</strong>
+        </p>
+        <hr style="margin:15px 0;">
+        <p style="font-size:15px; line-height:1.5;">
+          <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
+          or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
+        </p>
+        <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
+          💵 Deposit Due Now: JMD $4,000.00
+        </p>
+        <hr style="margin:15px 0;">
+        <h3 style="font-size:16px; margin:10px 0;">Banking Details:</h3>
+        <p>🏦 Bank: <strong>Your Bank Name</strong></p>
+        <p>👤 Account Name: <strong>Your Account Name</strong></p>
+        <p>#️⃣ Account Number: <strong>123456789</strong></p>
+        <p>🏢 Branch: <strong>Your Branch Name</strong></p>
+        <hr style="margin:15px 0;">
+        <p style="font-size:14px; color:#555;">
+          ℹ️ You can always see banking info in the <strong>Payment Info</strong> menu.
+        </p>
+      </div>
+    `;
+
+    // ✅ Finally, display the confirmation modal
+    document.getElementById('bookingModal').style.display = 'flex';
+  }
+})
+.catch((err) => {
+  console.error("Booking error:", err);
+  alert("Failed to save booking. Please try again.");
+});
 
 
 
