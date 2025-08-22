@@ -1074,7 +1074,7 @@ function generateBookingNumber(name) {
   return initials + digits;
 }
 
-async function submitBooking(event) {
+function submitBooking(event) {
   event.preventDefault();
 
   const user = firebase.auth().currentUser;
@@ -1085,84 +1085,131 @@ async function submitBooking(event) {
     return;
   }
 
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
-  const time = document.getElementById('selectedTime').value;
-
-  if (!date || !time) {
-    alert("Please select a date and time slot");
-    return;
-  }
+  const timeInput = document.getElementById('timeInput').value.trim();
+  const timePeriod = document.getElementById('timePeriod').value;
+  const time = `${timeInput} ${timePeriod}`;
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
-  let extensionLength = nailExtensionType !== 'NONE'
-    ? document.getElementById('extensionLength').value
-    : "";
+
+  let extensionLength = '';
+  if (nailExtensionType !== 'NONE') {
+    extensionLength = document.getElementById('extensionLength').value;
+  }
 
   let service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
   if (nailExtensionType !== 'NONE') {
     service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
   }
 
-  const duration = getSelectedServiceDuration();
+  // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
 
-  try {
-    // ✅ Validate availability
-    const isAvailable = await validateTimeSlot(date, time);
-    if (!isAvailable) {
-      alert('This time is not available. Please choose another time.');
-      return;
-    }
+  validateTimeSlot(date, time)
+    .then((isAvailable) => {
+      if (!isAvailable) {
+        alert('This time is not available. Please choose another time.');
+        return;
+      }
 
-    // ✅ Store booking in Firestore
-    const bookingData = {
-      uid: user.uid,
-      bookingNumber,
-      name,
-      phone,
-      dateString: date,
-      date: firebase.firestore.Timestamp.fromDate(new Date(date + "T00:00:00")),
-      time,
-      service,
-      duration,
-      deposit: "No"
-    };
+      // ✅ Save booking to Firestore (with default deposit = "No")
+      db.collection('bookings').add({
+        uid: user.uid,
+        bookingNumber: bookingNumber,
+        name: name,
+        phone: phone,
+        date: firebase.firestore.Timestamp.fromDate(new Date(date)), // Firestore Timestamp
+        time: time,
+        service: service,
+        deposit: "No"
+      })
+      .then(() => {
+        // ✅ Send Telegram notification
+        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
 
-    await db.collection('bookings').add(bookingData);
+        const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
+        const telegramChatId = "-1002734216867";
 
-    // ✅ Telegram notification (safe, no errors shown to user)
-    const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+        fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: message,
+            parse_mode: "HTML"
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            // ✅ Show confirmation modal
+            document.querySelector("#bookingModal h3").style.display = "none"; // hide old heading
+document.querySelector("#bookingModal p").innerHTML = `
+  <div style="
+    text-align: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+  ">
+    <!-- ✅ Green Check -->
+    <div style="font-size: 60px; color: #28a745; margin-bottom: 15px;">✔️</div>
 
-    const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
-    const telegramChatId = "-1002734216867";
+    <!-- ✅ Title + Booking Number -->
+    <h2 style="margin: 0; font-size: 22px; font-weight: bold;">BOOKING CONFIRMED</h2>
+    <p style="font-size: 18px; margin: 5px 0 15px 0;">
+      Booking #<strong>(${bookingNumber})</strong>
+    </p>
 
-    try {
-      await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: telegramChatId, text: message })
-      });
-    } catch (err) {
-      // Silent fail — don’t show any error to user
-    }
+    <hr style="margin: 15px 0;">
 
-    // ✅ Reset form
-    document.querySelector("#bookingSection form").reset();
-    document.getElementById("estimateTimeMessage").innerHTML = "";
-    document.getElementById("periodConfirmation").innerHTML = "";
-    document.getElementById("amBtn").style.display = "inline-block";
-    document.getElementById("pmBtn").style.display = "inline-block";
+    <!-- ✅ Deposit Warning -->
+    <p style="font-size: 15px; line-height: 1.5;">
+      <strong>$4,000 (JMD)</strong> must be transferred 
+      to the account provided below within <strong>48 hours</strong> or your 
+      booking will be <span style="color: red; font-weight: bold;">cancelled</span>.
+    </p>
 
-    alert("✅ Booking successful!");
+    <!-- ✅ Amount Due -->
+    <p style="font-size: 17px; margin: 10px 0; color: #6c2eb9; font-weight: bold;">
+      💵 Deposit Due Now: JMD $4,000.00
+    </p>
 
-  } catch (error) {
-    alert("⚠ Booking failed: " + (error.message || error));
-  }
-}
+    <hr style="margin: 15px 0;">
+
+    <!-- ✅ Banking Details -->
+    <h3 style="font-size: 16px; margin: 10px 0;">Banking Details:</h3>
+    <p style="margin: 5px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
+    <p style="margin: 5px 0;">👤 Account Name: <strong>Your Account Name</strong></p>
+    <p style="margin: 5px 0;">#️⃣ Account Number: <strong>123456789</strong></p>
+    <p style="margin: 5px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
+
+    <hr style="margin: 15px 0;">
+
+    <!-- ✅ Sidebar Reminder -->
+    <p style="font-size: 14px; color: #555;">
+      ℹ️ If you need to see the banking info again, it’s always visible in the 
+      <strong>Payment Info</strong> section of the menu.
+    </p>
+
+    <!-- ✅ OK Button -->
+    <button onclick="document.getElementById('bookingModal').style.display='none'"
+      style="
+        margin-top: 15px;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      ">
+      OK
+    </button>
+  </div>
+`;
 
 
     function showSection(sectionId) {
