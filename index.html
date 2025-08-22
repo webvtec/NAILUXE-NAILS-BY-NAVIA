@@ -1140,17 +1140,17 @@ async function submitBooking(event) {
     const telegramChatId = "-1002734216867";
 
     try {
-      const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: telegramChatId, text: message })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        console.error("Telegram API error:", data);
-      }
-    } catch (err) {
-      console.error("Telegram send failed:", err);
+  const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: telegramChatId, text: message })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        console.error("Telegram API error:", data);
+      }
+    } catch (err) {
+      console.error("Telegram send failed:", err);
     }
 
     // ✅ Show confirmation modal
@@ -1183,10 +1183,9 @@ async function submitBooking(event) {
     document.getElementById("pmBtn").style.display = "inline-block";
 
   } catch (error) {
-    console.error("Booking failed:", error);
-    alert("⚠ Booking failed: " + (error.message || error));
-  }
+  // Silently ignore errors so user doesn’t see unnecessary alerts
 }
+
 
 
     function showSection(sectionId) {
