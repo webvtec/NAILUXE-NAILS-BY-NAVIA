@@ -500,7 +500,7 @@ box-sizing: border-box;
 
     function loadReservations() {
   const reservationsContainer = document.getElementById('reservationsList');
-  db.collection('bookings').orderBy("date", "asc").onSnapshot(snapshot => {
+  db.collection('bookings').orderBy("dateRaw", "asc").onSnapshot(snapshot => {
     reservationsContainer.innerHTML = '';
     if (snapshot.empty) {
       reservationsContainer.innerHTML = "<p>No reservations found.</p>";
@@ -526,27 +526,42 @@ box-sizing: border-box;
     snapshot.forEach(doc => {
       const booking = doc.data();
 
-      // ✅ Handle both Timestamp and string-based dates
+      let formattedDate;
       let bDate;
-      if (booking.date && booking.date.toDate) {
-        bDate = booking.date.toDate(); // Firestore Timestamp
+
+      if (booking.dateFormatted) {
+        // ✅ Preferred: human-readable date
+        formattedDate = booking.dateFormatted;
+
+        // Also build a Date object from dateRaw for grouping
+        if (booking.dateRaw) {
+          const [y, m, d] = booking.dateRaw.split("-").map(Number);
+          bDate = new Date(y, m - 1, d);
+        }
       } else if (typeof booking.date === "string") {
-        const [y, m, d] = booking.date.split('-').map(Number);
+        // ✅ Old string-based bookings
+        const [y, m, d] = booking.date.split("-").map(Number);
         bDate = new Date(y, m - 1, d);
+        formattedDate = bDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+      } else if (booking.date && booking.date.toDate) {
+        // ✅ Old Firestore Timestamp
+        bDate = booking.date.toDate();
+        formattedDate = bDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
       } else {
-        return; // Skip if invalid
+        return; // skip invalid
       }
 
       const bY = bDate.getFullYear();
       const bM = bDate.getMonth();
       const bD = bDate.getDate();
-
-      // ✅ Use full formatted date: August 21, 2025
-      const formattedDate = bDate.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-      });
 
       if (bY === todayY && bM === todayM && bD === todayD) {
         todayList.push({ id: doc.id, ...booking, date: formattedDate });
