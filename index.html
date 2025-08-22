@@ -795,18 +795,6 @@ function closeMenu() {
   menu.classList.remove('show');
 }
 
-    // ✅ Close menu when clicking outside
-document.addEventListener("click", function(event) {
-  const menu = document.getElementById("menu");          // sidebar
-  const toggleBtn = document.getElementById("menu-toggle"); // ☰ button
-
-  if (menu.classList.contains("show") &&
-      !menu.contains(event.target) &&
-      !toggleBtn.contains(event.target)) {
-    closeMenu();
-  }
-});
-
 
 function formatTimeInput() {
   let input = document.getElementById('timeInput');
