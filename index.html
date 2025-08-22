@@ -1699,14 +1699,15 @@ if (!user) {
 let optionsHTML = `<option value="">-- Please select a time --</option>`;
 
 // Generate slots
+let optionsHTML = `<option value="">-- Please select a time --</option>`; // default placeholder
+
 for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
   let end = start + serviceDuration;
 
-  let conflict = snapshot.docs.some(doc => {
-    let bookedTime = doc.data().time.trim();
-    let bookedStart = convertToMinutes(bookedTime);
-    let bookedEnd = bookedStart + serviceDuration;
-
+  // Check overlap
+  let conflict = bookedSlots.some(b => {
+    let bookedStart = b;
+    let bookedEnd = bookedStart + serviceDuration; // assuming same duration
     return (start < bookedEnd && end > bookedStart);
   });
 
@@ -1722,7 +1723,8 @@ for (let start = openMins; start + serviceDuration <= closeMins; start += 15) {
   }
 }
 
-slotSelect.innerHTML = optionsHTML || `<option value="">No slots available</option>`;
+// Insert into dropdown
+slotSelect.innerHTML = optionsHTML;
 
 
 // Recalculate slots whenever date or services change
