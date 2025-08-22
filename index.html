@@ -1740,7 +1740,7 @@ function selectSlot(time, btn) {
   const openMinutes = convertToMinutes(business.open);
   const closeMinutes = convertToMinutes(business.close);
 
-  // Fetch bookings for that date
+  // Fetch existing bookings for that day
   const snapshot = await db.collection("bookings")
     .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(date)))
     .get();
@@ -1748,10 +1748,11 @@ function selectSlot(time, btn) {
   const bookedTimes = snapshot.docs.map(doc => convertToMinutes(doc.data().time));
   const buffer = getBufferForSelectedServices();
 
-  for (let t = openMinutes; t <= closeMinutes - buffer; t += 30) {
-    let isTaken = bookedTimes.some(bt => Math.abs(bt - t) < buffer);
+  // Loop every 5 minutes
+  for (let t = openMinutes; t < closeMinutes; t += 5) {
+    let conflict = bookedTimes.some(bt => Math.abs(bt - t) < buffer);
 
-    if (!isTaken) {
+    if (!conflict) {
       const hours = Math.floor(t / 60);
       const minutes = t % 60;
       const ampm = hours >= 12 ? "PM" : "AM";
@@ -1763,6 +1764,13 @@ function selectSlot(time, btn) {
       option.textContent = displayTime;
       timeSelect.appendChild(option);
     }
+  }
+
+  if (timeSelect.options.length === 1) {
+    let option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No available slots";
+    timeSelect.appendChild(option);
   }
 }
 
