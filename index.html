@@ -458,11 +458,14 @@
       <label for="date">Preferred Date:</label>
       <input type="date" id="date" min="" required />
 
-      <label for="timeSelect">Available Times:</label>
-<select id="timeSelect" required>
-  <option value="">-- Choose date and service to see times --</option>
-</select>
+      <label for="timeInput">Preferred Time:</label>
+<input type="text" id="timeInput" placeholder="ENTER TIME" maxlength="5" oninput="formatTimeInput()" required />
 
+<div style="margin: 10px 0;">
+  <button type="button" onclick="selectPeriod('AM')" id="amBtn" style="margin-right: 10px;">AM</button>
+  <button type="button" onclick="selectPeriod('PM')" id="pmBtn">PM</button>
+<div id="periodConfirmation" style="margin-bottom: 10px;"></div>
+</div>
 
 <input type="hidden" id="timePeriod" value="AM" />
 
@@ -584,7 +587,6 @@
     max-width: 300px;
     width: 100%;
   ">
-
     <div style="font-size: 50px; color: green; margin-bottom: 10px;">✔</div>
     <h3 style="margin-bottom: 10px;">Booking Confirmed</h3>
     <p style="font-size: 14px; color: #333;">
@@ -602,7 +604,7 @@
     ">OK</button>
   </div>
 </div>
-  
+
 
   <!-- Admin Login Modal -->
 <div id="adminLoginModal" style="
@@ -731,29 +733,13 @@ function attemptAdminLogin() {
 }
 
       function toggleMenu() {
-  const menu = document.getElementById("menu");
-  const button = document.querySelector(".menu-button");
-
-  if (menu.classList.contains("show")) {
-    closeMenu();
-  } else {
-    menu.classList.add("show");
-
-    // ✅ Enable outside click listener
-    document.addEventListener("click", outsideClickHandler);
-  }
-
-  function outsideClickHandler(event) {
-    if (!menu.contains(event.target) && !button.contains(event.target)) {
-      closeMenu();
-      document.removeEventListener("click", outsideClickHandler);
-    }
-  }
+  const menu = document.getElementById('menu');
+  menu.classList.toggle('show');
 }
 
 function closeMenu() {
-  const menu = document.getElementById("menu");
-  menu.classList.remove("show");
+  const menu = document.getElementById('menu');
+  menu.classList.remove('show');
 }
 
 function formatTimeInput() {
@@ -1160,7 +1146,10 @@ function submitBooking(event) {
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
   const date = document.getElementById('date').value;
-  const time = document.getElementById('timeSelect').value;
+  const timeInput = document.getElementById('timeInput').value.trim();
+  const timePeriod = document.getElementById('timePeriod').value;
+  const time = `${timeInput} ${timePeriod}`;
+
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
@@ -1648,103 +1637,6 @@ if (!user) {
   });
     }
 
-
-    async function generateAvailableSlots() {
-  const date = document.getElementById('date').value;
-  const pedicureType = document.getElementById('pedicureType').value;
-  const manicureType = document.getElementById('manicureType').value;
-  const nailExtensionType = document.getElementById('nailExtensionType').value;
-  const slotSelect = document.getElementById('timeSelect');
-
-  slotSelect.innerHTML = `<option value="">Loading available times...</option>`;
-
-  if (!date || (pedicureType === "NONE" && manicureType === "NONE" && nailExtensionType === "NONE")) {
-    slotSelect.innerHTML = `<option value="">Choose a date and service first</option>`;
-    return;
-  }
-
-  // Helper: estimate duration
-  function getDuration(pedi, mani, extension) {
-    let duration = 60; // base
-    if (pedi === "Gel Pedicure" || mani === "Gel Manicure") duration = 120;
-    if (pedi === "Spa Pedicure" || mani === "Deluxe Manicure") duration = 90;
-    if (extension !== "NONE") duration += 45;
-    return duration + 20; // buffer
-  }
-
-  // Duration for new booking
-  const selectedServiceDuration = getDuration(pedicureType, manicureType, nailExtensionType);
-
-  // Business hours
-  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
-  const business = businessHours[dayName];
-  if (!business) {
-    slotSelect.innerHTML = `<option value="">Closed on ${dayName}</option>`;
-    return;
-  }
-  const openMins = convertToMinutes(business.open);
-  const closeMins = convertToMinutes(business.close);
-
-  // --- Firestore range query ---
-  const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
-
-  let bookedSlots = [];
-  try {
-    const snapshot = await db.collection("bookings")
-      .where("date", ">=", firebase.firestore.Timestamp.fromDate(dayStart))
-      .where("date", "<=", firebase.firestore.Timestamp.fromDate(dayEnd))
-      .get();
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const bookedTime = (data.time || "").trim();
-      if (!bookedTime) return;
-
-      const bookedStart = convertToMinutes(bookedTime);
-
-      // Estimate this booking’s duration (or use data.duration if you save it!)
-      const bDuration = getDuration(
-        data.service.includes("Pedicure") ? data.service : "NONE",
-        data.service.includes("Manicure") ? data.service : "NONE",
-        data.service.includes("Nail Extension") ? data.service : "NONE"
-      );
-
-      bookedSlots.push({ start: bookedStart, end: bookedStart + bDuration });
-    });
-  } catch (err) {
-    console.error("Error fetching bookings:", err);
-    slotSelect.innerHTML = `<option value="">Error loading bookings</option>`;
-    return;
-  }
-
-  // Generate slots
-  let optionsHTML = `<option value="">-- Please select a time --</option>`;
-  let availableCount = 0;
-
-  for (let start = openMins; start + selectedServiceDuration <= closeMins; start += 15) {
-    let end = start + selectedServiceDuration;
-
-    // Conflict check
-    let conflict = bookedSlots.some(b => start < b.end && end > b.start);
-
-    if (!conflict) {
-      let hours = Math.floor(start / 60);
-      let minutes = start % 60;
-      let period = hours >= 12 ? "PM" : "AM";
-      if (hours > 12) hours -= 12;
-      if (hours === 0) hours = 12;
-
-      let timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
-      optionsHTML += `<option value="${timeStr}">${timeStr}</option>`;
-      availableCount++;
-    }
-  }
-
-  slotSelect.innerHTML = availableCount > 0
-    ? optionsHTML
-    : `<option value="">No available times</option>`;
-}
 
   </script>
 
