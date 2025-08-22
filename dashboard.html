@@ -528,14 +528,12 @@ box-sizing: border-box;
 
       // ✅ Handle both Timestamp and string-based dates
       let bDate;
-      if (booking.date && booking.date.toDate) {
-        bDate = booking.date.toDate(); // Firestore Timestamp
-      } else if (typeof booking.date === "string") {
-        const [y, m, d] = booking.date.split('-').map(Number);
-        bDate = new Date(y, m - 1, d);
-      } else {
-        return; // Skip if invalid
-      }
+      if (typeof booking.date === "string") {
+  const [y, m, d] = booking.date.split('-').map(Number);
+  bDate = new Date(y, m - 1, d);
+} else {
+  return; // skip if invalid
+}
 
       const bY = bDate.getFullYear();
       const bM = bDate.getMonth();
