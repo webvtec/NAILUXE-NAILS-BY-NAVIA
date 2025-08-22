@@ -1725,6 +1725,97 @@ function closeAvailableDays() {
   document.getElementById('availableTimesList').innerHTML = "";
 }
 
+
+// 🔹 Helper: get total service duration based on current selections
+function getServiceDuration() {
+  let duration = 0;
+
+  const pedicure = document.getElementById('pedicureType').value;
+  const manicure = document.getElementById('manicureType').value;
+  const extension = document.getElementById('nailExtensionType').value;
+
+  // Pedicure durations (in minutes)
+  switch (pedicure) {
+    case 'Regular Pedicure': duration += 60; break;
+    case 'Spa Pedicure': duration += 90; break;
+    case 'Deluxe Pedicure': duration += 90; break;
+    case 'Gel Pedicure': duration += 120; break;
+    case 'Paraffin Pedicure': duration += 60; break;
+    case 'Hot Stone Pedicure': duration += 90; break;
+    case 'French Pedicure': duration += 60; break;
+    case 'Shellac Pedicure': duration += 90; break;
+    case 'Fish Pedicure': duration += 60; break;
+    case 'Athletic Pedicure': duration += 90; break;
+  }
+
+  // Manicure durations
+  switch (manicure) {
+    case 'Regular Manicure': duration += 60; break;
+    case 'Spa Manicure': duration += 90; break;
+    case 'Deluxe Manicure': duration += 90; break;
+    case 'Gel Manicure': duration += 120; break;
+    case 'Paraffin Manicure': duration += 60; break;
+    case 'French Manicure': duration += 60; break;
+    case 'Shellac Manicure': duration += 90; break;
+    case 'Hot Oil Manicure': duration += 90; break;
+    case 'Acrylic Powder Manicure': duration += 120; break;
+    case 'Athletic Manicure': duration += 90; break;
+  }
+
+  // Nail Extensions
+  switch (extension) {
+    case 'Almond': duration += 40; break;
+    case 'Stiletto': duration += 50; break;
+    case 'Square': duration += 30; break;
+    case 'Coffin': duration += 50; break;
+    case 'Oval': duration += 40; break;
+  }
+
+  return duration || 30; // default 30 mins if none selected
+}
+
+// 🔹 Helper: duration for already-saved bookings
+function getServiceDurationFromData(data) {
+  let duration = 0;
+
+  switch (data.pedicureType) {
+    case 'Regular Pedicure': duration += 60; break;
+    case 'Spa Pedicure': duration += 90; break;
+    case 'Deluxe Pedicure': duration += 90; break;
+    case 'Gel Pedicure': duration += 120; break;
+    case 'Paraffin Pedicure': duration += 60; break;
+    case 'Hot Stone Pedicure': duration += 90; break;
+    case 'French Pedicure': duration += 60; break;
+    case 'Shellac Pedicure': duration += 90; break;
+    case 'Fish Pedicure': duration += 60; break;
+    case 'Athletic Pedicure': duration += 90; break;
+  }
+
+  switch (data.manicureType) {
+    case 'Regular Manicure': duration += 60; break;
+    case 'Spa Manicure': duration += 90; break;
+    case 'Deluxe Manicure': duration += 90; break;
+    case 'Gel Manicure': duration += 120; break;
+    case 'Paraffin Manicure': duration += 60; break;
+    case 'French Manicure': duration += 60; break;
+    case 'Shellac Manicure': duration += 90; break;
+    case 'Hot Oil Manicure': duration += 90; break;
+    case 'Acrylic Powder Manicure': duration += 120; break;
+    case 'Athletic Manicure': duration += 90; break;
+  }
+
+  switch (data.nailExtensionType) {
+    case 'Almond': duration += 40; break;
+    case 'Stiletto': duration += 50; break;
+    case 'Square': duration += 30; break;
+    case 'Coffin': duration += 50; break;
+    case 'Oval': duration += 40; break;
+  }
+
+  return duration || 30;
+}
+
+// 🔹 Main: show available times
 async function loadAvailableTimes() {
   const dateInput = document.getElementById("availableDatePicker").value;
   const timesList = document.getElementById("availableTimesList");
@@ -1736,119 +1827,51 @@ async function loadAvailableTimes() {
 
   timesList.innerHTML = "<p>Loading available times...</p>";
 
-// Generate slots every 5 minutes (9AM - 6PM)
-const slots = [];
-for (let hour = 9; hour <= 18; hour++) {
-  for (let min = 0; min < 60; min += 5) {   // ⬅ step = 5 mins
-    let period = hour >= 12 ? "PM" : "AM";
-    let displayHour = hour % 12 || 12;
-    let displayMin = min.toString().padStart(2, "0");
-    slots.push(`${displayHour}:${displayMin} ${period}`);
-  }
-}
+  const serviceDuration = getServiceDuration();
 
-  let availableSlots = [...slots];
+  // Generate slots every 15 minutes (9AM–6PM)
+  const slots = [];
+  for (let hour = 9; hour <= 18; hour++) {
+    for (let min = 0; min < 60; min += 15) {
+      let period = hour >= 12 ? "PM" : "AM";
+      let displayHour = hour % 12 || 12;
+      let displayMin = min.toString().padStart(2, "0");
+      slots.push(`${displayHour}:${displayMin} ${period}`);
+    }
+  }
 
   try {
-    // 1️⃣ Get bookings for that date
+    // 1️⃣ Get existing bookings
     const bookingSnap = await db.collection("bookings")
       .where("date", "==", firebase.firestore.Timestamp.fromDate(new Date(dateInput)))
       .get();
 
-    let blockedMinutes = new Set();
-
+    let existingBookings = [];
     bookingSnap.forEach(doc => {
       const data = doc.data();
-      const bookedTime = data.time.trim();
-      const bookedMinutes = convertToMinutes(bookedTime);
-
-      // 🔹 Use your buffer logic
-      let buffer = 0;
-
-      // Pedicure
-      if (data.pedicureType && data.pedicureType !== 'NONE') {
-        switch (data.pedicureType) {
-          case 'Regular Pedicure': buffer = 30; break;
-          case 'Spa Pedicure': buffer = 40; break;
-          case 'Deluxe Pedicure': buffer = 50; break;
-          case 'Gel Pedicure': buffer = 60; break;
-          case 'Paraffin Pedicure': buffer = 30; break;
-          case 'Hot Stone Pedicure': buffer = 50; break;
-          case 'French Pedicure': buffer = 30; break;
-          case 'Shellac Pedicure': buffer = 40; break;
-          case 'Fish Pedicure': buffer = 20; break;
-          case 'Athletic Pedicure': buffer = 30; break;
-          default: buffer = 0;
-        }
-      }
-
-      // Manicure
-      if (data.manicureType && data.manicureType !== 'NONE') {
-        switch (data.manicureType) {
-          case 'Regular Manicure': buffer += 20; break;
-          case 'Spa Manicure': buffer += 30; break;
-          case 'Deluxe Manicure': buffer += 40; break;
-          case 'Gel Manicure': buffer += 50; break;
-          case 'Paraffin Manicure': buffer += 30; break;
-          case 'French Manicure': buffer += 30; break;
-          case 'Shellac Manicure': buffer += 40; break;
-          case 'Hot Oil Manicure': buffer += 40; break;
-          case 'Acrylic Powder Manicure': buffer += 50; break;
-          case 'Athletic Manicure': buffer += 30; break;
-          default: buffer += 0;
-        }
-      }
-
-      // Nail Extensions
-      if (data.nailExtensionType && data.nailExtensionType !== 'NONE') {
-        switch (data.nailExtensionType) {
-          case 'Almond': buffer += 40; break;
-          case 'Stiletto': buffer += 50; break;
-          case 'Square': buffer += 30; break;
-          case 'Coffin': buffer += 50; break;
-          case 'Oval': buffer += 40; break;
-          default: buffer += 0;
-        }
-      }
-
-      // Default safeguard
-      if (buffer <= 0) buffer = 30;
-
-      // Block all minutes during the service
-      for (let i = 0; i < buffer; i++) {
-        blockedMinutes.add(bookedMinutes + i);
-      }
+      const bookedStart = convertToMinutes(data.time);
+      const bookedDuration = getServiceDurationFromData(data);
+      existingBookings.push({ start: bookedStart, end: bookedStart + bookedDuration });
     });
 
-    // 2️⃣ Get unavailable periods for that date
-    const unavailableSnap = await db.collection("unavailableDays")
-      .where("date", "==", dateInput)
-      .get();
+    // 2️⃣ Filter slots: only keep if service fits fully
+    let availableSlots = slots.filter(slot => {
+      const slotStart = convertToMinutes(slot);
+      const slotEnd = slotStart + serviceDuration;
 
-    unavailableSnap.forEach(doc => {
-      const data = doc.data();
-      if (data.allDay) {
-        availableSlots = []; // whole day blocked
-      } else {
-        const start = convertToMinutes(data.startTime);
-        const end = convertToMinutes(data.endTime);
-        for (let i = start; i <= end; i++) {
-          blockedMinutes.add(i);
+      for (let booking of existingBookings) {
+        if (slotStart < booking.end && slotEnd > booking.start) {
+          return false; // overlap → not available
         }
       }
+      return true;
     });
 
-    // 3️⃣ Remove blocked slots
-    availableSlots = availableSlots.filter(slot => {
-      const slotMinutes = convertToMinutes(slot);
-      return !blockedMinutes.has(slotMinutes);
-    });
-
-    // ✅ Show results
+    // 3️⃣ Show results
     if (availableSlots.length === 0) {
       timesList.innerHTML = "<p style='color:red;'>No available times for this day.</p>";
     } else {
-      timesList.innerHTML = "<h4>Available Times for " + dateInput + ":</h4>" +
+      timesList.innerHTML = "<h4>Available Times:</h4>" +
         availableSlots.map(t => `<p>⏰ ${t}</p>`).join("");
     }
 
