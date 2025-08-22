@@ -1873,15 +1873,15 @@ async function loadAvailableTimes() {
     intervals.forEach(interval => {
       const freeTime = interval.end - interval.start;
 
-      if (interval.isLast) {
-        // Last interval → allow if it fits before closing
-        if (serviceDuration <= freeTime) {
+      if (serviceDuration <= freeTime) {
+        if (interval.isLast) {
+          // Last interval → allow service to fit even if leftover before closing
           availableSlots.push(minutesToTime(interval.start));
-        }
-      } else {
-        // Normal interval → only allow exact fit
-        if (serviceDuration === freeTime) {
-          availableSlots.push(minutesToTime(interval.start));
+        } else {
+          // Middle intervals → allow service to start at interval.start if it ends before next booking
+          if (interval.start + serviceDuration <= interval.end) {
+            availableSlots.push(minutesToTime(interval.start));
+          }
         }
       }
     });
@@ -1902,7 +1902,6 @@ async function loadAvailableTimes() {
   }
 }
 
-// 🔹 Helper: convert minutes → readable time
 function minutesToTime(totalMinutes) {
   let hour = Math.floor(totalMinutes / 60);
   let minutes = totalMinutes % 60;
