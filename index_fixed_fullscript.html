@@ -1,0 +1,63 @@
+
+<!-- ✅ Scripts -->
+<script>
+    let currentUser = null;
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyBx9_GrR4_ruM8v-GDOj4De1erg7nWsH08",
+  authDomain: "arcturus-nail-care.firebaseapp.com",
+  projectId: "arcturus-nail-care",
+  storageBucket: "arcturus-nail-care.appspot.com",
+  messagingSenderId: "604991163098",
+  appId: "1:604991163098:web:47730d7480c66d813633e3"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged(user => {
+  currentUser = user || null;
+  loadReviews(currentUser);
+});
+
+    function login() {
+  document.getElementById('adminLoginModal').style.display = 'flex';
+}
+
+function closeAdminModal() {
+  document.getElementById('adminLoginModal').style.display = 'none';
+  document.getElementById('adminLoginMsg').style.display = 'none';
+  document.getElementById('adminEmail').value = "";
+  document.getElementById('adminPassword').value = "";
+}
+
+function attemptAdminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value.trim();
+  const msg = document.getElementById('adminLoginMsg');
+
+  const adminEmail = 'carlanviroberts@gmail.com';
+  const adminPassword = '@Carlanvi325';
+
+  if (email === adminEmail && password === adminPassword) {
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(() => {
+        closeAdminModal();
+        window.location.href = 'dashboard.html';
+      })
+      .catch(() => {
+        msg.textContent = "You are not an admin user.";
+        msg.style.display = "block";
+        document.getElementById('adminPassword').value = "";
+      });
+  } else {
+    msg.textContent = "You are not an admin user.";
+    msg.style.display = "block";
+    document.getElementById('adminPassword').value = "";
+  }
+}
+
+// ... ENTIRE USER PROVIDED SCRIPT GOES HERE (ending with showUserBookings())
+</script>
+</body>
+</html>
