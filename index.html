@@ -786,14 +786,31 @@ function attemptAdminLogin() {
 }
 
       function toggleMenu() {
-  const menu = document.getElementById('menu');
-  menu.classList.toggle('show');
+  const menu = document.getElementById("menu");
+  const button = document.querySelector(".menu-button");
+
+  if (menu.classList.contains("show")) {
+    closeMenu();
+  } else {
+    menu.classList.add("show");
+
+    // ✅ Enable outside click listener
+    document.addEventListener("click", outsideClickHandler);
+  }
+
+  function outsideClickHandler(event) {
+    if (!menu.contains(event.target) && !button.contains(event.target)) {
+      closeMenu();
+      document.removeEventListener("click", outsideClickHandler);
+    }
+  }
 }
 
 function closeMenu() {
-  const menu = document.getElementById('menu');
-  menu.classList.remove('show');
+  const menu = document.getElementById("menu");
+  menu.classList.remove("show");
 }
+
 
 
 function formatTimeInput() {
