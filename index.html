@@ -10,7 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;700&amp;display=swap" rel="stylesheet"/>
 <style>
     body {
@@ -26,7 +25,7 @@
       left: 0;
       right: 0;
       height: 48px;
-      background-color: #FE5DC7;    /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      background-color: #FFD1DC;    /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
       display: flex;
       align-items: center;
       justify-content: center;
@@ -37,7 +36,7 @@
       font-family: 'Zilla Slab', serif;
       font-size: 26px;
       font-weight: bold;
-      background: linear-gradient(90deg, #abecd6, #f9d423, #24c6dc, #abecd6);  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      background: linear-gradient(90deg, #ff4e50, #f9d423, #24c6dc, #abecd6);  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
@@ -51,7 +50,7 @@
       left: 0;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #61134A;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      background-color: #98FF98;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
       color: #FF69B4;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
       border: none;
       border-radius: 0px;
@@ -95,7 +94,7 @@
 
     h1 {
       text-align: center;
-      color: #FE5DC7;  /*COLOUR TO CHANGE TEXT ON REXIEWS PAGE (ALLOWED TO CHANGE FOR CLIENT)*/
+      color: #6200ea;  /*COLOUR TO CHANGE TEXT ON REXIEWS PAGE (ALLOWED TO CHANGE FOR CLIENT)*/
       margin-top: 80px;
     }
 
@@ -120,7 +119,7 @@
     }
 
     form button {
-      background-color: #61134A;  /*COLOUR TO CHANGE BOOM NOW BUTTON (ALLOWED TO CHANGE FOR CLIENT)*/
+      background-color: #6200ea;
       color: white;
       border: none;
       cursor: pointer;
@@ -128,7 +127,7 @@
     }
 
     form button:hover {
-      background-color: #61134A;
+      background-color: #3700b3;
     }
 
     #bookingMessage {
@@ -146,7 +145,7 @@
       text-align: center;
       margin-bottom: 15px;
       font-size: 22px;
-      color: #FE5DC7;  /*COLOUR TO CHANGE MAIN PAGE TEXTS (ALLOWED TO CHANGE FOR CLIENT)*/
+      color: #6200ea;  /*COLOUR TO CHANGE MAIN PAGE TEXTS (ALLOWED TO CHANGE FOR CLIENT)*/
       text-transform: uppercase;
     }
 
@@ -204,7 +203,7 @@
       right: 0px;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #61134A;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      background-color: #98FF98;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
       color: red;
       border: none;
       padding: 0;
@@ -231,17 +230,17 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 5px;
-  color: #FE5DC7; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+  color: #98FF98; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
 }
 
 .opening-hours p {
   font-size: 13px;
   margin: 2px 0;
-  color: #FFFFFF;   /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+  color: #98FF98;   /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
 }
 
 .opening-hours p:last-child {
-  color: #FFFFFF; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+  color: #98FF98; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
   font-weight: bold;
 }
 
@@ -255,7 +254,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 5px;
-  color: #FE5DC7; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+  color: #FFD1DC; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
 }
 
 .location-info p {
@@ -336,15 +335,12 @@
 <p>Saturday: 10:00 AM - 4:00 PM</p>
 <p>Sunday: Closed</p>
 </div>
-<a class="admin-button" onclick="showUserBookings(); closeMenu();" style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:#61134A; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;">
+<a class="admin-button" onclick="showUserBookings(); closeMenu();" style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:blue; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;">
    MY BOOKINGS
     </a>
-<a onclick="openPaymentInfo(); closeMenu();" 
-   style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:#61134A; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;"
-   href="javascript:void(0);">
+<a href="javascript:void(0);" onclick="showPaymentInfo(); closeMenu();" style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:blue; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;">
    PAYMENT INFO
 </a>
-    
 <!-- Another Separator Line -->
 <div class="separator-line"></div>
 <div class="social-links" style="display:flex; justify-content:center; gap:35px; margin-top:25px;">
@@ -371,7 +367,7 @@
 <a onclick="logoutUser(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:red; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; font-weight:bold;">
        LOGOUT
     </a>
-<a class="admin-button" onclick="login(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#61134A; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
+<a class="admin-button" onclick="login(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#6200ea; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
        ADMIN
     </a>
 </div>
@@ -407,7 +403,7 @@
       cursor:pointer;
       z-index:10001;
     ">✖</button>
-<h3 style="margin:10px 0; color:#FE5DC7; text-align:center;">
+<h3 style="margin:10px 0; color:#6200ea; text-align:center;">
       My Last 5 Bookings
     </h3>
 <div id="myBookingsContent"></div>
@@ -473,7 +469,7 @@
 <option value="SHORT">SHORT</option>
 </select>
 </div>
-<p id="estimateTimeMessage" style="color: #FE5DC7; font-weight: bold;"></p>
+<p id="estimateTimeMessage" style="color: #6200ea; font-weight: bold;"></p>
 <div style="margin: 15px 0; display: flex; align-items: center;">
 <input id="lateAgreement" required="" style="margin-right: 3px;" type="checkbox"/>
 <label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
@@ -485,7 +481,7 @@
 <p id="bookingMessage"></p>
 </div>
 <div class="content-section" id="reviewsSection">
-<h1 style="text-align:center; color:#FE5DC7;">CLIENT REVIEWS</h1>
+<h1 style="text-align:center; color:#6200ea;">CLIENT REVIEWS</h1>
 <div id="reviewPrompt" style="display:none; max-width:500px; margin:20px auto; 
             background-color:#e8d9fb; color:#6200ea; 
             border:1px solid #d1aaff; border-radius:6px; 
@@ -504,7 +500,7 @@
 <span data-value="4">★</span>
 <span data-value="5">★</span>
 </div>
-<button style="background-color:#61134A; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" type="submit">SUBMIT
+<button style="background-color:#6200ea; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" type="submit">SUBMIT
       REVIEW</button>
 </form>
 <p id="reviewSubmitMsg" style="text-align:center; color:green;"></p>
@@ -764,7 +760,7 @@ function selectPeriod(period) {
           <div style="text-align:center; margin-top:7px;">
             <button 
               onclick="showSection('bookingSection')" 
-              style="background-color:#61134A; color:#000; font-weight: bold; padding:10px 20px; border:none; border-radius:15px; cursor:pointer;">
+              style="background-color:#98FF98; color:#000; font-weight: bold; padding:10px 20px; border:none; border-radius:15px; cursor:pointer;">
               BOOK A SERVICE NOW
             </button>
           </div>
@@ -1092,8 +1088,8 @@ function submitBooking(event) {
 
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
-  const date = document.getElementById('date').value; // YYYY-MM-DD
-  const time = document.getElementById('selectedTime').value;
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('selectedTime').value; // ✅ FIXED
 
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
@@ -1112,83 +1108,79 @@ function submitBooking(event) {
   // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
 
-  // ✅ Convert to pretty format: July 6, 2025
-  const [y, m, d] = date.split('-').map(Number);
-  const formattedDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-
-  validateTimeSlot(date, time).then((isAvailable) => {
-    if (!isAvailable) {
-      alert('This time is not available. Please choose another time.');
-      return;
-    }
-
-    // ✅ Save booking to Firestore (string date + formatted date)
-    db.collection('bookings').add({
-      uid: user.uid,
-      bookingNumber,
-      name,
-      phone,
-      dateRaw: date,          // "2025-07-06"
-      dateFormatted: formattedDate, // "July 6, 2025"
-      time,
-      service,
-      deposit: "No"
-    })
-    .then(() => {
-      // ✅ Send Telegram notification
-      const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${formattedDate}\n⏰ Time: ${time}\n💅 Service: ${service}`;
-
-      const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
-      const telegramChatId = "-1002734216867";
-
-      return fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: telegramChatId,
-          text: message,
-          parse_mode: "HTML"
-        })
-      });
-    })
-    .then(response => {
-      if (response.ok) {
-        // ✅ Show confirmation modal
-        document.querySelector("#bookingModal h3").style.display = "none";
-        document.querySelector("#bookingModal p").innerHTML = `
-          <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
-            <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
-            <p style="font-size:18px; margin:5px 0 15px 0;">
-              Booking #<strong>${bookingNumber}</strong>
-            </p>
-            <p style="font-size:15px; margin:5px 0;">
-              <strong>Date:</strong> ${formattedDate}
-            </p>
-            <p style="font-size:15px; margin:5px 0;">
-              <strong>Time:</strong> ${time}
-            </p>
-            <hr style="margin:15px 0;">
-            <p style="font-size:15px; line-height:1.5;">
-              <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
-              or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
-            </p>
-            <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
-              💵 Deposit Due Now: JMD $4,000.00
-            </p>
-          </div>
-        `;
-        document.getElementById('bookingModal').style.display = 'flex';
+  validateTimeSlot(date, time)
+    .then((isAvailable) => {
+      if (!isAvailable) {
+        alert('This time is not available. Please choose another time.');
+        return;
       }
-    })
-    .catch((err) => {
-      console.error("Booking error:", err);
-      alert("Failed to save booking. Please try again.");
+
+      // ✅ Save booking to Firestore (with default deposit = "No")
+      db.collection('bookings').add({
+        uid: user.uid,
+        bookingNumber,
+        name,
+        phone,
+        date: firebase.firestore.Timestamp.fromDate(new Date(date)),
+        time,
+        service,
+        deposit: "No"
+      })
+      .then(() => {
+        // ✅ Send Telegram notification
+        const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${date}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+
+        const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
+        const telegramChatId = "-1002734216867";
+
+        return fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: message,
+            parse_mode: "HTML"
+          })
+        });
+      })
+      .then(response => {
+        if (response.ok) {
+          // ✅ Show confirmation modal with booking number
+          document.querySelector("#bookingModal h3").style.display = "none";
+          document.querySelector("#bookingModal p").innerHTML = `
+            <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
+              <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
+              <p style="font-size:18px; margin:5px 0 15px 0;">
+                Booking #<strong>${bookingNumber}</strong>
+              </p>
+              <hr style="margin:15px 0;">
+              <p style="font-size:15px; line-height:1.5;">
+                <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
+                or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
+              </p>
+              <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
+                💵 Deposit Due Now: JMD $4,000.00
+              </p>
+              <hr style="margin:15px 0;">
+              <h3 style="font-size:16px; margin:10px 0;">Banking Details:</h3>
+              <p>🏦 Bank: <strong>Your Bank Name</strong></p>
+              <p>👤 Account Name: <strong>Your Account Name</strong></p>
+              <p>#️⃣ Account Number: <strong>123456789</strong></p>
+              <p>🏢 Branch: <strong>Your Branch Name</strong></p>
+              <hr style="margin:15px 0;">
+              <p style="font-size:14px; color:#555;">
+                ℹ️ You can always see banking info in the <strong>Payment Info</strong> menu.
+              </p>
+            </div>
+          `;
+          document.getElementById('bookingModal').style.display = 'flex';
+        }
+      })
+      .catch((err) => {
+        console.error("Booking error:", err);
+        alert("Failed to save booking. Please try again.");
+      });
     });
-  });
 }
 
 
@@ -1508,11 +1500,11 @@ if (!user) {
     document.getElementById('bookingModal').style.display = 'none';
   }
 
-function openPaymentInfo() {
+    function showPaymentInfo() {
   Swal.fire({
-    title: "<div style='font-size:32px; margin-bottom:10px;'>🏦</div><div class='swal2-title-nowrap'>BANK TRANSFER INFO</div>",
+    title: "<div class='swal2-title-nowrap'>BANK TRANSER INFO</div>",
     html: `
-      <div style="text-align:left; font-size:16px; line-height:1.6; color:black;">
+      <div style="text-align:left; font-size:16px; line-height:1.6; color:white;">
         <p><b>Bank Name:</b> First Caribbean Bank</p>
         <p><b>Account Name:</b> John Doe</p>
         <p><b>Account Number:</b> 123456789</p>
@@ -1520,17 +1512,16 @@ function openPaymentInfo() {
         <p><b>Note:</b> Please use your Order # as the payment reference.</p>
       </div>
     `,
-    width: 600,
+    width: 600,  // ✅ slightly wider modal
     confirmButtonText: "CLOSE",
-    background: "#FFFFFF",   // white modal background
-    color: "black",          // text color
-    confirmButtonColor: "#61134A", // brand button
+    background: "#1a73e8",
+    color: "white",
+    confirmButtonColor: "#0d47a1",
     customClass: {
       popup: "swal2-rounded"
     }
   });
-}
-
+    }
 
 function getBufferForSelectedServices() {
   let buffer = 30; // default
