@@ -925,6 +925,21 @@ function showEstimateTime() {
     estimateMessage.innerHTML = `Estimated Time: ${timeEstimate}`;
 }
 
+
+    function normalizeTimeStr(timeStr) {
+  if (!timeStr) return null;
+
+  // ✅ Already in AM/PM format
+  if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
+
+  // ✅ Convert from 24-hour format (e.g. "13:30" → "1:30 PM")
+  let [hours, minutes] = timeStr.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
+
     function validateTimeSlot(date, selectedTime) {
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
@@ -953,8 +968,9 @@ function showEstimateTime() {
         if (data.allDay) {
           isUnavailable = true;
         } else {
-          const startMinutes = convertToMinutes(data.startTime);
-          const endMinutes = convertToMinutes(data.endTime);
+          const startMinutes = convertToMinutes(normalizeTimeStr(data.startTime));
+          const endMinutes = convertToMinutes(normalizeTimeStr(data.endTime));
+
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
             isUnavailable = true;
