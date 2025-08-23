@@ -1310,8 +1310,6 @@ if (!user) {
 
     function showUserBookings() {
   const user = firebase.auth().currentUser;
-  
-  // If no user is logged in, redirect to login
   if (!user) {
     if (confirm("Please log in to view your bookings. Click OK to log in.")) {
       window.location.href = 'login.html';
@@ -1319,56 +1317,106 @@ if (!user) {
     return;
   }
 
-  // Query the Firestore database for bookings by the logged-in user
-  db.collection('bookings')
-    .where("uid", "==", user.uid)
-    .orderBy("date", "desc")  // Ensure bookings are sorted by date in descending order
-    .limit(5)  // Fetch the last 5 bookings
-    .get() // Use `.get()` instead of `onSnapshot()` to just get the data once
-    .then(snapshot => {
-      if (snapshot.empty) {
-        console.log("No bookings found.");
-        document.getElementById('myBookingsContent').innerHTML = "<p style='color:red;'>You don’t have any bookings yet.</p>";
-        return;
-      }
+  try {
+    db.collection('bookings')
+      .where("uid", "==", user.uid)
+      .limit(20) // fetch more, then sort manually
+      .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
+        let bookings = [];
 
-      // Array to hold formatted bookings
-      let bookingsHTML = "";
+        snapshot.forEach(doc => {
+          bookings.push({ id: doc.id, ...doc.data() });
+        });
 
-      snapshot.forEach(doc => {
-        let booking = doc.data();
+        // 🔹 Sort manually by date (newest first)
+        bookings.sort((a, b) => {
+          let da = a.date && a.date.toDate ? a.date.toDate() : new Date(a.date);
+          let db = b.date && b.date.toDate ? b.date.toDate() : new Date(b.date);
+          return db - da;
+        });
 
-        // Assuming the date is a Firestore timestamp, if not, parse it as a string
-        let bookingDate = booking.date instanceof firebase.firestore.Timestamp 
-                          ? booking.date.toDate().toLocaleDateString('en-US') 
-                          : booking.date;  // If the date is already a string, just use it
+        // 🔹 Keep only the last 5
+        bookings = bookings.slice(0, 5);
 
-        let cleanService = booking.service.replace(/,?\s*Manicure:\s*NONE/gi, "")
-                                          .replace(/,?\s*Pedicure:\s*NONE/gi, "")
-                                          .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
-                                          .trim()
-                                          .replace(/,\s*$/, "");
+        // 🔹 Build HTML
+        let bookingsHTML = "";
+        if (bookings.length === 0) {
+          bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
+        } else {
+          bookings.forEach(b => {
+            // ✅ Format date
+            let bookingDate = "Unknown Date";
+            try {
+              if (b.date && b.date.toDate) {
+                bookingDate = b.date.toDate().toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                });
+              } else if (typeof b.date === "string") {
+                const [y, m, d] = b.date.split("-").map(Number);
+                bookingDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                });
+              }
+            } catch (err) {
+              console.error("Date format issue:", err);
+            }
 
-        bookingsHTML += `
-          <div style="border:1px solid #ccc; padding:15px; background:#fafafa; margin-bottom:10px;">
-            <h3>Booking #${booking.bookingNumber || "N/A"}</h3>
-            <p><strong>Name:</strong> ${booking.name || "N/A"}</p>
-            <p><strong>Phone:</strong> ${booking.phone || "N/A"}</p>
-            <p><strong>Date:</strong> ${bookingDate}</p>
-            <p><strong>Time:</strong> ${booking.time || "N/A"}</p>
-            <p><strong>Services:</strong> ${cleanService}</p>
-          </div>
-        `;
+            // ✅ Clean services
+            let cleanService = "";
+            if (b.service) {
+              cleanService = b.service
+                .replace(/,?\s*Manicure:\s*NONE/gi, "")
+                .replace(/,?\s*Pedicure:\s*NONE/gi, "")
+                .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
+                .trim()
+                .replace(/,\s*$/, "");
+            }
+
+            // ✅ Build card
+            let cardHTML = `
+              <div style="
+                border:1px solid #ccc;
+                border-radius:12px;
+                padding:15px;
+                margin-bottom:15px;
+                background:#fafafa;
+                box-shadow:0 2px 5px rgba(0,0,0,0.1);
+              ">
+                <h3 style="margin-top:0; color:#333;">Booking #${b.bookingNumber || "N/A"}</h3>
+                <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
+                <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
+                <p><strong>📅 Date:</strong> ${bookingDate}</p>
+                <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
+            `;
+
+            if (cleanService) {
+              cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
+            }
+
+            // ✅ Deposit status (live now)
+            cardHTML += b.deposit === "Made"
+              ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>`
+              : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`;
+
+            if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
+
+            cardHTML += `</div>`;
+            bookingsHTML += cardHTML;
+          });
+        }
+
+        // ✅ Show in modal
+        document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
+        document.getElementById('myBookingsModal').style.display = 'flex';
       });
-
-      // Inject the HTML into the modal
-      document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
-      document.getElementById('myBookingsModal').style.display = 'flex';
-    })
-    .catch(err => {
-      console.error("Error fetching bookings:", err);
-      alert("An error occurred while loading your bookings.");
-    });
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    alert("⚠ An unexpected error occurred while loading your bookings: " + err.message);
+  }
 }
 
 
