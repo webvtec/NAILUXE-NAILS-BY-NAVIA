@@ -971,10 +971,10 @@ function showEstimateTime() {
           const startMinutes = convertToMinutes(normalizeTimeStr(data.startTime));
           const endMinutes = convertToMinutes(normalizeTimeStr(data.endTime));
 
-
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-            isUnavailable = true;
-          }
+          isUnavailable = true;
+         }
+
         }
       });
 
