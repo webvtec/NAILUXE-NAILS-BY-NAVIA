@@ -1033,7 +1033,26 @@ function submitBooking(event) {
     })
     .then(() => {
       // ✅ Send Telegram notification
-     const message = `📅 New Booking Request\n\n🔑 Booking No: ${bookingNumber}\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Date: ${new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}\n⏰ Time: ${time}\n💅 Service: ${service}`;
+     // Split the date string into year, month, day
+const [year, month, day] = date.split("-");
+
+// Format the date properly
+const formattedDate = new Date(year, month - 1, day).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+// Build the message
+const message = `📅 New Booking Request
+
+🔑 Booking No: ${bookingNumber}
+👤 Name: ${name}
+📞 Phone: ${phone}
+📍 Date: ${formattedDate}
+⏰ Time: ${time}
+💅 Service: ${service}`;
+
 
       const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
       const telegramChatId = "-1002734216867";
