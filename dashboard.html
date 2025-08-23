@@ -359,6 +359,43 @@ box-sizing: border-box;
 </div>
 
 
+  <!-- Conflict Modal -->
+<div id="conflictModal" style="
+  display:none; 
+  position:fixed; 
+  top:0; left:0; 
+  width:100%; height:100%; 
+  background:rgba(0,0,0,0.5); 
+  justify-content:center; 
+  align-items:center;
+  z-index:2000;
+">
+  <div style="
+    background:#fff; 
+    padding:20px; 
+    border-radius:12px; 
+    max-width:450px; 
+    width:90%; 
+    max-height:80%; 
+    overflow-y:auto; 
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  ">
+    <h3 style="margin-bottom:15px; color:#FE5DC7;">⚠️ Conflicting Bookings</h3>
+    <div id="conflictList"></div>
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="closeConflictModal()" style="
+        background:#61134A; 
+        color:#fff; 
+        border:none; 
+        padding:8px 14px; 
+        border-radius:6px; 
+        cursor:pointer;
+      ">Close</button>
+    </div>
+  </div>
+</div>
+
+
   <!-- Deposit Modal -->
 <div id="depositModal" style="
   display:none; 
@@ -710,41 +747,38 @@ function clearReservations() {
     return;
   }
 
-  // ✅ Parse YYYY-MM-DD manually
   const [yyyy, mm, dd] = date.split("-");
   const finalDate = `${yyyy}-${mm}-${dd}`;
 
   try {
-    // 🔍 Step 1: Check for existing bookings on this date
     const snapshot = await db.collection("bookings").where("date", "==", finalDate).get();
+    const conflicts = [];
 
     if (!snapshot.empty) {
-      let conflict = false;
-
       snapshot.forEach(doc => {
         const booking = doc.data();
         const bookingTime = booking.time || null;
 
         if (allDay) {
-          conflict = true; // whole day unavailable conflicts with any booking
+          conflicts.push(booking);
         } else if (bookingTime) {
           const bookingMinutes = convertTimeToMinutes(bookingTime);
-          const startMinutes = convertTimeToMinutes(startTime + " AM"); // default handling
-          const endMinutes = convertTimeToMinutes(endTime + " PM");
+          const startMinutes = convertTimeToMinutes(startTime);
+          const endMinutes = convertTimeToMinutes(endTime);
 
           if (bookingMinutes >= startMinutes && bookingMinutes <= endMinutes) {
-            conflict = true;
+            conflicts.push(booking);
           }
         }
       });
-
-      if (conflict) {
-        alert("A booking already exists during this time. Please contact the client and cancel it from the dashboard before marking this time as unavailable.");
-        return; // ⛔ Stop here
-      }
     }
 
-    // ✅ Step 2: Add unavailable day since no conflict
+    if (conflicts.length > 0) {
+      showConflictModal(conflicts);
+      return; // ⛔ Stop here
+    }
+
+    // ✅ Save since no conflict
     await db.collection("unavailableDays").add({
       date: finalDate,
       allDay,
@@ -753,7 +787,7 @@ function clearReservations() {
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // ✅ Clear inputs
+    // Reset form
     document.getElementById('unavailableDateInput').value = '';
     document.getElementById('startTimeInput').value = '';
     document.getElementById('endTimeInput').value = '';
@@ -766,6 +800,36 @@ function clearReservations() {
     alert("Failed to add unavailable day. Please try again.");
   }
 }
+
+    function showConflictModal(conflicts) {
+  const conflictList = document.getElementById('conflictList');
+  conflictList.innerHTML = '';
+
+  conflicts.forEach(booking => {
+    conflictList.innerHTML += `
+      <div style="
+        padding:10px; 
+        margin-bottom:10px; 
+        border:1px solid #ddd; 
+        border-radius:8px;
+        background:#fafafa;
+      ">
+        <p><strong>Name:</strong> ${booking.name || "N/A"}</p>
+        <p><strong>Phone:</strong> ${booking.phone || "N/A"}</p>
+        <p><strong>Service:</strong> ${booking.service || "N/A"}</p>
+        <p><strong>Date:</strong> ${booking.date}</p>
+        <p><strong>Time:</strong> ${booking.time || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById('conflictModal').style.display = 'flex';
+}
+
+function closeConflictModal() {
+  document.getElementById('conflictModal').style.display = 'none';
+}
+
 
 
 function loadUnavailableDates() {
