@@ -380,7 +380,10 @@ box-sizing: border-box;
     overflow-y:auto; 
     box-shadow:0 4px 10px rgba(0,0,0,0.2);
   ">
-    <h3 style="margin-bottom:15px; color:#FE5DC7;">⚠️ Conflicting Bookings</h3>
+    <h3 style="margin-bottom:10px; color:#FE5DC7;">⚠️ Conflicting Bookings</h3>
+    <p style="font-size:14px; color:#333; margin-bottom:15px;">
+      The following bookings are in conflict. Please <strong>contact the client</strong> and <strong>cancel the booking from the Reservations dashboard</strong> before marking this time as unavailable.
+    </p>
     <div id="conflictList"></div>
     <div style="text-align:right; margin-top:15px;">
       <button onclick="closeConflictModal()" style="
@@ -394,6 +397,7 @@ box-sizing: border-box;
     </div>
   </div>
 </div>
+
 
 
   <!-- Deposit Modal -->
@@ -808,8 +812,8 @@ function clearReservations() {
   conflicts.forEach(booking => {
     conflictList.innerHTML += `
       <div style="
-        padding:10px; 
-        margin-bottom:10px; 
+        padding:12px; 
+        margin-bottom:12px; 
         border:1px solid #ddd; 
         border-radius:8px;
         background:#fafafa;
@@ -819,12 +823,33 @@ function clearReservations() {
         <p><strong>Service:</strong> ${booking.service || "N/A"}</p>
         <p><strong>Date:</strong> ${booking.date}</p>
         <p><strong>Time:</strong> ${booking.time || "N/A"}</p>
+        <button onclick="goToReservations()" style="
+          margin-top:8px;
+          background:#FE5DC7;
+          color:#fff;
+          border:none;
+          padding:6px 12px;
+          border-radius:6px;
+          cursor:pointer;
+          font-weight:bold;
+        ">Go to Reservations</button>
       </div>
     `;
   });
 
   document.getElementById('conflictModal').style.display = 'flex';
 }
+
+function closeConflictModal() {
+  document.getElementById('conflictModal').style.display = 'none';
+}
+
+function goToReservations() {
+  closeConflictModal();
+  showSection('reservationsPage');
+  document.getElementById('reservationsPage').scrollIntoView({ behavior: "smooth" });
+}
+
 
 function closeConflictModal() {
   document.getElementById('conflictModal').style.display = 'none';
