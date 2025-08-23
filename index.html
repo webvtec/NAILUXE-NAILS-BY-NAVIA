@@ -838,44 +838,43 @@ async function validateTimeSlot(date, selectedTime) {
     return false;
   }
 
-  // Check unavailable days
+  // Fetch unavailable days
   const unavailableSnapshot = await db.collection('unavailableDays')
     .where('date', '==', date)
     .get();
 
-  let duration = getSelectedServiceDuration();
+  const duration = getSelectedServiceDuration();
 
-// Check against booked slots
-for (let doc of bookingSnapshot.docs) {
-  let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
-  let bookedMinutes = convertToMinutes(bookedTime);
-  let bookedDuration = doc.data().duration || 60;
-
-  let bookedEnd = bookedMinutes + bookedDuration;
-  let selectedEnd = selectedMinutes + duration;
-
-  // If they overlap, reject
-  if (!(selectedEnd <= bookedMinutes || selectedMinutes >= bookedEnd)) {
-    return false;
-  }
-}
-
-  // Fetch existing bookings
+  // ✅ Fetch existing bookings first
   const bookingSnapshot = await db.collection('bookings')
-    .where('date', '==', firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .where('date', '==', date)
     .get();
 
+  // Check against booked slots
+  for (let doc of bookingSnapshot.docs) {
+    let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+    let bookedMinutes = convertToMinutes(bookedTime);
+    let bookedDuration = doc.data().duration || 60;
+
+    let bookedEnd = bookedMinutes + bookedDuration;
+    let selectedEnd = selectedMinutes + duration;
+
+    // If they overlap, reject
+    if (!(selectedEnd <= bookedMinutes || selectedMinutes >= bookedEnd)) {
+      return false;
+    }
+  }
+
+  // Buffer check (if using)
   const pedicureType = document.getElementById('pedicureType').value;
   const manicureType = document.getElementById('manicureType').value;
   const nailExtensionType = document.getElementById('nailExtensionType').value;
 
-  // ✅ Calculate buffer by summing selected services
   let buffer = 0;
   if (pedicureType !== "NONE") buffer += serviceBuffers[pedicureType] || 0;
   if (manicureType !== "NONE") buffer += serviceBuffers[manicureType] || 0;
   if (nailExtensionType !== "NONE") buffer += serviceBuffers[nailExtensionType] || 0;
 
-  // Check against booked slots
   for (let doc of bookingSnapshot.docs) {
     let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
     let bookedMinutes = convertToMinutes(bookedTime);
