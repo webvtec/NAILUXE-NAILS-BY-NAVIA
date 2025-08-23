@@ -1736,6 +1736,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+  const dateInput = document.getElementById("date");
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0]; 
+    dateInput.setAttribute("min", today); // ✅ Block past dates
+  }
+});
 
 
 
