@@ -764,14 +764,20 @@ function clearReservations() {
         const bookingTime = booking.time || null;
 
         if (allDay) {
-          conflicts.push(booking);
+          conflicts.push({
+            id: doc.id, // ✅ Include Firestore document ID
+            ...booking
+          });
         } else if (bookingTime) {
           const bookingMinutes = convertTimeToMinutes(bookingTime);
           const startMinutes = convertTimeToMinutes(startTime);
           const endMinutes = convertTimeToMinutes(endTime);
 
           if (bookingMinutes >= startMinutes && bookingMinutes <= endMinutes) {
-            conflicts.push(booking);
+            conflicts.push({
+              id: doc.id, // ✅ Include Firestore document ID
+              ...booking
+            });
           }
         }
       });
@@ -804,6 +810,33 @@ function clearReservations() {
     alert("Failed to add unavailable day. Please try again.");
   }
 }
+
+function goToReservationsAndHighlight(bookingId) {
+  closeConflictModal();
+  showSection('reservationsPage');
+
+  setTimeout(() => {
+    // ✅ Use the data-id attribute to find the correct card
+    const targetCard = document.querySelector(`[data-id="${bookingId}"]`);
+    
+    if (targetCard) {
+      // Remove any existing highlights first
+      document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
+      
+      // ✅ highlight and scroll
+      targetCard.classList.add("highlighted");
+      targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // ⏳ remove highlight after a few seconds
+      setTimeout(() => {
+        targetCard.classList.remove("highlighted");
+      }, 6000);
+    } else {
+      console.log("Could not find reservation card with ID:", bookingId);
+    }
+  }, 500); // wait a bit for UI to switch sections and load
+}
+    
 
     function showConflictModal(conflicts) {
   const conflictList = document.getElementById('conflictList');
