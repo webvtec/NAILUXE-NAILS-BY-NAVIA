@@ -1317,138 +1317,171 @@ if (!user) {
     return;
   }
 
-  // ✅ Close any other modals first
+  // Close any other modals first
   document.getElementById('bookingModal').style.display = 'none';
   document.getElementById('adminLoginModal').style.display = 'none';
 
-  try {
-    db.collection('bookings')
-      .where("uid", "==", user.uid)
-      .orderBy('date', 'desc') // ✅ Order by date descending in Firestore
-      .limit(5) // ✅ Only get 5 most recent bookings
-      .onSnapshot(snapshot => {
-        let bookings = [];
+  console.log("Loading bookings for user:", user.uid); // Debug log
 
-        snapshot.forEach(doc => {
-          bookings.push({ id: doc.id, ...doc.data() });
-        });
+  // Show loading state
+  document.getElementById('myBookingsContent').innerHTML = '<p style="text-align:center; color:#666;">Loading your bookings...</p>';
+  document.getElementById('myBookingsModal').style.display = 'flex';
 
-        // ✅ Additional sorting in case Firestore ordering isn't perfect
-        bookings.sort((a, b) => {
-          let dateA, dateB;
-          
-          // Handle different date formats
-          if (a.date && a.date.toDate) {
-            dateA = a.date.toDate();
-          } else if (typeof a.date === 'string') {
-            dateA = new Date(a.date);
-          } else {
-            dateA = new Date(0); // fallback to epoch
-          }
-          
-          if (b.date && b.date.toDate) {
-            dateB = b.date.toDate();
-          } else if (typeof b.date === 'string') {
-            dateB = new Date(b.date);
-          } else {
-            dateB = new Date(0); // fallback to epoch
-          }
-          
-          return dateB - dateA; // Most recent first
-        });
+  // Try simpler query first - get all user bookings without ordering
+  db.collection('bookings')
+    .where("uid", "==", user.uid)
+    .get() // Use get() instead of onSnapshot for debugging
+    .then(snapshot => {
+      console.log("Query returned", snapshot.docs.length, "documents"); // Debug log
+      
+      let bookings = [];
+      snapshot.forEach(doc => {
+        console.log("Booking data:", doc.data()); // Debug log
+        bookings.push({ id: doc.id, ...doc.data() });
+      });
 
-        // ✅ Build HTML
-        let bookingsHTML = "";
-        if (bookings.length === 0) {
-          bookingsHTML = `<p style="color:red;">You don't have any bookings yet.</p>`;
+      // Sort bookings by date (most recent first)
+      bookings.sort((a, b) => {
+        let dateA, dateB;
+        
+        // Handle different date formats
+        if (a.date && a.date.toDate) {
+          dateA = a.date.toDate();
+        } else if (typeof a.date === 'string') {
+          dateA = new Date(a.date);
         } else {
-          bookings.forEach(b => {
-            // ✅ Format date
-            let bookingDate = "Unknown Date";
-            try {
-              if (b.date && b.date.toDate) {
-                bookingDate = b.date.toDate().toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric"
-                });
-              } else if (typeof b.date === "string") {
-                const [y, m, d] = b.date.split("-").map(Number);
+          dateA = new Date(0);
+        }
+        
+        if (b.date && b.date.toDate) {
+          dateB = b.date.toDate();
+        } else if (typeof b.date === 'string') {
+          dateB = new Date(b.date);
+        } else {
+          dateB = new Date(0);
+        }
+        
+        return dateB - dateA;
+      });
+
+      // Take only the 5 most recent
+      bookings = bookings.slice(0, 5);
+
+      // Build HTML
+      let bookingsHTML = "";
+      if (bookings.length === 0) {
+        bookingsHTML = `
+          <div style="text-align:center; padding:20px;">
+            <p style="color:#666; font-size:16px;">You don't have any bookings yet.</p>
+            <button onclick="closeMyBookings(); showSection('bookingSection');" 
+                    style="background-color:#61134A; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">
+              Make Your First Booking
+            </button>
+          </div>
+        `;
+      } else {
+        bookings.forEach(b => {
+          // Format date
+          let bookingDate = "Unknown Date";
+          try {
+            if (b.date && b.date.toDate) {
+              bookingDate = b.date.toDate().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              });
+            } else if (typeof b.date === "string") {
+              const [y, m, d] = b.date.split("-").map(Number);
+              if (y && m && d) {
                 bookingDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
                   day: "numeric"
                 });
               }
-            } catch (err) {
-              console.error("Date format issue:", err);
             }
+          } catch (err) {
+            console.error("Date format issue:", err);
+          }
 
-            // ✅ Clean services
-            let cleanService = "";
-            if (b.service) {
-              cleanService = b.service
-                .replace(/,?\s*Manicure:\s*NONE/gi, "")
-                .replace(/,?\s*Pedicure:\s*NONE/gi, "")
-                .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
-                .trim()
-                .replace(/,\s*$/, "")
-                .replace(/^,\s*/, ""); // Remove leading comma too
-            }
+          // Clean services
+          let cleanService = "";
+          if (b.service) {
+            cleanService = b.service
+              .replace(/,?\s*Manicure:\s*NONE/gi, "")
+              .replace(/,?\s*Pedicure:\s*NONE/gi, "")
+              .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
+              .trim()
+              .replace(/^,+|,+$/g, "") // Remove leading/trailing commas
+              .replace(/,\s*,/g, ","); // Remove double commas
+          }
 
-            // ✅ Build card
-            let cardHTML = `
-              <div style="
-                border:1px solid #ccc;
-                border-radius:12px;
-                padding:15px;
-                margin-bottom:15px;
-                background:#fafafa;
-                box-shadow:0 2px 5px rgba(0,0,0,0.1);
-              ">
-                <h3 style="margin-top:0; color:#333;">Booking #${b.bookingNumber || "N/A"}</h3>
-                <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
-                <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
-                <p><strong>📅 Date:</strong> ${bookingDate}</p>
-                <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
-            `;
+          // Build card
+          let cardHTML = `
+            <div style="
+              border:1px solid #ddd;
+              border-radius:12px;
+              padding:15px;
+              margin-bottom:15px;
+              background:white;
+              box-shadow:0 2px 5px rgba(0,0,0,0.1);
+            ">
+              <h3 style="margin-top:0; color:#61134A; font-size:18px;">
+                Booking #${b.bookingNumber || "N/A"}
+              </h3>
+              <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
+              <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
+              <p><strong>📅 Date:</strong> ${bookingDate}</p>
+              <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
+          `;
 
-            if (cleanService) {
-              cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
-            }
+          if (cleanService) {
+            cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
+          }
 
-            // ✅ Deposit status
-            cardHTML += b.deposit === "Made"
-              ? `<p><strong>💵 Deposit Confirmed:</strong> <span style="color:green;">Yes</span></p>`
-              : `<p><strong>💵 Deposit Confirmed:</strong> <span style="color:red;">No</span></p>`;
+          // Deposit status
+          const depositStatus = b.deposit === "Made" || b.deposit === "Yes";
+          cardHTML += `
+            <p><strong>💵 Deposit:</strong> 
+              <span style="color:${depositStatus ? 'green' : 'red'}; font-weight:bold;">
+                ${depositStatus ? 'Confirmed' : 'Pending'}
+              </span>
+            </p>
+          `;
 
-            if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
+          if (b.notes) {
+            cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
+          }
 
-            cardHTML += `</div>`;
-            bookingsHTML += cardHTML;
-          });
-        }
+          cardHTML += `</div>`;
+          bookingsHTML += cardHTML;
+        });
+      }
 
-        // ✅ Show in modal
-        document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
-        document.getElementById('myBookingsModal').style.display = 'flex';
-      });
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    alert("⚠️ An unexpected error occurred while loading your bookings: " + err.message);
-  }
+      // Show in modal
+      document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
+    })
+    .catch(error => {
+      console.error("Error loading bookings:", error);
+      document.getElementById('myBookingsContent').innerHTML = `
+        <div style="text-align:center; padding:20px;">
+          <p style="color:red;">Error loading your bookings.</p>
+          <p style="color:#666; font-size:14px;">Please try again or contact support.</p>
+          <button onclick="closeMyBookings();" 
+                  style="background-color:#ccc; color:#333; padding:8px 16px; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">
+            Close
+          </button>
+        </div>
+      `;
+    });
 }
 
-// ✅ Also update the close function to prevent conflicts
+// Make sure the close function exists
 function closeMyBookings() {
   document.getElementById('myBookingsModal').style.display = 'none';
 }
 
-// ✅ Update booking modal close function
-function closeBookingModal() {
-  document.getElementById('bookingModal').style.display = 'none';
-}
-
+    
     function showPaymentInfo() {
   Swal.fire({
     title: "<div class='swal2-title-nowrap'>BANK TRANSER INFO</div>",
