@@ -1320,43 +1320,40 @@ if (!user) {
   try {
     db.collection('bookings')
       .where("uid", "==", user.uid)
-      .limit(20) // fetch more, then sort manually
-      .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
+      .limit(20) // Fetch more, then sort manually
+      .onSnapshot(snapshot => {   // live listener instead of .get()
         let bookings = [];
 
         snapshot.forEach(doc => {
           bookings.push({ id: doc.id, ...doc.data() });
         });
 
-        // 🔹 Sort manually by date (newest first)
+        // Debug: Log fetched bookings
+        console.log("Fetched bookings:", bookings);
+
+        // Sort bookings by date (newest first)
         bookings.sort((a, b) => {
-          let da = a.date && a.date.toDate ? a.date.toDate() : new Date(a.date);
-          let db = b.date && b.date.toDate ? b.date.toDate() : new Date(b.date);
-          return db - da;
+          let dateA = a.date instanceof firebase.firestore.Timestamp ? a.date.toDate() : new Date(a.date);
+          let dateB = b.date instanceof firebase.firestore.Timestamp ? b.date.toDate() : new Date(b.date);
+          return dateB - dateA;  // Sort by date (newest first)
         });
 
-
-        // 🔹 Keep only the last 5
+        // Keep only the last 5 bookings
         bookings = bookings.slice(0, 5);
 
-        // 🔹 Build HTML
+        // Debug: Log sorted bookings
+        console.log("Sorted bookings:", bookings);
+
+        // Build HTML content
         let bookingsHTML = "";
         if (bookings.length === 0) {
           bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
         } else {
           bookings.forEach(b => {
-            // ✅ Format date
             let bookingDate = "Unknown Date";
             try {
               if (b.date && b.date.toDate) {
                 bookingDate = b.date.toDate().toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric"
-                });
-              } else if (typeof b.date === "string") {
-                const [y, m, d] = b.date.split("-").map(Number);
-                bookingDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
                   day: "numeric"
@@ -1366,59 +1363,37 @@ if (!user) {
               console.error("Date format issue:", err);
             }
 
-            // ✅ Clean services
-            let cleanService = "";
-            if (b.service) {
-              cleanService = b.service
-                .replace(/,?\s*Manicure:\s*NONE/gi, "")
+            // Clean service data
+            let cleanService = b.service.replace(/,?\s*Manicure:\s*NONE/gi, "")
                 .replace(/,?\s*Pedicure:\s*NONE/gi, "")
                 .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
                 .trim()
                 .replace(/,\s*$/, "");
-            }
 
-            // ✅ Build card
             let cardHTML = `
-              <div style="
-                border:1px solid #ccc;
-                border-radius:12px;
-                padding:15px;
-                margin-bottom:15px;
-                background:#fafafa;
-                box-shadow:0 2px 5px rgba(0,0,0,0.1);
-              ">
-                <h3 style="margin-top:0; color:#333;">Booking #${b.bookingNumber || "N/A"}</h3>
-                <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
-                <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
-                <p><strong>📅 Date:</strong> ${bookingDate}</p>
-                <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
+              <div style="border:1px solid #ccc; padding:15px; background:#fafafa; margin-bottom:10px;">
+                <h3>Booking #${b.bookingNumber || "N/A"}</h3>
+                <p><strong>Name:</strong> ${b.name || "N/A"}</p>
+                <p><strong>Phone:</strong> ${b.phone || "N/A"}</p>
+                <p><strong>Date:</strong> ${bookingDate}</p>
+                <p><strong>Time:</strong> ${b.time || "N/A"}</p>
+                <p><strong>Services:</strong> ${cleanService}</p>
+              </div>
             `;
-
-            if (cleanService) {
-              cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
-            }
-
-            // ✅ Deposit status (live now)
-            cardHTML += b.deposit === "Made"
-              ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>`
-              : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`;
-
-            if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
-
-            cardHTML += `</div>`;
             bookingsHTML += cardHTML;
           });
         }
 
-        // ✅ Show in modal
+        // Inject HTML into the modal
         document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
         document.getElementById('myBookingsModal').style.display = 'flex';
       });
   } catch (err) {
-    console.error("Unexpected error:", err);
-    alert("⚠ An unexpected error occurred while loading your bookings: " + err.message);
+    console.error("Error loading bookings:", err);
+    alert("An error occurred while loading your bookings.");
   }
 }
+
 
 
   function closeMyBookings() {
