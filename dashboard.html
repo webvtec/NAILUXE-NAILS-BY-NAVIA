@@ -526,63 +526,77 @@ box-sizing: border-box;
     snapshot.forEach(doc => {
       const booking = doc.data();
 
-      // ✅ Handle both Timestamp and string-based dates
+      // Handle both Timestamp and string-based dates
       let bDate;
       if (typeof booking.date === "string") {
-  const [y, m, d] = booking.date.split('-').map(Number);
-  bDate = new Date(y, m - 1, d);
-} else {
-  return; // skip if invalid
-}
+        const [y, m, d] = booking.date.split('-').map(Number);
+        bDate = new Date(y, m - 1, d);
+      } else {
+        return; // skip if invalid
+      }
 
       const bY = bDate.getFullYear();
       const bM = bDate.getMonth();
       const bD = bDate.getDate();
 
-      // ✅ Use full formatted date: August 21, 2025
+      // Use full formatted date: August 21, 2025
       const formattedDate = bDate.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric"
       });
 
+      // Add booking with time parsing for sorting
+      const bookingWithSort = {
+        id: doc.id,
+        ...booking,
+        date: formattedDate,
+        timeSort: convertTimeToMinutes(booking.time) // Convert time to minutes for sorting
+      };
+
       if (bY === todayY && bM === todayM && bD === todayD) {
-        todayList.push({ id: doc.id, ...booking, date: formattedDate });
+        todayList.push(bookingWithSort);
       } else if (bY === tomorrowY && bM === tomorrowM && bD === tomorrowD) {
-        tomorrowList.push({ id: doc.id, ...booking, date: formattedDate });
+        tomorrowList.push(bookingWithSort);
       } else if (bDate > tomorrow) {
-        upcomingList.push({ id: doc.id, ...booking, date: formattedDate });
+        upcomingList.push(bookingWithSort);
       } else if (bDate < new Date(todayY, todayM, todayD)) {
-        pastList.push({ id: doc.id, ...booking, date: formattedDate });
+        pastList.push(bookingWithSort);
       }
     });
 
-    // ✅ Group renderer
-    function renderGroup(title, list, badgeClass) {
-  if (!list.length) return;
-  reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
-  list.forEach(booking => {
-    reservationsContainer.innerHTML += `
-      <div class="reservation-card">
-        <div class="reservation-header">
-          <h3>${booking.name}</h3>
-          <span class="badge ${badgeClass}">${title}</span>
-        </div>
-        <p><strong>Booking #:</strong> ${booking.bookingNumber || "N/A"}</p>
-        <p>Phone: ${booking.phone}</p>
-        <p><strong>Date:</strong> ${booking.date}</p>
-        <p><strong>Time:</strong> ${booking.time}</p>
-        <p><strong>Service:</strong> ${booking.service}</p>
-        <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
-        <div class="action-buttons">
-          <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
-          <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
-        </div>
-      </div>
-    `;
-  });
-}
+    // Sort each list by time (earliest first)
+    const sortByTime = (a, b) => a.timeSort - b.timeSort;
+    todayList.sort(sortByTime);
+    tomorrowList.sort(sortByTime);
+    upcomingList.sort(sortByTime);
+    pastList.sort(sortByTime);
 
+    // Group renderer
+    function renderGroup(title, list, badgeClass) {
+      if (!list.length) return;
+      reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
+      list.forEach(booking => {
+        reservationsContainer.innerHTML += `
+          <div class="reservation-card">
+            <div class="reservation-header">
+              <h3>${booking.name}</h3>
+              <span class="badge ${badgeClass}">${title}</span>
+            </div>
+            <p><strong>Booking #:</strong> ${booking.bookingNumber || "N/A"}</p>
+            <p>Phone: ${booking.phone}</p>
+            <p><strong>Date:</strong> ${booking.date}</p>
+            <p><strong>Time:</strong> ${booking.time}</p>
+            <p><strong>Service:</strong> ${booking.service}</p>
+            <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
+            <div class="action-buttons">
+              <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
+              <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
+            </div>
+          </div>
+        `;
+      });
+    }
 
     renderGroup("Today", todayList, "today");
     renderGroup("Tomorrow", tomorrowList, "tomorrow");
@@ -591,6 +605,31 @@ box-sizing: border-box;
   });
 }
 
+// Helper function to convert time string to minutes for sorting
+function convertTimeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  
+  // Handle formats like "9:00 AM", "10:30 PM", etc.
+  const timeParts = timeStr.trim().split(' ');
+  if (timeParts.length !== 2) return 0;
+  
+  const [time, period] = timeParts;
+  const [hours, minutes] = time.split(':').map(Number);
+  
+  if (isNaN(hours) || isNaN(minutes)) return 0;
+  
+  let totalMinutes = (hours * 60) + minutes;
+  
+  // Convert to 24-hour format
+  if (period.toUpperCase() === 'PM' && hours !== 12) {
+    totalMinutes += (12 * 60);
+  }
+  if (period.toUpperCase() === 'AM' && hours === 12) {
+    totalMinutes -= (12 * 60);
+  }
+  
+  return totalMinutes;
+}
 
 function searchReservations() {
   const query = document.getElementById("reservationSearch").value.toLowerCase();
