@@ -298,6 +298,18 @@ box-sizing: border-box;
   box-sizing: border-box;
 }
 
+.status-completed {
+  color: green;
+  font-weight: bold;
+}
+.status-not {
+  color: red;
+  font-weight: bold;
+}
+.status-none {
+  color: gray;
+  font-style: italic;
+}
 
 
   </style>
@@ -439,6 +451,48 @@ box-sizing: border-box;
     </div>
   </div>
 </div>
+
+
+  <!-- Status Modal -->
+<div id="statusModal" style="
+  display:none; 
+  position:fixed; 
+  top:0; left:0; 
+  width:100%; height:100%; 
+  background:rgba(0,0,0,0.5); 
+  justify-content:center; 
+  align-items:center;
+  z-index:1100;
+">
+  <div style="
+    background:#fff; 
+    padding:20px; 
+    border-radius:12px; 
+    max-width:320px; 
+    width:90%; 
+    text-align:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  ">
+    <h3 style="margin-bottom:15px;">Update Booking Status</h3>
+    
+    <label style="display:block; text-align:left; margin:10px 0;">
+      <input type="radio" name="statusChoice" value="Completed"> ✅ Completed
+    </label>
+    <label style="display:block; text-align:left; margin:10px 0;">
+      <input type="radio" name="statusChoice" value="Not Completed"> ❌ Not Completed
+    </label>
+
+    <div style="margin-top:20px;">
+      <button onclick="closeStatusModal()" style="
+        background:#ccc; color:#333; border:none; padding:8px 16px; border-radius:6px;
+      ">Cancel</button>
+      <button onclick="confirmStatus()" style="
+        background:#6200ea; color:white; border:none; padding:8px 16px; border-radius:6px; margin-left:8px;
+      ">Confirm</button>
+    </div>
+  </div>
+</div>
+
 
   
   <script>
@@ -630,9 +684,13 @@ box-sizing: border-box;
             <p><strong>Time:</strong> ${booking.time}</p>
             <p><strong>Service:</strong> ${booking.service}</p>
             <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
+            <p><strong>Status:</strong> <span class="status-label ${booking.status === 'Completed' ? 'status-completed' : booking.status === 'Not Completed' ? 'status-not' : 'status-none'}">
+            ${booking.status || "Not Set"}
+            </span></p>
             <div class="action-buttons">
-              <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
-              <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
+            <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
+            <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
+            ${title === "Today" ? `<button class="status-btn" onclick="updateStatus('${booking.id}')">Status</button>` : ""}
             </div>
           </div>
         `;
@@ -1044,6 +1102,44 @@ function closeDepositModal() {
   document.getElementById('depositModal').style.display = 'none';
   currentBookingId = null;
 }
+
+
+    let currentStatusBookingId = null;
+
+function updateStatus(bookingId) {
+  currentStatusBookingId = bookingId;
+  // Reset radio buttons
+  document.querySelectorAll('input[name="statusChoice"]').forEach(r => r.checked = false);
+  document.getElementById('statusModal').style.display = 'flex';
+}
+
+function confirmStatus() {
+  const choice = document.querySelector('input[name="statusChoice"]:checked');
+  if (!choice) {
+    alert("Please select an option.");
+    return;
+  }
+
+  const statusValue = choice.value;
+
+  db.collection('bookings').doc(currentStatusBookingId).update({
+    status: statusValue
+  })
+  .then(() => {
+    closeStatusModal();
+    loadReservations(); // reload cards so status updates immediately
+  })
+  .catch(error => {
+    console.error("Error updating status:", error);
+    alert("Failed to update status. Please try again.");
+  });
+}
+
+function closeStatusModal() {
+  document.getElementById('statusModal').style.display = 'none';
+  currentStatusBookingId = null;
+}
+
 
   </script>
 </body>
