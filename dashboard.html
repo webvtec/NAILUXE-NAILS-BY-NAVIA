@@ -870,23 +870,28 @@ function goToReservations(name, time) {
   closeConflictModal();
   showSection('reservationsPage');
 
-  // wait a bit for the reservations list to render
   setTimeout(() => {
-    const card = document.querySelector(`.reservation-card[data-id="${bookingId}"]`);
-    if (card) {
-      card.classList.add("highlighted");
-      card.scrollIntoView({ behavior: "smooth", block: "center" });
+    const cards = document.querySelectorAll(".reservation-card");
+    
+    // Find the card by looking for the cancel button with the matching booking ID
+    for (let card of cards) {
+      const cancelBtn = card.querySelector('.cancel-btn');
+      if (cancelBtn && cancelBtn.getAttribute('onclick').includes(`'${bookingId}'`)) {
+        // ✅ highlight and scroll
+        card.classList.add("highlighted");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
 
-      // remove highlight after a few seconds
-      setTimeout(() => {
-        card.classList.remove("highlighted");
-      }, 6000);
-    } else {
-      console.warn("Booking card not found for ID:", bookingId);
+        // ⏳ remove highlight after a few seconds
+        setTimeout(() => {
+          card.classList.remove("highlighted");
+        }, 6000);
+
+        break;
+      }
     }
-  }, 500);
-}
-
+  }, 400); // wait a bit for UI to switch sections
+    }
+    
 
 function closeConflictModal() {
   document.getElementById('conflictModal').style.display = 'none';
