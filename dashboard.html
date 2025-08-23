@@ -559,28 +559,30 @@ box-sizing: border-box;
 
     // ✅ Group renderer
     function renderGroup(title, list, badgeClass) {
-      if (!list.length) return;
-      reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
-      list.forEach(booking => {
-        reservationsContainer.innerHTML += `
-          <div class="reservation-card">
-            <div class="reservation-header">
-              <h3>${booking.name}</h3>
-              <span class="badge ${badgeClass}">${title}</span>
-            </div>
-            <p>📞 ${booking.phone}</p>
-            <p><strong>Date:</strong> ${booking.date}</p>
-            <p><strong>Time:</strong> ${booking.time}</p>
-            <p><strong>Service:</strong> ${booking.service}</p>
-            <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
-            <div class="action-buttons">
-              <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
-              <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
-            </div>
-          </div>
-        `;
-      });
-    }
+  if (!list.length) return;
+  reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
+  list.forEach(booking => {
+    reservationsContainer.innerHTML += `
+      <div class="reservation-card">
+        <div class="reservation-header">
+          <h3>${booking.name}</h3>
+          <span class="badge ${badgeClass}">${title}</span>
+        </div>
+        <p><strong>🔑 Booking #:</strong> ${booking.bookingNumber || "N/A"}</p>
+        <p>📞 ${booking.phone}</p>
+        <p><strong>Date:</strong> ${booking.date}</p>
+        <p><strong>Time:</strong> ${booking.time}</p>
+        <p><strong>Service:</strong> ${booking.service}</p>
+        <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
+        <div class="action-buttons">
+          <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
+          <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
 
     renderGroup("Today", todayList, "today");
     renderGroup("Tomorrow", tomorrowList, "tomorrow");
