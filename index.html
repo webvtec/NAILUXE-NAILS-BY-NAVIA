@@ -1319,10 +1319,10 @@ if (!user) {
 
   try {
     db.collection('bookings')
-      .where("uid", "==", user.uid)
-      .orderBy("time", "desc")
-      .limit(10) // fetch more, then sort manually
-      .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
+    .where("uid", "==", user.uid)
+    .orderBy("date", "desc")   // Order by date first
+    .orderBy("time", "desc")   // Order by time second
+    .limit(5)                  // Fetch only the most recent 5 bookings
         let bookings = [];
 
         snapshot.forEach(doc => {
