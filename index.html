@@ -1310,6 +1310,8 @@ if (!user) {
 
     function showUserBookings() {
   const user = firebase.auth().currentUser;
+  
+  // If no user is logged in, redirect to login
   if (!user) {
     if (confirm("Please log in to view your bookings. Click OK to log in.")) {
       window.location.href = 'login.html';
@@ -1317,81 +1319,56 @@ if (!user) {
     return;
   }
 
-  try {
-    db.collection('bookings')
-      .where("uid", "==", user.uid)
-      .limit(20) // Fetch more, then sort manually
-      .onSnapshot(snapshot => {   // live listener instead of .get()
-        let bookings = [];
+  // Query the Firestore database for bookings by the logged-in user
+  db.collection('bookings')
+    .where("uid", "==", user.uid)
+    .orderBy("date", "desc")  // Ensure bookings are sorted by date in descending order
+    .limit(5)  // Fetch the last 5 bookings
+    .get() // Use `.get()` instead of `onSnapshot()` to just get the data once
+    .then(snapshot => {
+      if (snapshot.empty) {
+        console.log("No bookings found.");
+        document.getElementById('myBookingsContent').innerHTML = "<p style='color:red;'>You don’t have any bookings yet.</p>";
+        return;
+      }
 
-        snapshot.forEach(doc => {
-          bookings.push({ id: doc.id, ...doc.data() });
-        });
+      // Array to hold formatted bookings
+      let bookingsHTML = "";
 
-        // Debug: Log fetched bookings
-        console.log("Fetched bookings:", bookings);
+      snapshot.forEach(doc => {
+        let booking = doc.data();
 
-        // Sort bookings by date (newest first)
-        bookings.sort((a, b) => {
-          let dateA = a.date instanceof firebase.firestore.Timestamp ? a.date.toDate() : new Date(a.date);
-          let dateB = b.date instanceof firebase.firestore.Timestamp ? b.date.toDate() : new Date(b.date);
-          return dateB - dateA;  // Sort by date (newest first)
-        });
+        // Assuming the date is a Firestore timestamp, if not, parse it as a string
+        let bookingDate = booking.date instanceof firebase.firestore.Timestamp 
+                          ? booking.date.toDate().toLocaleDateString('en-US') 
+                          : booking.date;  // If the date is already a string, just use it
 
-        // Keep only the last 5 bookings
-        bookings = bookings.slice(0, 5);
+        let cleanService = booking.service.replace(/,?\s*Manicure:\s*NONE/gi, "")
+                                          .replace(/,?\s*Pedicure:\s*NONE/gi, "")
+                                          .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
+                                          .trim()
+                                          .replace(/,\s*$/, "");
 
-        // Debug: Log sorted bookings
-        console.log("Sorted bookings:", bookings);
-
-        // Build HTML content
-        let bookingsHTML = "";
-        if (bookings.length === 0) {
-          bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
-        } else {
-          bookings.forEach(b => {
-            let bookingDate = "Unknown Date";
-            try {
-              if (b.date && b.date.toDate) {
-                bookingDate = b.date.toDate().toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric"
-                });
-              }
-            } catch (err) {
-              console.error("Date format issue:", err);
-            }
-
-            // Clean service data
-            let cleanService = b.service.replace(/,?\s*Manicure:\s*NONE/gi, "")
-                .replace(/,?\s*Pedicure:\s*NONE/gi, "")
-                .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
-                .trim()
-                .replace(/,\s*$/, "");
-
-            let cardHTML = `
-              <div style="border:1px solid #ccc; padding:15px; background:#fafafa; margin-bottom:10px;">
-                <h3>Booking #${b.bookingNumber || "N/A"}</h3>
-                <p><strong>Name:</strong> ${b.name || "N/A"}</p>
-                <p><strong>Phone:</strong> ${b.phone || "N/A"}</p>
-                <p><strong>Date:</strong> ${bookingDate}</p>
-                <p><strong>Time:</strong> ${b.time || "N/A"}</p>
-                <p><strong>Services:</strong> ${cleanService}</p>
-              </div>
-            `;
-            bookingsHTML += cardHTML;
-          });
-        }
-
-        // Inject HTML into the modal
-        document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
-        document.getElementById('myBookingsModal').style.display = 'flex';
+        bookingsHTML += `
+          <div style="border:1px solid #ccc; padding:15px; background:#fafafa; margin-bottom:10px;">
+            <h3>Booking #${booking.bookingNumber || "N/A"}</h3>
+            <p><strong>Name:</strong> ${booking.name || "N/A"}</p>
+            <p><strong>Phone:</strong> ${booking.phone || "N/A"}</p>
+            <p><strong>Date:</strong> ${bookingDate}</p>
+            <p><strong>Time:</strong> ${booking.time || "N/A"}</p>
+            <p><strong>Services:</strong> ${cleanService}</p>
+          </div>
+        `;
       });
-  } catch (err) {
-    console.error("Error loading bookings:", err);
-    alert("An error occurred while loading your bookings.");
-  }
+
+      // Inject the HTML into the modal
+      document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
+      document.getElementById('myBookingsModal').style.display = 'flex';
+    })
+    .catch(err => {
+      console.error("Error fetching bookings:", err);
+      alert("An error occurred while loading your bookings.");
+    });
 }
 
 
