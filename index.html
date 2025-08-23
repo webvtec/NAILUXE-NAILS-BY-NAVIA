@@ -1639,18 +1639,18 @@ async function loadAvailableSlots() {
   const closeMinutes = convertToMinutes(business.close);
 
   try {
-    // ✅ Fetch all bookings for that date
+    // ✅ Fetch bookings
     const snapshot = await db.collection("bookings")
       .where("date", "==", date)
       .get();
 
     const bookings = snapshot.docs.map(doc => {
-      const bookedTime = convertToMinutes(doc.data().time);
-      const bookedDuration = doc.data().duration || 60; // fallback
+      const bookedTime = convertToMinutes(normalizeTimeStr(doc.data().time));
+      const bookedDuration = doc.data().duration || 60;
       return { start: bookedTime, end: bookedTime + bookedDuration };
     });
 
-    // ✅ Fetch unavailable ranges for that date
+    // ✅ Fetch unavailable ranges
     const unavailableSnapshot = await db.collection("unavailableDays")
       .where("date", "==", date)
       .get();
@@ -1658,14 +1658,23 @@ async function loadAvailableSlots() {
     let unavailableRanges = [];
     unavailableSnapshot.forEach(doc => {
       const data = doc.data();
+
       if (data.allDay) {
         unavailableRanges.push({ start: openMinutes, end: closeMinutes });
       } else {
         const start = convertToMinutes(normalizeTimeStr(data.startTime));
         const end = convertToMinutes(normalizeTimeStr(data.endTime));
-        unavailableRanges.push({ start, end });
+
+        // ✅ Only add if both are valid numbers and end > start
+        if (!isNaN(start) && !isNaN(end) && end > start) {
+          unavailableRanges.push({ start, end });
+        }
       }
     });
+
+    // 🔍 Debug output (remove later)
+    console.log("Bookings:", bookings);
+    console.log("Unavailable ranges:", unavailableRanges);
 
     // ✅ Generate slots every 5 minutes
     for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
@@ -1702,6 +1711,7 @@ async function loadAvailableSlots() {
     timeSelect.innerHTML = "<option value=''>Error loading slots</option>";
   }
 }
+
 
     
   </script>
