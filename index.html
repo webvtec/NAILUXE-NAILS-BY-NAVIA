@@ -1319,27 +1319,21 @@ if (!user) {
 
   try {
     db.collection('bookings')
-  .where("uid", "==", user.uid)
-  .limit(10) // fetch more, then sort manually
-  .onSnapshot(snapshot => {
-    let bookings = [];
+      .where("uid", "==", user.uid)
+      .limit(20) // fetch more, then sort manually
+      .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
+        let bookings = [];
 
         snapshot.forEach(doc => {
           bookings.push({ id: doc.id, ...doc.data() });
         });
 
         // 🔹 Sort manually by date (newest first)
-        // 🔹 Sort manually by date (newest first)
-bookings.sort((a, b) => {
-  let da = a.date && a.date.toDate ? a.date.toDate() : new Date(a.date);
-  let db = b.date && b.date.toDate ? b.date.toDate() : new Date(b.date);
-  
-  // Ensure that both dates are valid Date objects
-  if (isNaN(da)) da = new Date(0); // fallback to a very old date if invalid
-  if (isNaN(db)) db = new Date(0); // fallback to a very old date if invalid
-
-  return db - da; // newest first
-});
+        bookings.sort((a, b) => {
+          let da = a.date && a.date.toDate ? a.date.toDate() : new Date(a.date);
+          let db = b.date && b.date.toDate ? b.date.toDate() : new Date(b.date);
+          return db - da;
+        });
 
 
         // 🔹 Keep only the last 5
