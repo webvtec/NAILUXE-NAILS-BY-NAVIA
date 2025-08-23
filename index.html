@@ -399,6 +399,36 @@
     </a>
 </div>
 </div>
+
+    <!-- Add this booking confirmation modal right after your existing modals -->
+<div id="bookingModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+">
+  <div style="
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 450px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    position: relative;
+  ">
+    <h3 id="bookingModalTitle" style="margin: 10px 0; color: #FE5DC7; text-align: center;">
+      Booking Confirmation
+    </h3>
+    <p id="bookingModalContent"></p>
+  </div>
+</div>
+
+    
 <!-- My Bookings Modal -->
 <div id="myBookingsModal" style="
   display:none;
