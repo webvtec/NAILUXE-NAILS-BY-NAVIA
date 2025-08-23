@@ -1320,7 +1320,8 @@ if (!user) {
   try {
     db.collection('bookings')
       .where("uid", "==", user.uid)
-      .limit(20) // fetch more, then sort manually
+      .orderBy("time", "desc")
+      .limit(10) // fetch more, then sort manually
       .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
         let bookings = [];
 
