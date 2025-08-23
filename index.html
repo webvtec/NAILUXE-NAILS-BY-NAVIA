@@ -1327,11 +1327,10 @@ if (!user) {
   document.getElementById('myBookingsContent').innerHTML = '<p style="text-align:center; color:#666;">Loading your bookings...</p>';
   document.getElementById('myBookingsModal').style.display = 'flex';
 
-  // Try simpler query first - get all user bookings without ordering
-  db.collection('bookings')
+  // Use onSnapshot for real-time updates when admin changes deposit status
+  const unsubscribe = db.collection('bookings')
     .where("uid", "==", user.uid)
-    .get() // Use get() instead of onSnapshot for debugging
-    .then(snapshot => {
+    .onSnapshot(snapshot => {
       console.log("Query returned", snapshot.docs.length, "documents"); // Debug log
       
       let bookings = [];
@@ -1460,8 +1459,7 @@ if (!user) {
 
       // Show in modal
       document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
-    })
-    .catch(error => {
+    }, error => {
       console.error("Error loading bookings:", error);
       document.getElementById('myBookingsContent').innerHTML = `
         <div style="text-align:center; padding:20px;">
@@ -1474,13 +1472,22 @@ if (!user) {
         </div>
       `;
     });
+
+  // Store unsubscribe function globally so we can clean it up
+  window.bookingsUnsubscribe = unsubscribe;
 }
 
-// Make sure the close function exists
+// Make sure the close function exists and cleans up the listener
 function closeMyBookings() {
   document.getElementById('myBookingsModal').style.display = 'none';
+  
+  // Clean up the real-time listener to prevent memory leaks
+  if (window.bookingsUnsubscribe) {
+    window.bookingsUnsubscribe();
+    window.bookingsUnsubscribe = null;
+  }
 }
-
+    
     
     function showPaymentInfo() {
   Swal.fire({
