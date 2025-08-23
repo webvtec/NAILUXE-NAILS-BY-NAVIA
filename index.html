@@ -1242,7 +1242,7 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
 
 function formatReviewTime(timestamp) {
   if (!timestamp || !timestamp.toDate) return '';
-  
+
   const now = new Date();
   const reviewDate = timestamp.toDate();
   const diffMs = now - reviewDate;
@@ -1250,26 +1250,19 @@ function formatReviewTime(timestamp) {
   const diffMin = Math.floor(diffSec / 60);
   const diffHours = Math.floor(diffMin / 60);
   const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
 
-  // If less than 24 hours
-  if (diffHours < 24) {
-    if (diffHours >= 1) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    } else if (diffMin >= 1) {
-      return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
-    } else {
-      return `Just now`;
-    }
-  }
-  
-  // If less than 7 days
-  if (diffDays < 7) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  }
-
-  // Otherwise show date in dd/mm/yyyy format
-  return reviewDate.toLocaleDateString('en-GB');
+  if (diffSec < 60) return "Just now";
+  if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffWeeks < 5) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+  if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+  return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 }
+
 
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
