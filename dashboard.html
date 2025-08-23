@@ -619,7 +619,7 @@ box-sizing: border-box;
       reservationsContainer.innerHTML += `<h2 class="reservation-group">${title}</h2>`;
       list.forEach(booking => {
         reservationsContainer.innerHTML += `
-          <div class="reservation-card">
+  <div class="reservation-card" data-id="${booking.id}">
             <div class="reservation-header">
               <h3>${booking.name}</h3>
               <span class="badge ${badgeClass}">${title}</span>
@@ -857,8 +857,8 @@ function goToReservations(name, time) {
         card.classList.add("highlighted");
         card.scrollIntoView({ behavior: "smooth", block: "center" });
 
-        // Remove highlight after 5 seconds
-        setTimeout(() => card.classList.remove("highlighted"), 5000);
+        // Remove highlight after 6 seconds
+        setTimeout(() => card.classList.remove("highlighted"), 6000);
         break;
       }
     }
@@ -870,23 +870,21 @@ function goToReservations(name, time) {
   closeConflictModal();
   showSection('reservationsPage');
 
+  // wait a bit for the reservations list to render
   setTimeout(() => {
-    const cards = document.querySelectorAll(".reservation-card");
-    for (let card of cards) {
-      if (card.innerText.includes(bookingId) || card.innerHTML.includes(bookingId)) {
-        // ✅ highlight and scroll
-        card.classList.add("highlighted");
-        card.scrollIntoView({ behavior: "smooth", block: "center" });
+    const card = document.querySelector(`.reservation-card[data-id="${bookingId}"]`);
+    if (card) {
+      card.classList.add("highlighted");
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
 
-        // ⏳ remove highlight after a few seconds
-        setTimeout(() => {
-          card.classList.remove("highlighted");
-        }, 6000);
-
-        break;
-      }
+      // remove highlight after a few seconds
+      setTimeout(() => {
+        card.classList.remove("highlighted");
+      }, 6000);
+    } else {
+      console.warn("Booking card not found for ID:", bookingId);
     }
-  }, 400); // wait a bit for UI to switch sections
+  }, 500);
 }
 
 
