@@ -1673,6 +1673,27 @@ async function loadAvailableSlots() {
   }
 }
 
+    function updateEstimatedTime() {
+  const duration = getSelectedServiceDuration();
+
+  if (duration > 0) {
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+
+    let text = "⏱️ Approximate time needed: ";
+    if (hours > 0) {
+      text += `${hours} hour${hours > 1 ? "s" : ""}`;
+      if (minutes > 0) text += ` ${minutes} minutes`;
+    } else {
+      text += `${minutes} minutes`;
+    }
+
+    document.getElementById("estimateTimeMessage").innerText = text;
+  } else {
+    document.getElementById("estimateTimeMessage").innerText = "";
+  }
+}
+
     
   </script>
 </body>
