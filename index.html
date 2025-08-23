@@ -473,7 +473,14 @@
 <label for="name">Name:</label>
 <input id="name" required="" type="text"/>
 <label for="phone">Phone Number:</label>
-<input id="phone" required="" type="text"/>
+<input 
+  id="phone" 
+  type="tel" 
+  inputmode="numeric" 
+  maxlength="14" 
+  placeholder="(876) 123-4567" 
+  required 
+/>
 <label for="date">Preferred Date:</label>
 <input id="date" min="" onchange="loadAvailableSlots()" required="" type="date"/>
 <!-- ✅ Time slots will appear here -->
@@ -1704,6 +1711,25 @@ async function loadAvailableSlots() {
     timeSelect.innerHTML = "<option value=''>Error loading slots</option>";
   }
 }
+
+
+    document.getElementById("phone").addEventListener("input", function(e) {
+  let input = e.target.value.replace(/\D/g, ""); // remove non-digits
+  if (input.length > 10) input = input.substring(0, 10); // limit to 10 digits
+
+  let formatted = input;
+
+  if (input.length > 6) {
+    formatted = `(${input.substring(0,3)}) ${input.substring(3,6)}-${input.substring(6)}`;
+  } else if (input.length > 3) {
+    formatted = `(${input.substring(0,3)}) ${input.substring(3)}`;
+  } else if (input.length > 0) {
+    formatted = `(${input}`;
+  }
+
+  e.target.value = formatted;
+});
+
 
 
     
