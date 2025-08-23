@@ -1381,12 +1381,13 @@ function getSelectedServiceDuration() {
 
   let duration = 0;
 
-  if (pedicure !== "NONE") duration += services[pedicure] || 0;
-  if (manicure !== "NONE") duration += services[manicure] || 0;
-  if (nailExtension !== "NONE") duration += services[nailExtension] || 0;
+  if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 0;
+  if (manicure !== "NONE") duration += serviceDurations[manicure] || 0;
+  if (nailExtension !== "NONE") duration += serviceDurations[nailExtension] || 0;
 
-  return duration || 60; // fallback
+  return duration || 30; // fallback
 }
+
 
 // ✅ FINAL version — only one loadAvailableSlots() now
 async function loadAvailableSlots() {
