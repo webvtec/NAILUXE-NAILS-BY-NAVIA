@@ -823,7 +823,7 @@ function clearReservations() {
         <p><strong>Service:</strong> ${booking.service || "N/A"}</p>
         <p><strong>Date:</strong> ${booking.date}</p>
         <p><strong>Time:</strong> ${booking.time || "N/A"}</p>
-        <button onclick="goToReservations()" style="
+        <button onclick="goToReservationsAndHighlight('${booking.id}')" style="
           margin-top:8px;
           background:#FE5DC7;
           color:#fff;
@@ -840,14 +840,53 @@ function clearReservations() {
   document.getElementById('conflictModal').style.display = 'flex';
 }
 
-function closeConflictModal() {
-  document.getElementById('conflictModal').style.display = 'none';
-}
 
-function goToReservations() {
+function goToReservations(name, time) {
   closeConflictModal();
   showSection('reservationsPage');
-  document.getElementById('reservationsPage').scrollIntoView({ behavior: "smooth" });
+
+  // Wait a bit for the reservations list to load
+  setTimeout(() => {
+    const cards = document.querySelectorAll(".reservation-card");
+    const query = `${name} ${time}`.toLowerCase();
+
+    for (let card of cards) {
+      const text = card.innerText.toLowerCase();
+      if (text.includes(name.toLowerCase()) && text.includes(time.toLowerCase())) {
+        // Highlight + scroll
+        card.classList.add("highlighted");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // Remove highlight after 5 seconds
+        setTimeout(() => card.classList.remove("highlighted"), 5000);
+        break;
+      }
+    }
+  }, 500);
+}
+
+
+    function goToReservationsAndHighlight(bookingId) {
+  closeConflictModal();
+  showSection('reservationsPage');
+
+  setTimeout(() => {
+    const cards = document.querySelectorAll(".reservation-card");
+    for (let card of cards) {
+      if (card.innerText.includes(bookingId) || card.innerHTML.includes(bookingId)) {
+        // ✅ highlight and scroll
+        card.classList.add("highlighted");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // ⏳ remove highlight after a few seconds
+        setTimeout(() => {
+          card.classList.remove("highlighted");
+        }, 4000);
+
+        break;
+      }
+    }
+  }, 400); // wait a bit for UI to switch sections
 }
 
 
