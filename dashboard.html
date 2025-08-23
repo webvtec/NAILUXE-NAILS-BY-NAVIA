@@ -694,7 +694,7 @@ function clearReservations() {
   });
 }
 
-    function addUnavailableDate() {
+    async function addUnavailableDate() {
   const date = document.getElementById('unavailableDateInput').value;
   const allDay = document.getElementById('allDayCheckbox').checked;
   const startTime = document.getElementById('startTimeInput').value;
@@ -710,23 +710,61 @@ function clearReservations() {
     return;
   }
 
-  // ✅ FIX: parse YYYY-MM-DD manually (no timezone conversion)
+  // ✅ Parse YYYY-MM-DD manually
   const [yyyy, mm, dd] = date.split("-");
   const finalDate = `${yyyy}-${mm}-${dd}`;
 
-  db.collection("unavailableDays").add({
-    date: finalDate,
-    allDay,
-    startTime: allDay ? null : startTime,
-    endTime: allDay ? null : endTime,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
+  try {
+    // 🔍 Step 1: Check for existing bookings on this date
+    const snapshot = await db.collection("bookings").where("date", "==", finalDate).get();
+
+    if (!snapshot.empty) {
+      let conflict = false;
+
+      snapshot.forEach(doc => {
+        const booking = doc.data();
+        const bookingTime = booking.time || null;
+
+        if (allDay) {
+          conflict = true; // whole day unavailable conflicts with any booking
+        } else if (bookingTime) {
+          const bookingMinutes = convertTimeToMinutes(bookingTime);
+          const startMinutes = convertTimeToMinutes(startTime + " AM"); // default handling
+          const endMinutes = convertTimeToMinutes(endTime + " PM");
+
+          if (bookingMinutes >= startMinutes && bookingMinutes <= endMinutes) {
+            conflict = true;
+          }
+        }
+      });
+
+      if (conflict) {
+        alert("A booking already exists during this time. Please contact the client and cancel it from the dashboard before marking this time as unavailable.");
+        return; // ⛔ Stop here
+      }
+    }
+
+    // ✅ Step 2: Add unavailable day since no conflict
+    await db.collection("unavailableDays").add({
+      date: finalDate,
+      allDay,
+      startTime: allDay ? null : startTime,
+      endTime: allDay ? null : endTime,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // ✅ Clear inputs
     document.getElementById('unavailableDateInput').value = '';
     document.getElementById('startTimeInput').value = '';
     document.getElementById('endTimeInput').value = '';
     document.getElementById('allDayCheckbox').checked = true;
     document.getElementById('timeInputs').style.display = 'none';
-  });
+
+    alert("Unavailable day added successfully.");
+  } catch (error) {
+    console.error("Error checking/adding unavailable day:", error);
+    alert("Failed to add unavailable day. Please try again.");
+  }
 }
 
 
