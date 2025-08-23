@@ -1713,22 +1713,29 @@ async function loadAvailableSlots() {
 }
 
 
-    document.getElementById("phone").addEventListener("input", function(e) {
-  let input = e.target.value.replace(/\D/g, ""); // remove non-digits
-  if (input.length > 10) input = input.substring(0, 10); // limit to 10 digits
+    // ✅ Auto-format phone number in booking form
+document.addEventListener("DOMContentLoaded", function () {
+  const phoneInput = document.getElementById("phone");
+  if (phoneInput) {
+    phoneInput.addEventListener("input", function(e) {
+      let input = e.target.value.replace(/\D/g, ""); // only digits
+      if (input.length > 10) input = input.substring(0, 10); // max 10 digits
 
-  let formatted = input;
+      let formatted = input;
 
-  if (input.length > 6) {
-    formatted = `(${input.substring(0,3)}) ${input.substring(3,6)}-${input.substring(6)}`;
-  } else if (input.length > 3) {
-    formatted = `(${input.substring(0,3)}) ${input.substring(3)}`;
-  } else if (input.length > 0) {
-    formatted = `(${input}`;
+      if (input.length > 6) {
+        formatted = `(${input.substring(0,3)}) ${input.substring(3,6)}-${input.substring(6)}`;
+      } else if (input.length > 3) {
+        formatted = `(${input.substring(0,3)}) ${input.substring(3)}`;
+      } else if (input.length > 0) {
+        formatted = `(${input}`;
+      }
+
+      e.target.value = formatted;
+    });
   }
-
-  e.target.value = formatted;
 });
+
 
 
 
