@@ -1661,8 +1661,8 @@ async function loadAvailableSlots() {
       if (data.allDay) {
         unavailableRanges.push({ start: openMinutes, end: closeMinutes });
       } else {
-        const start = convertToMinutes(data.startTime);
-        const end = convertToMinutes(data.endTime);
+        const start = convertToMinutes(normalizeTimeStr(data.startTime));
+        const end = convertToMinutes(normalizeTimeStr(data.endTime));
         unavailableRanges.push({ start, end });
       }
     });
