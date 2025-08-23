@@ -1317,31 +1317,50 @@ if (!user) {
     return;
   }
 
+  // ✅ Close any other modals first
+  document.getElementById('bookingModal').style.display = 'none';
+  document.getElementById('adminLoginModal').style.display = 'none';
+
   try {
     db.collection('bookings')
       .where("uid", "==", user.uid)
-      .limit(20) // fetch more, then sort manually
-      .onSnapshot(snapshot => {   // ✅ live listener instead of .get()
+      .orderBy('date', 'desc') // ✅ Order by date descending in Firestore
+      .limit(5) // ✅ Only get 5 most recent bookings
+      .onSnapshot(snapshot => {
         let bookings = [];
 
         snapshot.forEach(doc => {
           bookings.push({ id: doc.id, ...doc.data() });
         });
 
-        // 🔹 Sort manually by date (newest first)
+        // ✅ Additional sorting in case Firestore ordering isn't perfect
         bookings.sort((a, b) => {
-          let da = a.date && a.date.toDate ? a.date.toDate() : new Date(a.date);
-          let db = b.date && b.date.toDate ? b.date.toDate() : new Date(b.date);
-          return db - da;
+          let dateA, dateB;
+          
+          // Handle different date formats
+          if (a.date && a.date.toDate) {
+            dateA = a.date.toDate();
+          } else if (typeof a.date === 'string') {
+            dateA = new Date(a.date);
+          } else {
+            dateA = new Date(0); // fallback to epoch
+          }
+          
+          if (b.date && b.date.toDate) {
+            dateB = b.date.toDate();
+          } else if (typeof b.date === 'string') {
+            dateB = new Date(b.date);
+          } else {
+            dateB = new Date(0); // fallback to epoch
+          }
+          
+          return dateB - dateA; // Most recent first
         });
 
-        // 🔹 Keep only the last 5
-        bookings = bookings.slice(0, 5);
-
-        // 🔹 Build HTML
+        // ✅ Build HTML
         let bookingsHTML = "";
         if (bookings.length === 0) {
-          bookingsHTML = `<p style="color:red;">You don’t have any bookings yet.</p>`;
+          bookingsHTML = `<p style="color:red;">You don't have any bookings yet.</p>`;
         } else {
           bookings.forEach(b => {
             // ✅ Format date
@@ -1373,7 +1392,8 @@ if (!user) {
                 .replace(/,?\s*Pedicure:\s*NONE/gi, "")
                 .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
                 .trim()
-                .replace(/,\s*$/, "");
+                .replace(/,\s*$/, "")
+                .replace(/^,\s*/, ""); // Remove leading comma too
             }
 
             // ✅ Build card
@@ -1397,10 +1417,10 @@ if (!user) {
               cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
             }
 
-            // ✅ Deposit status (live now)
+            // ✅ Deposit status
             cardHTML += b.deposit === "Made"
-              ? `<p><strong>💵 Deposit Confirmed:</strong> Yes</p>`
-              : `<p><strong>💵 Deposit Confirmed:</strong> No</p>`;
+              ? `<p><strong>💵 Deposit Confirmed:</strong> <span style="color:green;">Yes</span></p>`
+              : `<p><strong>💵 Deposit Confirmed:</strong> <span style="color:red;">No</span></p>`;
 
             if (b.notes) cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
 
@@ -1415,20 +1435,19 @@ if (!user) {
       });
   } catch (err) {
     console.error("Unexpected error:", err);
-    alert("⚠ An unexpected error occurred while loading your bookings: " + err.message);
+    alert("⚠️ An unexpected error occurred while loading your bookings: " + err.message);
   }
 }
 
+// ✅ Also update the close function to prevent conflicts
+function closeMyBookings() {
+  document.getElementById('myBookingsModal').style.display = 'none';
+}
 
-
-  function closeMyBookings() {
-    document.getElementById('myBookingsModal').style.display = 'none';
-  }
-
-  
-  function closeBookingModal() {
-    document.getElementById('bookingModal').style.display = 'none';
-  }
+// ✅ Update booking modal close function
+function closeBookingModal() {
+  document.getElementById('bookingModal').style.display = 'none';
+}
 
     function showPaymentInfo() {
   Swal.fire({
