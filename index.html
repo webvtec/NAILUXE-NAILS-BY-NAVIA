@@ -819,13 +819,14 @@ const businessHours = {
 };
 
 
-function validateTimeSlot(date, selectedTime) {
-  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+async function validateTimeSlot(date, selectedTime) {
+  const dayName = new Date(date + 'T00:00:00')
+    .toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
   if (!business) {
     alert(`We are closed on Sundays. Please select another day.`);
-    return Promise.resolve(false);
+    return false;
   }
 
   const selectedMinutes = convertToMinutes(selectedTime);
@@ -834,156 +835,59 @@ function validateTimeSlot(date, selectedTime) {
 
   if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
     alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
-    return Promise.resolve(false);
+    return false;
   }
 
-  return db.collection('unavailableDays').where('date', '==', date).get()
-    .then((unavailableSnapshot) => {
-      let isUnavailable = false;
+  // Check unavailable days
+  const unavailableSnapshot = await db.collection('unavailableDays')
+    .where('date', '==', date)
+    .get();
 
-      unavailableSnapshot.forEach((doc) => {
-        const data = doc.data();
+  let duration = getSelectedServiceDuration();
 
-        if (data.allDay) {
-          isUnavailable = true;
-        } else {
-          const startMinutes = convertToMinutes(data.startTime);
-          const endMinutes = convertToMinutes(data.endTime);
+// Check against booked slots
+for (let doc of bookingSnapshot.docs) {
+  let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+  let bookedMinutes = convertToMinutes(bookedTime);
+  let bookedDuration = doc.data().duration || 60;
 
-          if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-            isUnavailable = true;
-          }
-        }
-      });
+  let bookedEnd = bookedMinutes + bookedDuration;
+  let selectedEnd = selectedMinutes + duration;
 
-      if (isUnavailable) {
-        return false;
-      }
-
-      return db.collection('bookings')
-        .where('date', '==', firebase.firestore.Timestamp.fromDate(new Date(date)))
-        .get()
-        .then((querySnapshot) => {
-          // Dynamically calculate buffer based on the selected service type
-          const pedicureType = document.getElementById('pedicureType').value;
-          const manicureType = document.getElementById('manicureType').value;
-          const nailExtensionType = document.getElementById('nailExtensionType').value;
-
-          let buffer = 0; // Initialize buffer time
-
-          // Calculate buffer for Pedicure
-          if (pedicureType !== 'NONE') {
-            switch (pedicureType) {
-              case 'Regular Pedicure':
-                buffer = 30; // 30 minutes buffer for Regular Pedicure
-                break;
-              case 'Spa Pedicure':
-                buffer = 40; // 40 minutes buffer for Spa Pedicure
-                break;
-              case 'Deluxe Pedicure':
-                buffer = 50; // 50 minutes buffer for Deluxe Pedicure
-                break;
-              case 'Gel Pedicure':
-                buffer = 60; // 60 minutes buffer for Gel Pedicure
-                break;
-              case 'Paraffin Pedicure':
-                buffer = 30; // 30 minutes buffer for Paraffin Pedicure
-                break;
-              case 'Hot Stone Pedicure':
-                buffer = 50; // 50 minutes buffer for Hot Stone Pedicure
-                break;
-              case 'French Pedicure':
-                buffer = 30; // 30 minutes buffer for French Pedicure
-                break;
-              case 'Shellac Pedicure':
-                buffer = 40; // 40 minutes buffer for Shellac Pedicure
-                break;
-              case 'Fish Pedicure':
-                buffer = 20; // 20 minutes buffer for Fish Pedicure
-                break;
-              case 'Athletic Pedicure':
-                buffer = 30; // 30 minutes buffer for Athletic Pedicure
-                break;
-              default:
-                buffer = 0; // No buffer for unrecognized pedicure
-            }
-          }
-
-          // Calculate buffer for Manicure
-          if (manicureType !== 'NONE') {
-            switch (manicureType) {
-              case 'Regular Manicure':
-                buffer = 20; // 20 minutes buffer for Regular Manicure
-                break;
-              case 'Spa Manicure':
-                buffer = 30; // 30 minutes buffer for Spa Manicure
-                break;
-              case 'Deluxe Manicure':
-                buffer = 40; // 40 minutes buffer for Deluxe Manicure
-                break;
-              case 'Gel Manicure':
-                buffer = 50; // 50 minutes buffer for Gel Manicure
-                break;
-              case 'Paraffin Manicure':
-                buffer = 30; // 30 minutes buffer for Paraffin Manicure
-                break;
-              case 'French Manicure':
-                buffer = 30; // 30 minutes buffer for French Manicure
-                break;
-              case 'Shellac Manicure':
-                buffer = 40; // 40 minutes buffer for Shellac Manicure
-                break;
-              case 'Hot Oil Manicure':
-                buffer = 40; // 40 minutes buffer for Hot Oil Manicure
-                break;
-              case 'Acrylic Powder Manicure':
-                buffer = 50; // 50 minutes buffer for Acrylic Powder Manicure
-                break;
-              case 'Athletic Manicure':
-                buffer = 30; // 30 minutes buffer for Athletic Manicure
-                break;
-              default:
-                buffer = 0; // No buffer for unrecognized manicure
-            }
-          }
-
-          // Calculate buffer for Nail Extension
-          if (nailExtensionType !== 'NONE') {
-            switch (nailExtensionType) {
-              case 'Almond':
-                buffer = 40; // 40 minutes buffer for Almond Extension
-                break;
-              case 'Stiletto':
-                buffer = 50; // 50 minutes buffer for Stiletto Extension
-                break;
-              case 'Square':
-                buffer = 30; // 30 minutes buffer for Square Extension
-                break;
-              case 'Coffin':
-                buffer = 50; // 50 minutes buffer for Coffin Extension
-                break;
-              case 'Oval':
-                buffer = 40; // 40 minutes buffer for Oval Extension
-                break;
-              default:
-                buffer = 0; // No buffer for unrecognized nail extension
-            }
-          }
-
-          // Check if the selected time conflicts with any existing bookings
-          for (let doc of querySnapshot.docs) {
-            let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
-            let bookedMinutes = convertToMinutes(bookedTime);
-
-            if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
-              return false; // Conflict
-            }
-          }
-
-          return true; // No conflict
-        });
-    });
+  // If they overlap, reject
+  if (!(selectedEnd <= bookedMinutes || selectedMinutes >= bookedEnd)) {
+    return false;
+  }
 }
+
+  // Fetch existing bookings
+  const bookingSnapshot = await db.collection('bookings')
+    .where('date', '==', firebase.firestore.Timestamp.fromDate(new Date(date)))
+    .get();
+
+  const pedicureType = document.getElementById('pedicureType').value;
+  const manicureType = document.getElementById('manicureType').value;
+  const nailExtensionType = document.getElementById('nailExtensionType').value;
+
+  // ✅ Calculate buffer by summing selected services
+  let buffer = 0;
+  if (pedicureType !== "NONE") buffer += serviceBuffers[pedicureType] || 0;
+  if (manicureType !== "NONE") buffer += serviceBuffers[manicureType] || 0;
+  if (nailExtensionType !== "NONE") buffer += serviceBuffers[nailExtensionType] || 0;
+
+  // Check against booked slots
+  for (let doc of bookingSnapshot.docs) {
+    let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+    let bookedMinutes = convertToMinutes(bookedTime);
+
+    if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
+      return false; // Conflict
+    }
+  }
+
+  return true; // No conflict
+}
+
 
 function generateBookingNumber(name) {
   const initials = name.trim().substring(0, 2).toUpperCase();
@@ -1451,18 +1355,8 @@ if (!user) {
     }
 
 function getBufferForSelectedServices() {
-  let buffer = 30; // default
-
-  const pedicureType = document.getElementById('pedicureType')?.value || "NONE";
-  const manicureType = document.getElementById('manicureType')?.value || "NONE";
-  const nailExtensionType = document.getElementById('nailExtensionType')?.value || "NONE";
-
-  // Example buffer logic — adjust if needed
-  if (pedicureType === "Gel Pedicure") buffer = 60;
-  if (manicureType === "Gel Manicure") buffer = 50;
-  if (nailExtensionType !== "NONE") buffer = 40;
-
-  return buffer;
+  // No extra buffer
+  return 0;
 }
 
 // ✅ Service durations in minutes
@@ -1479,6 +1373,7 @@ const serviceDurations = {
   "NONE": 0
 };
 
+
 function getSelectedServiceDuration() {
   const pedicure = document.getElementById('pedicureType')?.value || "NONE";
   const manicure = document.getElementById('manicureType')?.value || "NONE";
@@ -1486,9 +1381,9 @@ function getSelectedServiceDuration() {
 
   let duration = 0;
 
-  if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 60;
-  if (manicure !== "NONE") duration += serviceDurations[manicure] || 60;
-  if (nailExtension !== "NONE") duration += 60; // default for extensions
+  if (pedicure !== "NONE") duration += services[pedicure] || 0;
+  if (manicure !== "NONE") duration += services[manicure] || 0;
+  if (nailExtension !== "NONE") duration += services[nailExtension] || 0;
 
   return duration || 60; // fallback
 }
