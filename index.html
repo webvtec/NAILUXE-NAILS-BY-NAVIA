@@ -1028,10 +1028,7 @@ function submitBooking(event) {
     service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
   }
 
-  // ✅ Generate booking number
   const bookingNumber = generateBookingNumber(name);
-
-  // ✅ Get duration based on selected services
   const duration = getSelectedServiceDuration();
 
   validateTimeSlot(date, time)
@@ -1041,7 +1038,6 @@ function submitBooking(event) {
         return;
       }
 
-      // ✅ Save booking to Firestore
       return db.collection('bookings').add({
         uid: user.uid,
         bookingNumber,
@@ -1050,24 +1046,19 @@ function submitBooking(event) {
         date: date,
         time,
         service,
-        duration, // now properly defined
+        duration,
         deposit: "No"
       });
     })
     .then(() => {
-      // ✅ Send Telegram notification
-     // Split the date string into year, month, day
-const [year, month, day] = date.split("-");
+      const [year, month, day] = date.split("-");
+      const formattedDate = new Date(year, month - 1, day).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 
-// Format the date properly
-const formattedDate = new Date(year, month - 1, day).toLocaleDateString("en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
-
-// Build the message
-const message = `📅 New Booking Request
+      const message = `📅 New Booking Request
 
 🔑 Booking No: ${bookingNumber}
 👤 Name: ${name}
@@ -1075,7 +1066,6 @@ const message = `📅 New Booking Request
 📍 Date: ${formattedDate}
 ⏰ Time: ${time}
 💅 Service: ${service}`;
-
 
       const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
       const telegramChatId = "-1002734216867";
@@ -1092,37 +1082,58 @@ const message = `📅 New Booking Request
     })
     .then((response) => {
       if (response.ok) {
-        // ✅ Clear form
         document.querySelector("#bookingSection form").reset();
         document.getElementById("estimateTimeMessage").innerHTML = "";
         document.getElementById("selectedTime").innerHTML = "<option value=''>Pick date & service first</option>";
 
-        // ✅ Show confirmation modal
         document.querySelector("#bookingModal h3").style.display = "none";
         document.querySelector("#bookingModal p").innerHTML = `
-          <div style="text-align:center; padding:20px; font-family:Arial,sans-serif; color:#333;">
-            <h2 style="margin:0; font-size:22px; font-weight:bold;">BOOKING CONFIRMED</h2>
-            <p style="font-size:18px; margin:5px 0 15px 0;">
+          <div style="
+            text-align:center; 
+            padding:15px; 
+            font-family:Arial,sans-serif; 
+            color:#333;
+            max-width:400px;
+            margin:0 auto;
+            background:white;
+            border-radius:8px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <h2 style="margin:0 0 8px 0; font-size:20px; font-weight:bold;">BOOKING CONFIRMED</h2>
+            <p style="font-size:16px; margin:0 0 12px 0;">
               Booking #<strong>${bookingNumber}</strong>
             </p>
-            <hr style="margin:15px 0;">
-            <p style="font-size:15px; line-height:1.5;">
+            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+            <p style="font-size:13px; line-height:1.4; margin:8px 0;">
               <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
               or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
             </p>
-            <p style="font-size:17px; margin:10px 0; color:#6c2eb9; font-weight:bold;">
-              💵 Deposit Due Now: JMD $4,000.00
+            <p style="font-size:15px; margin:8px 0; color:#6c2eb9; font-weight:bold;">
+              💵 Deposit Due: JMD $4,000.00
             </p>
-            <hr style="margin:15px 0;">
-            <h3 style="font-size:16px; margin:10px 0;">Banking Details:</h3>
-            <p>🏦 Bank: <strong>Your Bank Name</strong></p>
-            <p>👤 Account Name: <strong>Your Account Name</strong></p>
-            <p>#️⃣ Account Number: <strong>123456789</strong></p>
-            <p>🏢 Branch: <strong>Your Branch Name</strong></p>
-            <hr style="margin:15px 0;">
-            <p style="font-size:14px; color:#555;">
-              ℹ️ You can always see banking info in the <strong>Payment Info</strong> menu.
+            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+            <h3 style="font-size:14px; margin:8px 0;">Banking Details:</h3>
+            <div style="font-size:12px; text-align:left; margin:8px 0;">
+              <p style="margin:3px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
+              <p style="margin:3px 0;">👤 Account: <strong>Your Account Name</strong></p>
+              <p style="margin:3px 0;">#️⃣ Number: <strong>123456789</strong></p>
+              <p style="margin:3px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
+            </div>
+            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+            <p style="font-size:11px; color:#666; margin:8px 0;">
+              ℹ️ Banking info available in <strong>Payment Info</strong> menu
             </p>
+            <button onclick="closeBookingModal()" style="
+              margin-top:15px; 
+              padding:10px 25px; 
+              background:#6c2eb9; 
+              color:white; 
+              border:none; 
+              border-radius:5px; 
+              font-size:14px; 
+              cursor:pointer;
+              font-weight:bold;">
+              OK
+            </button>
           </div>
         `;
         document.getElementById('bookingModal').style.display = 'flex';
@@ -1134,7 +1145,10 @@ const message = `📅 New Booking Request
     });
 }
 
-
+// Add this function to close the modal
+function closeBookingModal() {
+  document.getElementById('bookingModal').style.display = 'none';
+}
 
 
     function showSection(sectionId) {
