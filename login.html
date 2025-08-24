@@ -61,6 +61,12 @@
       background-color: #4500b5;
       box-shadow: 0 6px 15px rgba(69,0,181,0.4);
     }
+    .google-btn {
+      background-color: #db4437;
+    }
+    .google-btn:hover {
+      background-color: #c23321;
+    }
     hr {
       margin: 1.5rem 0;
       border: none;
@@ -72,6 +78,17 @@
       min-height: 1.4em;
       margin-top: 1rem;
       user-select: none;
+    }
+    .forgot-password {
+      margin-top: 1rem;
+    }
+    .forgot-password a {
+      color: #6200ea;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .forgot-password a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -87,12 +104,13 @@
     <button id="signupBtn">Sign Up</button>
 
     <hr />
-
-    <button id="googleSignInBtn" style="background-color: #db4437; color: white;">
-  Sign in with Google
-</button>
+    <button id="googleSignInBtn" class="google-btn">Sign in with Google</button>
 
     <p id="status"></p>
+
+    <div class="forgot-password">
+      <a href="javascript:void(0);" id="forgotPasswordLink">Forgot Password?</a>
+    </div>
   </div>
 
   <script>
@@ -108,13 +126,32 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    const emailInput = document.getElementById('email');
+    
+
+  // Custom error messages
+  function getErrorMessage(errorCode) {
+    switch (errorCode) {
+      case "auth/invalid-email":
+        return "Invalid email format.";
+      case "auth/user-disabled":
+        return "This account has been disabled.";
+      case "auth/user-not-found":
+        return "No account found with this email.";
+      case "auth/wrong-password":
+        return "Incorrect password. Please try again.";
+      case "auth/email-already-in-use":
+        return "This email is already registered.";
+      case "auth/weak-password":
+        return "Password should be at least 6 characters.";
+      default:
+        return "Something went wrong. Please try again.";
+    }
+  }
+const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const statusText = document.getElementById('status');
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
 
-    loginBtn.addEventListener('click', () => {
+    document.getElementById('loginBtn').addEventListener('click', () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
@@ -128,11 +165,11 @@
           window.location.href = 'index.html';
         })
         .catch(err => {
-          statusText.textContent = `Login error: ${err.message}`;
+          statusText.textContent = getErrorMessage(err.code);
         });
     });
 
-    signupBtn.addEventListener('click', () => {
+    document.getElementById('signupBtn').addEventListener('click', () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
@@ -146,25 +183,37 @@
           window.location.href = 'index.html';
         })
         .catch(err => {
-          statusText.textContent = `Signup error: ${err.message}`;
+          statusText.textContent = getErrorMessage(err.code);
+        });
+    });
+
+    document.getElementById('forgotPasswordLink').addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        statusText.textContent = 'Please enter your email to reset password.';
+        return;
+      }
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          statusText.textContent = 'Password reset email sent!';
+        })
+        .catch(err => {
+          statusText.textContent = getErrorMessage(err.code);
         });
     });
 
     // Google Sign-In
-const googleSignInBtn = document.getElementById('googleSignInBtn');
-googleSignInBtn.addEventListener('click', () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  auth.signInWithPopup(provider)
-    .then((result) => {
-      // ✅ Successful sign-in
-      window.location.href = 'index.html';
-    })
-    .catch((error) => {
-      statusText.textContent = `Google sign-in error: ${error.message}`;
+    document.getElementById('googleSignInBtn').addEventListener('click', () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(() => {
+          window.location.href = 'index.html';
+        })
+        .catch(err => {
+          statusText.textContent = getErrorMessage(err.code);
+        });
     });
-});
-
   </script>
 
 </body>
