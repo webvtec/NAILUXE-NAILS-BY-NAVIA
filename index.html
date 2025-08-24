@@ -309,14 +309,6 @@
   z-index: 10000;
 }
 
-    select, input, button {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-}
-
     
   </style>
 </head>
@@ -477,9 +469,6 @@
 <!-- ✅ Booking Section -->
 <div class="content-section" id="bookingSection">
 <h1>BOOK APPOINTMENT</h1>
-<select id="selectedTime" required="" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
-<option value="">COMPLETE FORM TO SEE AVAILABLE SLOTS</option>
- </select>
 <form onsubmit="submitBooking(event)">
 <label for="name">Name:</label>
 <input id="name" required="" type="text"/>
@@ -494,6 +483,9 @@
 />
 <label for="date">Preferred Date:</label>
 <input id="date" min="" onchange="loadAvailableSlots()" required="" type="date"/>
+<select id="selectedTime" required="" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
+<option value="">COMPLETE FORM TO SEE AVAILABLE SLOTS</option>
+</select>
 <!-- ✅ Time slots will appear here -->
 <label for="selectedTime">Available Times:</label>
 <label for="pedicureType">Select Pedicure Type:</label>
