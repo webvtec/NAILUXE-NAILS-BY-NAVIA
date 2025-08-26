@@ -760,27 +760,36 @@ function clearReservations() {
   }
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // normalize
+  today.setHours(0, 0, 0, 0); // normalize to midnight
 
   db.collection('bookings').get().then(snapshot => {
     const batch = db.batch();
 
     snapshot.forEach(doc => {
       const booking = doc.data();
-      let bookingEnd = null;
+      let bookingDate = null;
 
-      if (booking.rentalDates?.includes(' to ')) {
-        const end = booking.rentalDates.split(' to ')[1];
-        const [year, month, day] = end.split('-').map(Number);
-        bookingEnd = new Date(year, month - 1, day);
-      } else if (booking.rentalDates) {
-        const [year, month, day] = booking.rentalDates.split('-').map(Number);
-        bookingEnd = new Date(year, month - 1, day);
+      // ✅ Handle standard `date` field (YYYY-MM-DD string)
+      if (booking.date && typeof booking.date === "string") {
+        const [year, month, day] = booking.date.split('-').map(Number);
+        bookingDate = new Date(year, month - 1, day);
       }
 
-      if (bookingEnd) {
-        bookingEnd.setHours(0, 0, 0, 0);
-        if (bookingEnd < today) {
+      // ✅ Handle optional rentalDates field (range or single)
+      if (booking.rentalDates) {
+        if (booking.rentalDates.includes(" to ")) {
+          const end = booking.rentalDates.split(" to ")[1];
+          const [year, month, day] = end.split('-').map(Number);
+          bookingDate = new Date(year, month - 1, day);
+        } else {
+          const [year, month, day] = booking.rentalDates.split('-').map(Number);
+          bookingDate = new Date(year, month - 1, day);
+        }
+      }
+
+      if (bookingDate) {
+        bookingDate.setHours(0, 0, 0, 0);
+        if (bookingDate < today) {
           batch.delete(doc.ref);
         }
       }
@@ -790,8 +799,12 @@ function clearReservations() {
   }).then(() => {
     alert('Past reservations cleared successfully.');
     document.getElementById('clearInput').value = '';
+  }).catch(err => {
+    console.error("Error clearing reservations:", err);
+    alert("Failed to clear past reservations.");
   });
 }
+
 
     async function addUnavailableDate() {
   const date = document.getElementById('unavailableDateInput').value;
