@@ -649,9 +649,11 @@
 </div>
 <!-- ✅ Scripts -->
 <script>
-    let currentUser = null;
+    
 
-    const firebaseConfig = {
+let currentUser = null;
+
+const firebaseConfig = {
   apiKey: "AIzaSyCI24steVBjoIgV68Wkr_OzddXzwHZjnMs",
   authDomain: "nailuxe-nailz-by-navia.firebaseapp.com",
   projectId: "nailuxe-nailz-by-navia",
@@ -660,25 +662,77 @@
   appId: "1:937826104665:web:9eea9808ccce54c1cd8848"
 };
 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    firebase.auth().onAuthStateChanged(user => {
-  currentUser = user || null; // Store user if logged in, null if not
+firebase.auth().onAuthStateChanged(user => {
+  currentUser = user || null;
   loadReviews(currentUser);
 });
 
+// Service durations in minutes
+const serviceDurations = {
+  "Female Manicure": 45,
+  "Female Pedicure": 60,
+  "Men's Manicure": 45,
+  "Men's Pedicure": 75,
+  "Gel Polish Fingers": 30,
+  "Gel Polish Toes": 30,
+  "French Toes": 45,
+  "Hand Painted French": 30,
+  "Nail Art": 15,
+  "XL Full Set": 180,
+  "Long Full Set": 150,
+  "Medium Full Set": 120,
+  "Short Full Set": 90,
+  "Oval/Almond Medium": 150,
+  "Oval Faded French (Medium)": 165,
+  "Coffin": 120,
+  "Nail Overlay (Short)": 75,
+  "Overlay & Gel Polish": 150,
+  "Refill & Gel Polish": 105,
+  "Refill My Work (2–3 Weeks)": 60,
+  "Reshape & Cutdown Nails": 30,
+  "Acrylic All Toes": 90,
+  "Acrylic Big Toes": 45,
+  "Fix Acrylic Toes": 30,
+  "Refill Toes": 45,
+  "Gel X (Long)": 135,
+  "Gel X (Medium)": 120,
+  "Rebalanced Structured Gel": 105,
+  "Soak Off Acrylic Fingers & Clean Up": 45,
+  "Soak Off Toes": 15,
+  "Gem Application": 10,
+  "Hair Brush": 10,
+  "Regular Pedicure": 60,
+  "Spa Pedicure": 90,
+  "Deluxe Pedicure": 90,
+  "Gel Pedicure": 120,
+  "Regular Manicure": 60,
+  "Spa Manicure": 90,
+  "Deluxe Manicure": 90,
+  "Gel Manicure": 120,
+  "Acrylic Powder Manicure": 120,
+  "NONE": 0
+};
 
-    function login() {
+const businessHours = {
+  'Sunday': null, // Closed
+  'Monday': { open: '8:30 AM', close: '6:00 PM' },
+  'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Thursday': { open: '8:30 AM', close: '6:00 PM' },
+  'Friday': { open: '9:00 AM', close: '7:00 PM' },
+  'Saturday': { open: '9:00 AM', close: '7:00 PM' }
+};
+
+function login() {
   document.getElementById('adminLoginModal').style.display = 'flex';
 }
 
 function closeAdminModal() {
   document.getElementById('adminLoginModal').style.display = 'none';
-  document.getElementById('adminLoginMsg').style.display = 'none'; // Hide error message
-
-  // ✅ Clear inputs on close
+  document.getElementById('adminLoginMsg').style.display = 'none';
   document.getElementById('adminEmail').value = "";
   document.getElementById('adminPassword').value = "";
 }
@@ -688,36 +742,28 @@ function attemptAdminLogin() {
   const password = document.getElementById('adminPassword').value.trim();
   const msg = document.getElementById('adminLoginMsg');
 
-  // Hard-coded admin credentials
   const adminEmail = 'carlanviroberts@gmail.com';
   const adminPassword = '@Carlanvi325';
 
   if (email === adminEmail && password === adminPassword) {
     firebase.auth().signInWithEmailAndPassword(email, password)
       .then(() => {
-        // ✅ Close modal immediately
         closeAdminModal();
-
-        // ✅ Redirect to dashboard
         window.location.href = 'dashboard.html';
       })
       .catch(() => {
         msg.textContent = "You are not an admin user.";
         msg.style.display = "block";
-
-        // ✅ Clear only password on error
         document.getElementById('adminPassword').value = "";
       });
   } else {
     msg.textContent = "You are not an admin user.";
     msg.style.display = "block";
-
-    // ✅ Clear only password on wrong login
     document.getElementById('adminPassword').value = "";
   }
 }
 
-      function toggleMenu() {
+function toggleMenu() {
   const menu = document.getElementById("menu");
   const button = document.querySelector(".menu-button");
 
@@ -725,8 +771,6 @@ function attemptAdminLogin() {
     closeMenu();
   } else {
     menu.classList.add("show");
-
-    // ✅ Enable outside click listener
     document.addEventListener("click", outsideClickHandler);
   }
 
@@ -745,7 +789,7 @@ function closeMenu() {
 
 function formatTimeInput() {
   let input = document.getElementById('timeInput');
-  let value = input.value.replace(/\D/g, ''); // Keep only digits
+  let value = input.value.replace(/\D/g, '');
 
   if (value.length === 0) {
     input.value = '';
@@ -753,32 +797,26 @@ function formatTimeInput() {
   }
 
   if (value.length <= 2) {
-    // For hour input like "1" or "12"
     input.value = value;
   } else if (value.length === 3) {
-    // For input like "130" ➜ should show "1:30"
     input.value = `${value.slice(0, 1)}:${value.slice(1)}`;
   } else if (value.length === 4) {
-    // For input like "1030" ➜ should show "10:30"
     input.value = `${value.slice(0, 2)}:${value.slice(2)}`;
   }
 }
 
 function selectPeriod(period) {
   document.getElementById('timePeriod').value = period;
-
-  // Hide AM/PM buttons after selection
   document.getElementById('amBtn').style.display = 'none';
   document.getElementById('pmBtn').style.display = 'none';
 
-  // Show selected period text (ensure no duplicates)
   const confirmation = document.getElementById('periodConfirmation');
   confirmation.innerText = `You selected ${period}`;
   confirmation.style.fontWeight = 'bold';
   confirmation.style.marginBottom = '10px';
 }
 
-    function showExtensionLengthOptions() {
+function showExtensionLengthOptions() {
   const extensionType = document.getElementById('nailExtensionType').value;
   const lengthContainer = document.getElementById('extensionLengthContainer');
 
@@ -789,13 +827,12 @@ function selectPeriod(period) {
   }
 }
 
-  function loadGallery(containerId) {
+function loadGallery(containerId) {
   const galleryContainer = document.getElementById(containerId);
   galleryContainer.innerHTML = '';
 
   db.collection('gallery').onSnapshot((querySnapshot) => {
     galleryContainer.innerHTML = '';
-
     const categories = {};
 
     querySnapshot.forEach((doc) => {
@@ -838,13 +875,12 @@ function selectPeriod(period) {
   });
 }
 
-// ✅ Force the Designs page to load immediately
 document.addEventListener('DOMContentLoaded', function () {
   showSection('gallerySection');
   loadGallery('galleryDisplay');
 });
 
-    function convertToMinutes(timeStr) {
+function convertToMinutes(timeStr) {
   let [time, period] = timeStr.split(' ');
   let [hours, minutes] = time.split(':').map(Number);
 
@@ -858,70 +894,54 @@ document.addEventListener('DOMContentLoaded', function () {
   return (hours * 60) + minutes;
 }
 
-const businessHours = {
-  'Sunday': null, // Closed
-  'Monday': { open: '8:30 AM', close: '6:00 PM' },
-  'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
-  'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
-  'Thursday': { open: '8:30 AM', close: '6:00 PM' },
-  'Friday': { open: '9:00 AM', close: '7:00 PM' },
-  'Saturday': { open: '9:00 AM', close: '7:00 PM' }
-};
-
 function showEstimateTime() {
-    const manicurePedicure = document.getElementById('manicurePedicureType').value;
-    const polishArt = document.getElementById('polishArtType').value;
-    const acrylic = document.getElementById('acrylicType').value;
-    const gel = document.getElementById('gelType').value;
-    const other = document.getElementById('otherType').value;
-    const estimateMessage = document.getElementById('estimateTimeMessage');
+  const manicurePedicure = document.getElementById('manicurePedicureType').value;
+  const polishArt = document.getElementById('polishArtType').value;
+  const acrylic = document.getElementById('acrylicType').value;
+  const gel = document.getElementById('gelType').value;
+  const other = document.getElementById('otherType').value;
+  const estimateMessage = document.getElementById('estimateTimeMessage');
 
-    // Check if no services are selected
-    if (manicurePedicure === 'NONE' && polishArt === 'NONE' && acrylic === 'NONE' && gel === 'NONE' && other === 'NONE') {
-        estimateMessage.innerHTML = '';
-        return;
+  if (manicurePedicure === 'NONE' && polishArt === 'NONE' && acrylic === 'NONE' && gel === 'NONE' && other === 'NONE') {
+    estimateMessage.innerHTML = '';
+    return;
+  }
+
+  let totalDuration = 0;
+
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      totalDuration += serviceDurations[service] || 0;
     }
+  });
 
-    let totalDuration = 0;
-
-    // Add durations for selected services
-    [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
-        if (service && service !== 'NONE') {
-            totalDuration += serviceDurations[service] || 0;
-        }
-    });
-
-    // Display estimated time
-    if (totalDuration > 0) {
-        const hours = Math.floor(totalDuration / 60);
-        const minutes = totalDuration % 60;
-        let timeStr = '';
-        if (hours > 0) timeStr += `${hours} hour${hours > 1 ? 's' : ''}`;
-        if (minutes > 0) {
-            if (timeStr) timeStr += ' and ';
-            timeStr += `${minutes} minute${minutes > 1 ? 's' : ''}`;
-        }
-        estimateMessage.innerHTML = `Estimated Duration: Approximately ${timeStr}`;
-    } else {
-        estimateMessage.innerHTML = '';
+  if (totalDuration > 0) {
+    const hours = Math.floor(totalDuration / 60);
+    const minutes = totalDuration % 60;
+    let timeStr = '';
+    if (hours > 0) timeStr += `${hours} hour${hours > 1 ? 's' : ''}`;
+    if (minutes > 0) {
+      if (timeStr) timeStr += ' and ';
+      timeStr += `${minutes} minute${minutes > 1 ? 's' : ''}`;
     }
+    estimateMessage.innerHTML = `Estimated Duration: Approximately ${timeStr}`;
+  } else {
+    estimateMessage.innerHTML = '';
+  }
 }
 
-    function normalizeTimeStr(timeStr) {
+function normalizeTimeStr(timeStr) {
   if (!timeStr) return null;
 
-  // ✅ Already in AM/PM format
   if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
 
-  // ✅ Convert from 24-hour format (e.g. "13:30" → "1:30 PM")
   let [hours, minutes] = timeStr.split(":").map(Number);
   const period = hours >= 12 ? "PM" : "AM";
   hours = hours % 12 || 12;
   return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
 
-
-    function validateTimeSlot(date, selectedTime) {
+function validateTimeSlot(date, selectedTime) {
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
@@ -953,9 +973,8 @@ function showEstimateTime() {
           const endMinutes = convertToMinutes(normalizeTimeStr(data.endTime));
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-          isUnavailable = true;
-         }
-
+            isUnavailable = true;
+          }
         }
       });
 
@@ -974,22 +993,20 @@ function showEstimateTime() {
             let bookedMinutes = convertToMinutes(bookedTime);
 
             if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
-              return false; // Conflict
+              return false;
             }
           }
 
-          return true; // No conflict
+          return true;
         });
     });
 }
 
-
 function generateBookingNumber(name) {
   const initials = name.trim().substring(0, 2).toUpperCase();
-  const digits = Math.floor(1000 + Math.random() * 9000); // random 4 digits
+  const digits = Math.floor(1000 + Math.random() * 9000);
   return initials + digits;
 }
-
 
 function submitBooking(event) {
   event.preventDefault();
@@ -1002,15 +1019,24 @@ function submitBooking(event) {
     return;
   }
 
-  // Get selected services from all categories
-const services = getSelectedServices();
+  // Get form values
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('selectedTime').value;
+  const services = getSelectedServices();
 
-// Check if at least one service is selected
-if (services === 'No services selected') {
-  alert('Please select at least one service before booking.');
-  return;
-}
-    
+  // Validation
+  if (!name || !phone || !date || !time) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  if (services === 'No services selected') {
+    alert('Please select at least one service before booking.');
+    return;
+  }
+
   const bookingNumber = generateBookingNumber(name);
   const duration = getSelectedServiceDuration();
 
@@ -1028,7 +1054,7 @@ if (services === 'No services selected') {
         phone,
         date: date,
         time,
-        service,
+        service: services,
         duration,
         deposit: "No"
       });
@@ -1048,7 +1074,7 @@ if (services === 'No services selected') {
 📞 Phone: ${phone}
 📍 Date: ${formattedDate}
 ⏰ Time: ${time}
-💅 Service: ${service}`;
+💅 Service: ${services}`;
 
       const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
       const telegramChatId = "-1002734216867";
@@ -1128,19 +1154,11 @@ if (services === 'No services selected') {
     });
 }
 
-// The closeBookingModal() function should already exist in your HTML/existing JavaScript
-// Add this function to close the modal
-function closeBookingModal() {
-  document.getElementById('bookingModal').style.display = 'none';
-            }
-
-// Add this function to close the modal
 function closeBookingModal() {
   document.getElementById('bookingModal').style.display = 'none';
 }
 
-
-    function showSection(sectionId) {
+function showSection(sectionId) {
   document.querySelectorAll('.content-section').forEach(section =>
     section.classList.remove('active')
   );
@@ -1149,65 +1167,71 @@ function closeBookingModal() {
   if (sectionId === 'gallerySection') {
     loadGallery('galleryDisplay');
   } else if (sectionId === 'reviewsSection') {
-    loadReviews(currentUser); // ✅ Pass the user here
+    loadReviews(currentUser);
   }
 }
-
-// Assume firebase is initialized and 'db' and 'auth' are set up
 
 let selectedRating = 0;
 
-// Star rating UI logic
-document.querySelectorAll('#starRating span').forEach(star => {
-  star.addEventListener('click', () => {
-    selectedRating = parseInt(star.getAttribute('data-value'));
-    document.querySelectorAll('#starRating span').forEach(s => {
-      s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+// Star rating UI logic - wrapped in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+  const starRatingElement = document.getElementById('starRating');
+  if (starRatingElement) {
+    starRatingElement.querySelectorAll('span').forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.getAttribute('data-value'));
+        starRatingElement.querySelectorAll('span').forEach(s => {
+          s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+        });
+      });
     });
-  });
-});
-
-// Submit review
-document.getElementById('reviewForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
-        window.location.href = 'login.html';
-    }
-    return;
-}
-
-  const name = document.getElementById('reviewName').value.trim();
-  const comment = document.getElementById('reviewComment').value.trim();
-  const msg = document.getElementById('reviewSubmitMsg');
-
-  if (!name || !comment || selectedRating === 0) {
-    msg.style.color = "red";
-    msg.textContent = "Please fill all fields and select a star rating.";
-    return;
   }
 
-  try {
-    await db.collection('reviews').add({
-      name,
-      comment,
-      rating: selectedRating,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      uid: user.uid
+  // Submit review - wrapped in DOMContentLoaded
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+          window.location.href = 'login.html';
+        }
+        return;
+      }
+
+      const name = document.getElementById('reviewName').value.trim();
+      const comment = document.getElementById('reviewComment').value.trim();
+      const msg = document.getElementById('reviewSubmitMsg');
+
+      if (!name || !comment || selectedRating === 0) {
+        msg.style.color = "red";
+        msg.textContent = "Please fill all fields and select a star rating.";
+        return;
+      }
+
+      try {
+        await db.collection('reviews').add({
+          name,
+          comment,
+          rating: selectedRating,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          uid: user.uid
+        });
+
+        msg.style.color = "green";
+        msg.textContent = "Thank you for your review!";
+        reviewForm.reset();
+        selectedRating = 0;
+        starRatingElement.querySelectorAll('span').forEach(s => s.style.color = '#ccc');
+
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        msg.style.color = "red";
+        msg.textContent = "Error submitting review.";
+      }
     });
-
-    msg.style.color = "green";
-    msg.textContent = "Thank you for your review!";
-    document.getElementById('reviewForm').reset();
-    selectedRating = 0;
-    document.querySelectorAll('#starRating span').forEach(s => s.style.color = '#ccc');
-
-  } catch (error) {
-    console.error("Error submitting review:", error);
-    msg.style.color = "red";
-    msg.textContent = "Error submitting review.";
   }
 });
 
@@ -1234,9 +1258,10 @@ function formatReviewTime(timestamp) {
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 }
 
-
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
+  if (!container) return;
+
   container.innerHTML = "<p>Loading reviews...</p>";
 
   db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
@@ -1250,10 +1275,8 @@ function loadReviews(user) {
       const d = doc.data();
       const isOwner = user && d.uid === user.uid;
 
-      // Format time display
       const dateString = formatReviewTime(d.timestamp);
 
-      // Star rating display
       let stars = '';
       for (let i = 1; i <= 5; i++) {
         stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
@@ -1271,13 +1294,12 @@ function loadReviews(user) {
   });
 }
 
-
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
-if (!user) {
-    window.location.href = 'login.html'; // send them to your login form
+  if (!user) {
+    window.location.href = 'login.html';
     return;
-}
+  }
 
   db.collection('reviews').doc(docId).get().then(doc => {
     if (!doc.exists) {
@@ -1291,7 +1313,6 @@ if (!user) {
       return;
     }
 
-    // If the review belongs to the current user, delete it
     db.collection('reviews').doc(docId).delete()
       .then(() => alert("Review deleted."))
       .catch(error => alert("Failed to delete review: " + error.message));
@@ -1300,30 +1321,30 @@ if (!user) {
   });
 }
 
-    document.addEventListener('DOMContentLoaded', function () {
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      firebase.auth().signOut()
-        .then(() => {
-          window.location.href = 'login.html';
-        })
-        .catch((error) => {
-          console.error("Logout error:", error);
-          alert("Failed to log out.");
-        });
-    });
-  }
+document.addEventListener('DOMContentLoaded', function () {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      firebase.auth().signOut()
+        .then(() => {
+          window.location.href = 'login.html';
+        })
+        .catch((error) => {
+          console.error("Logout error:", error);
+          alert("Failed to log out.");
+        });
+    });
+  }
 });
 
-    function logoutUser() {
-  firebase.auth().signOut()
-    .then(() => {
-      window.location.href = 'login.html'; // or wherever you want after logout
-    })
-    .catch(error => {
-      alert('Logout failed: ' + error.message);
-    });
+function logoutUser() {
+  firebase.auth().signOut()
+    .then(() => {
+      window.location.href = 'login.html';
+    })
+    .catch(error => {
+      alert('Logout failed: ' + error.message);
+    });
 }
 
 
