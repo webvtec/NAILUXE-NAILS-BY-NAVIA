@@ -1348,7 +1348,7 @@ function logoutUser() {
 }
 
 
-    function showUserBookings() {
+function showUserBookings() {
   const user = firebase.auth().currentUser;
   if (!user) {
     if (confirm("Please log in to view your bookings. Click OK to log in.")) {
@@ -1361,8 +1361,6 @@ function logoutUser() {
   document.getElementById('bookingModal').style.display = 'none';
   document.getElementById('adminLoginModal').style.display = 'none';
 
-  console.log("Loading bookings for user:", user.uid); // Debug log
-
   // Show loading state
   document.getElementById('myBookingsContent').innerHTML = '<p style="text-align:center; color:#666;">Loading your bookings...</p>';
   document.getElementById('myBookingsModal').style.display = 'flex';
@@ -1371,11 +1369,8 @@ function logoutUser() {
   const unsubscribe = db.collection('bookings')
     .where("uid", "==", user.uid)
     .onSnapshot(snapshot => {
-      console.log("Query returned", snapshot.docs.length, "documents"); // Debug log
-      
       let bookings = [];
       snapshot.forEach(doc => {
-        console.log("Booking data:", doc.data()); // Debug log
         bookings.push({ id: doc.id, ...doc.data() });
       });
 
@@ -1468,20 +1463,20 @@ function logoutUser() {
               <h3 style="margin-top:0; color:#61134A; font-size:18px;">
                 Booking #: ${b.bookingNumber || "N/A"}
               </h3>
-              <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
-              <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
-              <p><strong>📅 Date:</strong> ${bookingDate}</p>
-              <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
+              <p><strong>Name:</strong> ${b.name || "N/A"}</p>
+              <p><strong>Phone:</strong> ${b.phone || "N/A"}</p>
+              <p><strong>Date:</strong> ${bookingDate}</p>
+              <p><strong>Time:</strong> ${b.time || "N/A"}</p>
           `;
 
           if (cleanService) {
-            cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
+            cardHTML += `<p><strong>Services:</strong> ${cleanService}</p>`;
           }
 
           // Deposit status
           const depositStatus = b.deposit === "Made" || b.deposit === "Yes";
           cardHTML += `
-            <p><strong>💵 Deposit:</strong> 
+            <p><strong>Deposit:</strong> 
               <span style="color:${depositStatus ? 'green' : 'red'}; font-weight:bold;">
                 ${depositStatus ? 'Confirmed' : 'Pending'}
               </span>
@@ -1489,7 +1484,7 @@ function logoutUser() {
           `;
 
           if (b.notes) {
-            cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
+            cardHTML += `<p><strong>Notes:</strong> ${b.notes}</p>`;
           }
 
           cardHTML += `</div>`;
@@ -1517,7 +1512,6 @@ function logoutUser() {
   window.bookingsUnsubscribe = unsubscribe;
 }
 
-// Make sure the close function exists and cleans up the listener
 function closeMyBookings() {
   document.getElementById('myBookingsModal').style.display = 'none';
   
@@ -1527,11 +1521,10 @@ function closeMyBookings() {
     window.bookingsUnsubscribe = null;
   }
 }
-    
-    
-    function showPaymentInfo() {
+
+function showPaymentInfo() {
   Swal.fire({
-    title: "<div class='swal2-title-nowrap'>BANK TRANSER INFO</div>",
+    title: "<div class='swal2-title-nowrap'>BANK TRANSFER INFO</div>",
     html: `
       <div style="text-align:left; font-size:16px; line-height:1.6; color:white;">
         <p><b>Bank Name:</b> First Caribbean Bank</p>
@@ -1541,7 +1534,7 @@ function closeMyBookings() {
         <p><b>Note:</b> Please use your Booking # as the payment reference.</p>
       </div>
     `,
-    width: 600,  // ✅ slightly wider modal
+    width: 600,
     confirmButtonText: "CLOSE",
     background: "#1a73e8",
     color: "white",
@@ -1550,55 +1543,61 @@ function closeMyBookings() {
       popup: "swal2-rounded"
     }
   });
-    }
+}
 
 function getBufferForSelectedServices() {
-  let buffer = 30; // default
+  let buffer = 30; // default buffer in minutes
 
-  const pedicureType = document.getElementById('pedicureType')?.value || "NONE";
-  const manicureType = document.getElementById('manicureType')?.value || "NONE";
-  const nailExtensionType = document.getElementById('nailExtensionType')?.value || "NONE";
+  // Get the actual form values from your booking form
+  const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
 
-  // Example buffer logic — adjust if needed
-  if (pedicureType === "Gel Pedicure") buffer = 60;
-  if (manicureType === "Gel Manicure") buffer = 50;
-  if (nailExtensionType !== "NONE") buffer = 40;
+  // Adjust buffer based on service complexity
+  if (acrylic !== "NONE" && acrylic.includes("XL")) buffer = 60;
+  else if (acrylic !== "NONE" && acrylic.includes("Long")) buffer = 50;
+  else if (gel !== "NONE") buffer = 45;
+  else if (manicurePedicure !== "NONE" && manicurePedicure.includes("Men's Pedicure")) buffer = 40;
 
   return buffer;
 }
 
-
 function getSelectedServiceDuration() {
-  const manicurePedicure = document.getElementById('manicurePedicureType').value;
-  const polishArt = document.getElementById('polishArtType').value;
-  const acrylic = document.getElementById('acrylicType').value;
-  const gel = document.getElementById('gelType').value;
-  const other = document.getElementById('otherType').value;
+  const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
+  const polishArt = document.getElementById('polishArtType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
+  const other = document.getElementById('otherType')?.value || "NONE";
   
   let totalDuration = 0;
   
   [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
-    if (service && service !== 'NONE') {
-      totalDuration += serviceDurations[service] || 0;
+    if (service && service !== 'NONE' && serviceDurations[service]) {
+      totalDuration += serviceDurations[service];
     }
   });
   
   return totalDuration || 60; // fallback to 60 minutes if nothing selected
 }
 
-    
-// ✅ FINAL version — only one loadAvailableSlots() now
+// FIXED: Updated loadAvailableSlots to work with actual form field IDs
 async function loadAvailableSlots() {
   const date = document.getElementById('date').value;
-  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
-  const manicure = document.getElementById('manicureType')?.value || "NONE";
-  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
+  
+  // Get services from the actual form fields that exist
+  const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
+  const polishArt = document.getElementById('polishArtType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
+  const other = document.getElementById('otherType')?.value || "NONE";
 
   const timeSelect = document.getElementById('selectedTime');
   timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
 
   // Must have a date + at least one service
-  if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
+  const hasService = [manicurePedicure, polishArt, acrylic, gel, other].some(service => service !== "NONE");
+  
+  if (!date || !hasService) {
     timeSelect.innerHTML = "<option value=''>COMPLETE FORM TO SEE AVAILABLE SLOTS</option>";
     return;
   }
@@ -1616,7 +1615,7 @@ async function loadAvailableSlots() {
   const closeMinutes = convertToMinutes(business.close);
 
   try {
-    // ✅ Fetch bookings
+    // Fetch bookings
     const snapshot = await db.collection("bookings")
       .where("date", "==", date)
       .get();
@@ -1627,7 +1626,7 @@ async function loadAvailableSlots() {
       return { start: bookedTime, end: bookedTime + bookedDuration };
     });
 
-    // ✅ Fetch unavailable ranges
+    // Fetch unavailable ranges
     const unavailableSnapshot = await db.collection("unavailableDays")
       .where("date", "==", date)
       .get();
@@ -1642,19 +1641,14 @@ async function loadAvailableSlots() {
         const start = convertToMinutes(normalizeTimeStr(data.startTime));
         const end = convertToMinutes(normalizeTimeStr(data.endTime));
 
-        // ✅ Only add if both are valid numbers and end > start
         if (!isNaN(start) && !isNaN(end) && end > start) {
           unavailableRanges.push({ start, end });
         }
       }
     });
 
-    // 🔍 Debug output (remove later)
-    console.log("Bookings:", bookings);
-    console.log("Unavailable ranges:", unavailableRanges);
-
-    // ✅ Generate slots every 5 minutes
-    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+    // Generate slots every 15 minutes (changed from 5 to reduce clutter)
+    for (let t = openMinutes; t <= closeMinutes - duration; t += 15) {
       const end = t + duration;
 
       // Skip if overlaps with any booking or unavailable range
@@ -1689,8 +1683,7 @@ async function loadAvailableSlots() {
   }
 }
 
-
-    // ✅ Auto-format phone number in booking form
+// Auto-format phone number in booking form
 document.addEventListener("DOMContentLoaded", function () {
   const phoneInput = document.getElementById("phone");
   if (phoneInput) {
@@ -1713,22 +1706,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// Set minimum date to today
 document.addEventListener("DOMContentLoaded", function () {
   const dateInput = document.getElementById("date");
   if (dateInput) {
     const today = new Date().toISOString().split("T")[0]; 
-    dateInput.setAttribute("min", today); // ✅ Block past dates
+    dateInput.setAttribute("min", today);
   }
 });
 
-
-// Get selected services for booking
+// Get selected services for booking - FIXED to match actual form fields
 function getSelectedServices() {
-  const manicurePedicure = document.getElementById('manicurePedicureType').value;
-  const polishArt = document.getElementById('polishArtType').value;
-  const acrylic = document.getElementById('acrylicType').value;
-  const gel = document.getElementById('gelType').value;
-  const other = document.getElementById('otherType').value;
+  const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
+  const polishArt = document.getElementById('polishArtType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
+  const other = document.getElementById('otherType')?.value || "NONE";
   
   let services = [];
   
@@ -1740,42 +1733,6 @@ function getSelectedServices() {
   
   return services.length > 0 ? services.join(', ') : 'No services selected';
 }
-
-// Service duration estimates (in minutes)
-const serviceDurations = {
-  "Female Manicure": 45,
-  "Female Pedicure": 60,
-  "Men's Manicure": 45,
-  "Men's Pedicure": 75,
-  "Gel Polish Fingers": 30,
-  "Gel Polish Toes": 30,
-  "French Toes": 45,
-  "Hand Painted French": 30,
-  "Nail Art": 15,
-  "XL Full Set": 180,
-  "Long Full Set": 150,
-  "Medium Full Set": 120,
-  "Short Full Set": 90,
-  "Oval/Almond Medium": 150,
-  "Oval Faded French (Medium)": 165,
-  "Coffin": 120,
-  "Nail Overlay (Short)": 75,
-  "Overlay & Gel Polish": 150,
-  "Refill & Gel Polish": 105,
-  "Refill My Work (2–3 Weeks)": 60,
-  "Reshape & Cutdown Nails": 30,
-  "Acrylic All Toes": 90,
-  "Acrylic Big Toes": 45,
-  "Fix Acrylic Toes": 30,
-  "Refill Toes": 45,
-  "Gel X (Long)": 135,
-  "Gel X (Medium)": 120,
-  "Rebalanced Structured Gel": 105,
-  "Soak Off Acrylic Fingers & Clean Up": 45,
-  "Soak Off Toes": 15,
-  "Gem Application": 10,
-  "Hair Brush": 10
-};
     
   </script>
 </body>
