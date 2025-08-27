@@ -466,12 +466,14 @@
 <div id="myBookingsContent"></div>
 </div>
 </div>
-<!-- ✅ Booking Section -->
+
+<!-- Updated Booking Section -->
 <div class="content-section" id="bookingSection">
 <h1>BOOK APPOINTMENT</h1>
 <form onsubmit="submitBooking(event)">
 <label for="name">Name:</label>
 <input id="name" required="" type="text"/>
+
 <label for="phone">Phone Number:</label>
 <input 
   id="phone" 
@@ -481,69 +483,95 @@
   placeholder="eg... (876) 123-4567" 
   required 
 />
+
 <label for="date">Preferred Date:</label>
 <input id="date" min="" onchange="loadAvailableSlots()" required="" type="date"/>
-<!-- ✅ Time slots will appear here -->
+
+<!-- Time slots will appear here -->
 <label for="selectedTime">Available Times:</label>
 <select id="selectedTime" required="" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
 <option value="">COMPLETE FORM TO SEE AVAILABLE SLOTS</option>
 </select>
-<label for="pedicureType">Select Pedicure Type:</label>
-<select id="pedicureType" onchange="showEstimateTime(); loadAvailableSlots();">
+
+<!-- Manicure & Pedicure Services -->
+<label for="manicurePedicureType">Manicure & Pedicure:</label>
+<select id="manicurePedicureType" onchange="showEstimateTime(); loadAvailableSlots();">
 <option value="NONE">NONE</option>
-<option value="Regular Pedicure">Regular Pedicure</option>
-<option value="Spa Pedicure">Spa Pedicure</option>
-<option value="Deluxe Pedicure">Deluxe Pedicure</option>
-<option value="Gel Pedicure">Gel Pedicure</option>
-<option value="Paraffin Pedicure">Paraffin Pedicure</option>
-<option value="Hot Stone Pedicure">Hot Stone Pedicure</option>
-<option value="French Pedicure">French Pedicure</option>
-<option value="Shellac Pedicure">Shellac Pedicure</option>
-<option value="Fish Pedicure">Fish Pedicure</option>
-<option value="Athletic Pedicure">Athletic Pedicure</option>
+<option value="Female Manicure">Female Manicure — $2,000</option>
+<option value="Female Pedicure">Female Pedicure — $3,000</option>
+<option value="Men's Manicure">Men's Manicure — $2,000</option>
+<option value="Men's Pedicure">Men's Pedicure — $5,000</option>
 </select>
-<label for="manicureType">Select Manicure Type:</label>
-<select id="manicureType" onchange="showEstimateTime(); loadAvailableSlots();">
+
+<!-- Polish & Art Services -->
+<label for="polishArtType">Polish & Art:</label>
+<select id="polishArtType" onchange="showEstimateTime(); loadAvailableSlots();">
 <option value="NONE">NONE</option>
-<option value="Regular Manicure">Regular Manicure</option>
-<option value="Spa Manicure">Spa Manicure</option>
-<option value="Deluxe Manicure">Deluxe Manicure</option>
-<option value="Gel Manicure">Gel Manicure</option>
-<option value="Paraffin Manicure">Paraffin Manicure</option>
-<option value="French Manicure">French Manicure</option>
-<option value="Shellac Manicure">Shellac Manicure</option>
-<option value="Hot Oil Manicure">Hot Oil Manicure</option>
-<option value="Acrylic Powder Manicure">Acrylic Powder Manicure</option>
-<option value="Athletic Manicure">Athletic Manicure</option>
+<option value="Gel Polish Fingers">Gel Polish Fingers — $3,000</option>
+<option value="Gel Polish Toes">Gel Polish Toes — $2,000</option>
+<option value="French Toes">French Toes — $2,500</option>
+<option value="Hand Painted French">Hand Painted French — $2,000</option>
+<option value="Nail Art">Nail Art — $300</option>
 </select>
-<label for="nailExtensionType">Select Nail Extension Shape:</label>
-<select id="nailExtensionType" onchange="showExtensionLengthOptions(); loadAvailableSlots();">
+
+<!-- Acrylic Services -->
+<label for="acrylicType">Acrylic (Hands & Toes):</label>
+<select id="acrylicType" onchange="showEstimateTime(); loadAvailableSlots();">
 <option value="NONE">NONE</option>
-<option value="Almond">Almond</option>
-<option value="Stiletto">Stiletto</option>
-<option value="Square">Square</option>
-<option value="Coffin">Coffin</option>
-<option value="Oval">Oval</option>
+<option value="XL Full Set">XL Full Set — $8,000</option>
+<option value="Long Full Set">Long Full Set — $7,000</option>
+<option value="Medium Full Set">Medium Full Set — $6,000</option>
+<option value="Short Full Set">Short Full Set — $5,000</option>
+<option value="Oval/Almond Medium">Oval/Almond Medium — $7,000</option>
+<option value="Oval Faded French (Medium)">Oval Faded French (Medium) — $7,500</option>
+<option value="Coffin">Coffin — $6,000</option>
+<option value="Nail Overlay (Short)">Nail Overlay (Short) — $4,500</option>
+<option value="Overlay & Gel Polish">Overlay & Gel Polish — $7,000</option>
+<option value="Refill & Gel Polish">Refill & Gel Polish — $5,500</option>
+<option value="Refill My Work (2–3 Weeks)">Refill My Work (2–3 Weeks) — $3,000</option>
+<option value="Reshape & Cutdown Nails">Reshape & Cutdown Nails — $1,200</option>
+<option value="Acrylic All Toes">Acrylic All Toes — $4,000</option>
+<option value="Acrylic Big Toes">Acrylic Big Toes — $2,500</option>
+<option value="Fix Acrylic Toes">Fix Acrylic Toes — $1,500</option>
+<option value="Refill Toes">Refill Toes — $2,000</option>
 </select>
-<div id="extensionLengthContainer" style="display: none; margin-top: 15px;">
-<label for="extensionLength">Select Length:</label>
-<select id="extensionLength" onchange="loadAvailableSlots()">
-<option value="LONG">LONG</option>
-<option value="MEDIUM">MEDIUM</option>
-<option value="SHORT">SHORT</option>
+
+<!-- Gel Services -->
+<label for="gelType">Gel Services:</label>
+<select id="gelType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="Gel X (Long)">Gel X (Long) — $7,500</option>
+<option value="Gel X (Medium)">Gel X (Medium) — $6,500</option>
+<option value="Rebalanced Structured Gel">Rebalanced Structured Gel — $5,500</option>
 </select>
-</div>
+
+<!-- Other Services -->
+<label for="otherType">Other Services:</label>
+<select id="otherType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="Soak Off Acrylic Fingers & Clean Up">Soak Off Acrylic Fingers & Clean Up — $1,500</option>
+<option value="Soak Off Toes">Soak Off Toes — $500</option>
+<option value="Gem Application">Gem Application — $300</option>
+<option value="Hair Brush">Hair Brush — $300</option>
+</select>
+
 <p id="estimateTimeMessage" style="color: #FE5DC7; font-weight: bold;"></p>
+
 <div style="margin: 15px 0; display: flex; align-items: center;">
 <input id="lateAgreement" required="" style="margin-right: 3px;" type="checkbox"/>
 <label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
         I agree to make an online deposit of <strong>$4,000 (JMD)</strong> within the next 48 Hours to secure my booking.
       </label>
 </div>
+
 <button type="submit">Book Now</button>
 </form>
 <p id="bookingMessage"></p>
 </div>
+
+
+
+    
 <div class="content-section" id="reviewsSection">
 <h1 style="text-align:center; color:#FE5DC7;">CLIENT REVIEWS</h1>
 <div id="reviewPrompt" style="display:none; max-width:500px; margin:20px auto; 
