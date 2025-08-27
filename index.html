@@ -869,98 +869,43 @@ const businessHours = {
 };
 
 function showEstimateTime() {
-    const pedicureType = document.getElementById('pedicureType').value;
-    const manicureType = document.getElementById('manicureType').value;
+    const manicurePedicure = document.getElementById('manicurePedicureType').value;
+    const polishArt = document.getElementById('polishArtType').value;
+    const acrylic = document.getElementById('acrylicType').value;
+    const gel = document.getElementById('gelType').value;
+    const other = document.getElementById('otherType').value;
     const estimateMessage = document.getElementById('estimateTimeMessage');
 
-    // Default message when no type is selected
-    if (pedicureType === 'NONE' && manicureType === 'NONE') {
+    // Check if no services are selected
+    if (manicurePedicure === 'NONE' && polishArt === 'NONE' && acrylic === 'NONE' && gel === 'NONE' && other === 'NONE') {
         estimateMessage.innerHTML = '';
         return;
     }
 
-    let timeEstimate = '';
+    let totalDuration = 0;
 
-    // Set estimated time based on pedicure type
-    if (pedicureType !== 'NONE') {
-        switch (pedicureType) {
-            case 'Regular Pedicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'Spa Pedicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Deluxe Pedicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Gel Pedicure':
-                timeEstimate = 'Approximately 2 hours';
-                break;
-            case 'Paraffin Pedicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'Hot Stone Pedicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'French Pedicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'Shellac Pedicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Fish Pedicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'Athletic Pedicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            default:
-                timeEstimate = 'No estimate available';
+    // Add durations for selected services
+    [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+        if (service && service !== 'NONE') {
+            totalDuration += serviceDurations[service] || 0;
         }
-    }
+    });
 
-    // Set estimated time based on manicure type
-    if (manicureType !== 'NONE') {
-        switch (manicureType) {
-            case 'Regular Manicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'Spa Manicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Deluxe Manicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Gel Manicure':
-                timeEstimate = 'Approximately 2 hours';
-                break;
-            case 'Paraffin Manicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'French Manicure':
-                timeEstimate = 'Approximately 1 hour';
-                break;
-            case 'Shellac Manicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Hot Oil Manicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            case 'Acrylic Powder Manicure':
-                timeEstimate = 'Approximately 2 hours';
-                break;
-            case 'Athletic Manicure':
-                timeEstimate = 'Approximately 1.5 hours';
-                break;
-            default:
-                timeEstimate = 'No estimate available';
+    // Display estimated time
+    if (totalDuration > 0) {
+        const hours = Math.floor(totalDuration / 60);
+        const minutes = totalDuration % 60;
+        let timeStr = '';
+        if (hours > 0) timeStr += `${hours} hour${hours > 1 ? 's' : ''}`;
+        if (minutes > 0) {
+            if (timeStr) timeStr += ' and ';
+            timeStr += `${minutes} minute${minutes > 1 ? 's' : ''}`;
         }
+        estimateMessage.innerHTML = `Estimated Duration: Approximately ${timeStr}`;
+    } else {
+        estimateMessage.innerHTML = '';
     }
-
-    // Display the estimated time in the paragraph
-    estimateMessage.innerHTML = `Estimated Time: ${timeEstimate}`;
 }
-
 
     function normalizeTimeStr(timeStr) {
   if (!timeStr) return null;
@@ -1057,25 +1002,15 @@ function submitBooking(event) {
     return;
   }
 
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const date = document.getElementById('date').value;
-  const time = document.getElementById('selectedTime').value;
+  // Get selected services from all categories
+const services = getSelectedServices();
 
-  const pedicureType = document.getElementById('pedicureType').value;
-  const manicureType = document.getElementById('manicureType').value;
-  const nailExtensionType = document.getElementById('nailExtensionType').value;
-
-  let extensionLength = '';
-  if (nailExtensionType !== 'NONE') {
-    extensionLength = document.getElementById('extensionLength').value;
-  }
-
-  let service = `Pedicure: ${pedicureType}, Manicure: ${manicureType}`;
-  if (nailExtensionType !== 'NONE') {
-    service += `, Nail Extension: ${nailExtensionType} (${extensionLength})`;
-  }
-
+// Check if at least one service is selected
+if (services === 'No services selected') {
+  alert('Please select at least one service before booking.');
+  return;
+}
+    
   const bookingNumber = generateBookingNumber(name);
   const duration = getSelectedServiceDuration();
 
@@ -1626,19 +1561,24 @@ const serviceDurations = {
 };
 
 function getSelectedServiceDuration() {
-  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
-  const manicure = document.getElementById('manicureType')?.value || "NONE";
-  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
-
-  let duration = 0;
-
-  if (pedicure !== "NONE") duration += serviceDurations[pedicure] || 60;
-  if (manicure !== "NONE") duration += serviceDurations[manicure] || 60;
-  if (nailExtension !== "NONE") duration += 60; // default for extensions
-
-  return duration || 60; // fallback
+  const manicurePedicure = document.getElementById('manicurePedicureType').value;
+  const polishArt = document.getElementById('polishArtType').value;
+  const acrylic = document.getElementById('acrylicType').value;
+  const gel = document.getElementById('gelType').value;
+  const other = document.getElementById('otherType').value;
+  
+  let totalDuration = 0;
+  
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      totalDuration += serviceDurations[service] || 0;
+    }
+  });
+  
+  return totalDuration || 60; // fallback to 60 minutes if nothing selected
 }
 
+    
 // ✅ FINAL version — only one loadAvailableSlots() now
 async function loadAvailableSlots() {
   const date = document.getElementById('date').value;
@@ -1774,7 +1714,60 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+// Get selected services for booking
+function getSelectedServices() {
+  const manicurePedicure = document.getElementById('manicurePedicureType').value;
+  const polishArt = document.getElementById('polishArtType').value;
+  const acrylic = document.getElementById('acrylicType').value;
+  const gel = document.getElementById('gelType').value;
+  const other = document.getElementById('otherType').value;
+  
+  let services = [];
+  
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      services.push(service);
+    }
+  });
+  
+  return services.length > 0 ? services.join(', ') : 'No services selected';
+}
 
+// Service duration estimates (in minutes)
+const serviceDurations = {
+  "Female Manicure": 45,
+  "Female Pedicure": 60,
+  "Men's Manicure": 45,
+  "Men's Pedicure": 75,
+  "Gel Polish Fingers": 30,
+  "Gel Polish Toes": 30,
+  "French Toes": 45,
+  "Hand Painted French": 30,
+  "Nail Art": 15,
+  "XL Full Set": 180,
+  "Long Full Set": 150,
+  "Medium Full Set": 120,
+  "Short Full Set": 90,
+  "Oval/Almond Medium": 150,
+  "Oval Faded French (Medium)": 165,
+  "Coffin": 120,
+  "Nail Overlay (Short)": 75,
+  "Overlay & Gel Polish": 150,
+  "Refill & Gel Polish": 105,
+  "Refill My Work (2–3 Weeks)": 60,
+  "Reshape & Cutdown Nails": 30,
+  "Acrylic All Toes": 90,
+  "Acrylic Big Toes": 45,
+  "Fix Acrylic Toes": 30,
+  "Refill Toes": 45,
+  "Gel X (Long)": 135,
+  "Gel X (Medium)": 120,
+  "Rebalanced Structured Gel": 105,
+  "Soak Off Acrylic Fingers & Clean Up": 45,
+  "Soak Off Toes": 15,
+  "Gem Application": 10,
+  "Hair Brush": 10
+};
     
   </script>
 </body>
