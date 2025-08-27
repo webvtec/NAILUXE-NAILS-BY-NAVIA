@@ -432,13 +432,13 @@ box-sizing: border-box;
     text-align:center;
     box-shadow:0 4px 10px rgba(0,0,0,0.2);
   ">
-    <h3 style="margin-bottom:15px;">UPDATE DEPOSIT STATUS</h3>
+    <h3 style="margin-bottom:15px;">UPDATE PAYMENT STATUS</h3>
     
     <label style="display:block; text-align:left; margin:10px 0;">
-      <input type="radio" name="depositChoice" value="Made"> 💵 $4,000 DEPOSIT MADE
+      <input type="radio" name="depositChoice" value="Made"> 💵 PAYMENT MADE
     </label>
     <label style="display:block; text-align:left; margin:10px 0;">
-      <input type="radio" name="depositChoice" value="No"> NO DEPOSIT MADE
+      <input type="radio" name="depositChoice" value="No"> NO PAYMENT MADE
     </label>
 
     <div style="margin-top:20px;">
@@ -684,13 +684,13 @@ box-sizing: border-box;
             <p><strong>Date:</strong> ${booking.date}</p>
             <p><strong>Time:</strong> ${booking.time}</p>
             <p><strong>Service:</strong> ${booking.service}</p>
-            <p><strong>💵 Deposit:</strong> ${booking.deposit || "No"}</p>
+            <p><strong>💵 Payment:</strong> ${booking.deposit || "No"}</p>
             <p><strong>Status:</strong> <span class="status-label ${booking.status === 'Completed' ? 'status-completed' : booking.status === 'Not Completed' ? 'status-not' : 'status-none'}">
             ${booking.status || "Not Set"}
             </span></p>
             <div class="action-buttons">
             <button class="cancel-btn" onclick="cancelReservation('${booking.id}')">Cancel</button>
-            <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Deposit</button>
+            <button class="deposit-btn" onclick="updateDeposit('${booking.id}')">Payment</button>
             ${title === "Today" ? `<button class="status-btn" onclick="updateStatus('${booking.id}')">Status</button>` : ""}
             </div>
           </div>
