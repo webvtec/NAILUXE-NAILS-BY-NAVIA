@@ -493,6 +493,24 @@ box-sizing: border-box;
   </div>
 </div>
 
+<div id="toast" style="
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  background-color: #4CAF50;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 14px;
+  position: fixed;
+  z-index: 3000;
+  left: 50%;
+  bottom: 30px;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.5s, bottom 0.5s;
+"></div>
 
   
   <script>
@@ -1093,7 +1111,7 @@ function updateDeposit(bookingId) {
 function confirmDeposit() {
   const choice = document.querySelector('input[name="depositChoice"]:checked');
   if (!choice) {
-    alert("Please select an option.");
+    showToast("⚠️ Please select an option.", false);
     return;
   }
 
@@ -1104,13 +1122,14 @@ function confirmDeposit() {
   })
   .then(() => {
     closeDepositModal();
-    alert("Deposit status updated to: " + depositValue);
+    showToast(`✅ Payment status set to: ${depositValue}`);
   })
   .catch(error => {
     console.error("Error updating deposit:", error);
-    alert("Failed to update deposit. Please try again.");
+    showToast("❌ Failed to update payment. Please try again.", false);
   });
 }
+
 
 function closeDepositModal() {
   document.getElementById('depositModal').style.display = 'none';
@@ -1152,6 +1171,22 @@ function confirmStatus() {
 function closeStatusModal() {
   document.getElementById('statusModal').style.display = 'none';
   currentStatusBookingId = null;
+}
+
+
+    function showToast(message, success = true) {
+  const toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.style.backgroundColor = success ? "#4CAF50" : "#e53935"; // green or red
+  toast.style.visibility = "visible";
+  toast.style.opacity = "1";
+  toast.style.bottom = "50px";
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.bottom = "30px";
+    setTimeout(() => { toast.style.visibility = "hidden"; }, 500);
+  }, 3000);
 }
 
 
