@@ -1567,19 +1567,6 @@ function getBufferForSelectedServices() {
   return buffer;
 }
 
-// ✅ Service durations in minutes
-const serviceDurations = {
-  "Regular Pedicure": 60,
-  "Spa Pedicure": 90,
-  "Deluxe Pedicure": 90,
-  "Gel Pedicure": 120,
-  "Regular Manicure": 60,
-  "Spa Manicure": 90,
-  "Deluxe Manicure": 90,
-  "Gel Manicure": 120,
-  "Acrylic Powder Manicure": 120,
-  "NONE": 0
-};
 
 function getSelectedServiceDuration() {
   const manicurePedicure = document.getElementById('manicurePedicureType').value;
