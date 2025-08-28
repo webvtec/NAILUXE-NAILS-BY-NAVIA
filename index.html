@@ -1175,6 +1175,21 @@ function closeBookingModal() {
 }
 
 
+    document.addEventListener('DOMContentLoaded', function () {
+  showSection('gallerySection');
+  loadGallery('galleryDisplay');
+  
+  // Initialize reviews section immediately
+  firebase.auth().onAuthStateChanged(user => {
+    currentUser = user || null;
+    // Load reviews for the current user state
+    if (document.getElementById('reviewsSection')) {
+      loadReviews(user);
+    }
+  });
+});
+    
+
 function showSection(sectionId) {
   document.querySelectorAll('.content-section').forEach(section =>
     section.classList.remove('active')
@@ -1184,9 +1199,15 @@ function showSection(sectionId) {
   if (sectionId === 'gallerySection') {
     loadGallery('galleryDisplay');
   } else if (sectionId === 'reviewsSection') {
-    // Wait for auth state before loading reviews
+    // Force load reviews immediately, regardless of auth state
+    const user = firebase.auth().currentUser;
+    loadReviews(user);
+    
+    // Also set up auth state listener for future changes
     firebase.auth().onAuthStateChanged(user => {
-      loadReviews(user);
+      if (document.getElementById('reviewsSection').classList.contains('active')) {
+        loadReviews(user);
+      }
     });
   }
 }
@@ -1275,47 +1296,71 @@ function formatReviewTime(timestamp) {
 
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
-  container.innerHTML = "<p style='text-align:center; color:#666;'>Loading reviews...</p>";
+  const reviewPrompt = document.getElementById('reviewPrompt');
+  
+  // Show loading state
+  container.innerHTML = "<p style='text-align:center; color:#666; padding:20px;'>Loading reviews...</p>";
 
-  db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-    container.innerHTML = ''; // Clear loading message
-    
-    if (snapshot.empty) {
-      container.innerHTML = "<p style='text-align:center; color:#666;'>No reviews yet. Be the first to leave a review!</p>";
-      return;
-    }
+  // Check if user has recent bookings to show review prompt
+  if (user) {
+    db.collection('bookings')
+      .where("uid", "==", user.uid)
+      .orderBy('timestamp', 'desc')
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (!snapshot.empty) {
+          reviewPrompt.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.log("Error checking bookings for review prompt:", error);
+      });
+  }
 
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const isOwner = user && d.uid === user.uid;
-
-      // Format time display
-      const dateString = formatReviewTime(d.timestamp);
-
-      // Star rating display
-      let stars = '';
-      for (let i = 1; i <= 5; i++) {
-        stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+  // Load reviews
+  db.collection('reviews')
+    .orderBy('timestamp', 'desc')
+    .get()
+    .then(snapshot => {
+      container.innerHTML = ''; // Clear loading message
+      
+      if (snapshot.empty) {
+        container.innerHTML = "<p style='text-align:center; color:#666; padding:20px;'>No reviews yet. Be the first to leave a review!</p>";
+        return;
       }
 
-      container.innerHTML += `
-        <div style="background:#fff; border:1px solid #eee; padding:15px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <strong style="color:#61134A;">${d.name}</strong>
-            <small style="color:#999; font-style:italic;">${dateString}</small>
-          </div>
-          <div style="margin-bottom:8px;">${stars}</div>
-          <div style="color:#333; line-height:1.4;">${d.comment}</div>
-          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-size:12px;">Delete</button>` : ''}
-        </div>
-      `;
-    });
-  }, error => {
-    console.error("Error loading reviews:", error);
-    container.innerHTML = "<p style='text-align:center; color:red;'>Error loading reviews. Please try again later.</p>";
-  });
-}
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const isOwner = user && d.uid === user.uid;
 
+        // Format time display
+        const dateString = formatReviewTime(d.timestamp);
+
+        // Star rating display
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+          stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+        }
+
+        container.innerHTML += `
+          <div style="background:#fff; border:1px solid #eee; padding:15px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+              <strong style="color:#61134A;">${d.name}</strong>
+              <small style="color:#999; font-style:italic;">${dateString}</small>
+            </div>
+            <div style="margin-bottom:8px;">${stars}</div>
+            <div style="color:#333; line-height:1.4;">${d.comment}</div>
+            ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-size:12px;">Delete</button>` : ''}
+          </div>
+        `;
+      });
+    })
+    .catch(error => {
+      console.error("Error loading reviews:", error);
+      container.innerHTML = "<p style='text-align:center; color:red; padding:20px;'>Error loading reviews. Please try again later.</p>";
+    });
+}
     
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
