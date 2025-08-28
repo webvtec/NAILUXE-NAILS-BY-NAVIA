@@ -598,7 +598,7 @@
 <!-- Container where reviews will be loaded -->
 <div id="reviewsContainer" style="max-width:100%; margin:20px auto;"></div>
 </div>
-
+    
 <!-- Admin Login Modal -->
 <div id="adminLoginModal" style="
   display:none;
@@ -665,7 +665,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 firebase.auth().onAuthStateChanged(user => {
-  currentUser = user || null;
+  currentUser = user || null; // Store user if logged in, null if not
   loadReviews(currentUser);
 });
 
@@ -1344,7 +1344,7 @@ if (!user) {
     });
   }
 });
-
+    
 
 function logoutUser() {
   firebase.auth().signOut()
