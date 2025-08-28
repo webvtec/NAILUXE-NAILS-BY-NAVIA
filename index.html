@@ -656,7 +656,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCI24steVBjoIgV68Wkr_OzddXzwHZjnMs",
   authDomain: "nailuxe-nailz-by-navia.firebaseapp.com",
   projectId: "nailuxe-nailz-by-navia",
-  storageBucket: "nailuxe-nailz-by-navia.appspot.com",
+  storageBucket: "nailuxe-nailz-by-navia.firebasestorage.app",
   messagingSenderId: "937826104665",
   appId: "1:937826104665:web:9eea9808ccce54c1cd8848"
 };
@@ -1274,42 +1274,55 @@ function formatReviewTime(timestamp) {
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 }
 
-// 📖 Load reviews
+// 📖 Load reviews (patched to handle missing timestamps)
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
   if (!container) return;
   container.innerHTML = "<p>Loading reviews...</p>";
 
-  db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No reviews yet.</p>";
-      return;
-    }
+  db.collection('reviews')
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snapshot => {
+      container.innerHTML = '';
 
-    container.innerHTML = '';
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const isOwner = user && d.uid === user.uid;
-      const dateString = formatReviewTime(d.timestamp);
-
-      let stars = '';
-      for (let i = 1; i <= 5; i++) {
-        stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+      if (snapshot.empty) {
+        container.innerHTML = "<p>No reviews yet.</p>";
+        return;
       }
 
-      container.innerHTML += `
-        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px; border-radius:6px;">
-          <div><strong>${d.name}</strong> 
-            <small style="color:gray; font-style:italic; margin-left:8px;">${dateString}</small>
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const isOwner = user && d.uid === user.uid;
+
+        // ✅ Safe timestamp handling
+        let dateString = "Unknown";
+        if (d.timestamp && d.timestamp.toDate) {
+          dateString = formatReviewTime(d.timestamp);
+        }
+
+        // ⭐ Stars rendering
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+          stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+        }
+
+        container.innerHTML += `
+          <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px; border-radius:6px;">
+            <div><strong>${d.name || "Anonymous"}</strong> 
+              <small style="color:gray; font-style:italic; margin-left:8px;">${dateString}</small>
+            </div>
+            <div>${stars}</div>
+            <div>${d.comment || ""}</div>
+            ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px;">Delete</button>` : ''}
           </div>
-          <div>${stars}</div>
-          <div>${d.comment}</div>
-          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px;">Delete</button>` : ''}
-        </div>
-      `;
+        `;
+      });
+    }, error => {
+      console.error("Error loading reviews:", error);
+      container.innerHTML = "<p style='color:red;'>Failed to load reviews. Please try again later.</p>";
     });
-  });
 }
+
 
 // ❌ Delete review
 function deleteReview(docId) {
