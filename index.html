@@ -1169,6 +1169,166 @@ function closeBookingModal() {
 }
 
 
+let selectedRating = 0;
+
+// Star rating UI logic
+document.querySelectorAll('#starRating span').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.getAttribute('data-value'));
+    document.querySelectorAll('#starRating span').forEach(s => {
+      s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+    });
+  });
+});
+
+// Submit review
+document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+        window.location.href = 'login.html';
+    }
+    return;
+}
+
+  const name = document.getElementById('reviewName').value.trim();
+  const comment = document.getElementById('reviewComment').value.trim();
+  const msg = document.getElementById('reviewSubmitMsg');
+
+  if (!name || !comment || selectedRating === 0) {
+    msg.style.color = "red";
+    msg.textContent = "Please fill all fields and select a star rating.";
+    return;
+  }
+
+  try {
+    await db.collection('reviews').add({
+      name,
+      comment,
+      rating: selectedRating,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      uid: user.uid
+    });
+
+    msg.style.color = "green";
+    msg.textContent = "Thank you for your review!";
+    document.getElementById('reviewForm').reset();
+    selectedRating = 0;
+    document.querySelectorAll('#starRating span').forEach(s => s.style.color = '#ccc');
+
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    msg.style.color = "red";
+    msg.textContent = "Error submitting review.";
+  }
+});
+
+function formatReviewTime(timestamp) {
+  if (!timestamp || !timestamp.toDate) return '';
+
+  const now = new Date();
+  const reviewDate = timestamp.toDate();
+  const diffMs = now - reviewDate;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHours = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
+
+  if (diffSec < 60) return "Just now";
+  if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffWeeks < 5) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+  if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+  return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+}
+
+
+function loadReviews(user) {
+  const container = document.getElementById('reviewsContainer');
+  container.innerHTML = "<p>Loading reviews...</p>";
+
+  db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    if (snapshot.empty) {
+      container.innerHTML = "<p>No reviews yet.</p>";
+      return;
+    }
+
+    container.innerHTML = '';
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const isOwner = user && d.uid === user.uid;
+
+      // Format time display
+      const dateString = formatReviewTime(d.timestamp);
+
+      // Star rating display
+      let stars = '';
+      for (let i = 1; i <= 5; i++) {
+        stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+      }
+
+      container.innerHTML += `
+        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
+          <div><strong>${d.name}</strong> <small style="color:gray; font-style:italic;">${dateString}</small></div>
+          <div>${stars}</div>
+          <div>${d.comment}</div>
+          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
+        </div>
+      `;
+    });
+  });
+}
+
+
+function deleteReview(docId) {
+  const user = firebase.auth().currentUser;
+if (!user) {
+    window.location.href = 'login.html'; // send them to your login form
+    return;
+}
+
+  db.collection('reviews').doc(docId).get().then(doc => {
+    if (!doc.exists) {
+      alert("Review not found.");
+      return;
+    }
+
+    const data = doc.data();
+    if (data.uid !== user.uid) {
+      alert("You can only delete your own reviews.");
+      return;
+    }
+
+    // If the review belongs to the current user, delete it
+    db.collection('reviews').doc(docId).delete()
+      .then(() => alert("Review deleted."))
+      .catch(error => alert("Failed to delete review: " + error.message));
+  }).catch(error => {
+    alert("Error fetching review: " + error.message);
+  });
+}
+
+    document.addEventListener('DOMContentLoaded', function () {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      firebase.auth().signOut()
+        .then(() => {
+          window.location.href = 'login.html';
+        })
+        .catch((error) => {
+          console.error("Logout error:", error);
+          alert("Failed to log out.");
+        });
+    });
+  }
+});
 
 
 
