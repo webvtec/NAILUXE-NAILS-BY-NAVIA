@@ -1268,41 +1268,135 @@ function formatReviewTime(timestamp) {
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 }
 
+// Replace your existing loadReviews function with this improved version:
+
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
-  if (!container) return;
+  if (!container) {
+    console.error('Reviews container not found');
+    return;
+  }
 
-  container.innerHTML = "<p>Loading reviews...</p>";
+  // Show loading state
+  container.innerHTML = "<p style='text-align:center; color:#666;'>Loading reviews...</p>";
 
-  db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No reviews yet.</p>";
-      return;
-    }
-
-    container.innerHTML = '';
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const isOwner = user && d.uid === user.uid;
-
-      const dateString = formatReviewTime(d.timestamp);
-
-      let stars = '';
-      for (let i = 1; i <= 5; i++) {
-        stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+  // Load reviews regardless of user authentication status
+  db.collection('reviews')
+    .orderBy('timestamp', 'desc')
+    .get() // Use get() instead of onSnapshot() for more reliable initial load
+    .then(snapshot => {
+      if (snapshot.empty) {
+        container.innerHTML = "<p style='text-align:center; color:#666;'>No reviews yet. Be the first to leave a review!</p>";
+        return;
       }
 
-      container.innerHTML += `
-        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
-          <div><strong>${d.name}</strong> <small style="color:gray; font-style:italic;">${dateString}</small></div>
-          <div>${stars}</div>
-          <div>${d.comment}</div>
-          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
+      container.innerHTML = '';
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const isOwner = user && d.uid === user.uid;
+
+        const dateString = formatReviewTime(d.timestamp);
+
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+          stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+        }
+
+        container.innerHTML += `
+          <div style="background:#fff; border:1px solid #eee; padding:15px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <div style="margin-bottom:8px;">
+              <strong>${d.name || 'Anonymous'}</strong> 
+              <small style="color:gray; font-style:italic; margin-left:10px;">${dateString}</small>
+            </div>
+            <div style="margin-bottom:8px;">${stars}</div>
+            <div style="line-height:1.4;">${d.comment || ''}</div>
+            ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-size:12px;">Delete</button>` : ''}
+          </div>
+        `;
+      });
+    })
+    .catch(error => {
+      console.error("Error loading reviews:", error);
+      container.innerHTML = `
+        <div style="text-align:center; padding:20px;">
+          <p style="color:red;">Error loading reviews.</p>
+          <p style="color:#666; font-size:14px;">Please check your internet connection and try again.</p>
+          <button onclick="loadReviews(currentUser)" style="background:#61134A; color:white; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;">
+            Retry
+          </button>
         </div>
       `;
     });
-  });
 }
+
+// Also update your showSection function to ensure reviews load properly:
+function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(section =>
+    section.classList.remove('active')
+  );
+  document.getElementById(sectionId).classList.add('active');
+
+  if (sectionId === 'gallerySection') {
+    loadGallery('galleryDisplay');
+  } else if (sectionId === 'reviewsSection') {
+    // Add a small delay to ensure the section is visible before loading
+    setTimeout(() => {
+      loadReviews(currentUser);
+    }, 100);
+  }
+}
+
+// Add this debugging function to test your Firebase connection:
+function testFirebaseConnection() {
+  console.log('Testing Firebase connection...');
+  db.collection('reviews').limit(1).get()
+    .then(snapshot => {
+      console.log('Firebase connection successful');
+      console.log('Number of reviews found:', snapshot.size);
+    })
+    .catch(error => {
+      console.error('Firebase connection failed:', error);
+    });
+}
+
+// Call this in your browser console to test
+// testFirebaseConnection();
+
+// Ensure reviews load when the page first loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Wait for Firebase to initialize
+  setTimeout(() => {
+    if (document.getElementById('reviewsSection').classList.contains('active')) {
+      loadReviews(currentUser);
+    }
+  }, 1000);
+});
+
+// Add this debugging function to test your Firebase connection:
+function testFirebaseConnection() {
+  console.log('Testing Firebase connection...');
+  db.collection('reviews').limit(1).get()
+    .then(snapshot => {
+      console.log('Firebase connection successful');
+      console.log('Number of reviews found:', snapshot.size);
+    })
+    .catch(error => {
+      console.error('Firebase connection failed:', error);
+    });
+}
+
+// Call this in your browser console to test
+// testFirebaseConnection();
+
+// Ensure reviews load when the page first loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Wait for Firebase to initialize
+  setTimeout(() => {
+    if (document.getElementById('reviewsSection').classList.contains('active')) {
+      loadReviews(currentUser);
+    }
+  }, 1000);
+});
 
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
