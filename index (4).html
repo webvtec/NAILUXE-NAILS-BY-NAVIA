@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NAILUXE NAILZ BY NAVIA</title>
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    body {
+      font-family: 'Zilla Slab', serif;
+      margin: 0;
+      padding: 0;
+      background-color: #FFFFFF;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+    }
+
+    .header-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background-color: #FE5DC7;    /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .header-title {
+      font-family: 'Zilla Slab', serif;
+      font-size: 22px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #abecd6, #f9d423, #24c6dc, #abecd6);  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+      white-space: nowrap;
+      text-align: center;
+    }
+
+
+    .menu-button {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #61134A;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      color: #FF69B4;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      border: none;
+      border-radius: 0px;
+      cursor: pointer;
+      height: 48px;
+      width: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      padding: 0;
+    }
+
+    .menu {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      width: 150px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #98FF98;
+      padding: 20px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      height: auto;
+      min-height: 100px;
+      z-index: 999;
+    }
+
+    .menu.show {
+      transform: translateX(0);
+    }
+
+    .menu a {
+      display: block;
+      color: white;
+      margin-bottom: 15px;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    h1 {
+      text-align: center;
+      color: #FE5DC7;  /*COLOUR TO CHANGE TEXT ON REXIEWS PAGE (ALLOWED TO CHANGE FOR CLIENT)*/
+      margin-top: 80px;
+    }
+
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    form input,
+    form select,
+    form button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    form button {
+      background-color: #61134A;  /*COLOUR TO CHANGE BOOM NOW BUTTON (ALLOWED TO CHANGE FOR CLIENT)*/
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    form button:hover {
+      background-color: #61134A;
+    }
+
+    #bookingMessage {
+      text-align: center;
+      font-weight: bold;
+      color: green;
+      margin-top: 20px;
+    }
+
+    .gallery-category {
+      margin-top: 40px;
+    }
+
+    .gallery-category h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 22px;
+      color: #FE5DC7;  /*COLOUR TO CHANGE MAIN PAGE TEXTS (ALLOWED TO CHANGE FOR CLIENT)*/
+      text-transform: uppercase;
+    }
+
+    .gallery-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 10px;
+    }
+
+    .gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+    .gallery-grid img {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      height: 230px;
+      object-fit: cover;
+    }
+
+    .content-section {
+      display: none;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    .menu a.admin-button {
+      background-color: #6A0DAD;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: bold;
+      display: block;
+      margin: 50px auto 0;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-align: center;
+      width: fit-content;
+    }
+
+    .menu a.admin-button:hover {
+      background-color: #3700b3;
+    }
+
+    .location-button {
+      position: absolute;
+      right: 0px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #61134A;  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+      color: red;
+      border: none;
+      padding: 0;
+      border-radius: 0px;
+      cursor: pointer;
+      height: 48px;
+      width: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      text-decoration: none;
+    }
+
+        .opening-hours {
+  font-family: Arial, sans-serif;
+  padding: 8px 0;      /* Optional spacing */
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.opening-hours h3 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  color: #FE5DC7; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+}
+
+.opening-hours p {
+  font-size: 13px;
+  margin: 2px 0;
+  color: #FFFFFF;   /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+}
+
+.opening-hours p:last-child {
+  color: #FFFFFF; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+  font-weight: bold;
+}
+
+        .location-info {
+  font-family: Arial, sans-serif;
+  padding: 8px 0;     /* Optional spacing */
+}
+
+.location-info h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  color: #FE5DC7; /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
+}
+
+.location-info p {
+  font-size: 13px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8); /* Slightly lighter than title */
+}
+
+    .separator-line {
+  height: 2px;
+  background-color: #5B5B5B;
+  margin: 2px 0; /* Optional spacing */
+    }
+
+
+    /* Modal container */
+#myBookingsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none; /* default hidden */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Modal box */
+#myBookingsBox {
+  background: #fff;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;   /* ✅ prevent overflowing screen */
+  border-radius: 12px;
+  overflow-y: auto;   /* ✅ allow scrolling when content is tall */
+  position: relative;
+  padding: 20px;
+}
+
+/* Close button */
+#closeBookings {
+  position: sticky;   /* ✅ stays visible when scrolling */
+  top: 0;
+  float: right;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+    
+  </style>
+</head>
+<body>
+<div class="header-bar">
+<button class="menu-button" onclick="toggleMenu()">☰</button>
+<div class="header-title">NAILUXE NAILZ BY NAVIA</div>
+<a class="location-button" href="https://maps.app.goo.gl/T2eqba2KwhEGBfAH6">📍</a>
+</div>
+<!-- ✅ Gallery Section (Now Wrapped) -->
+<div class="content-section active" id="gallerySection">
+<h2 style="text-align:center; margin-top:60px;"></h2>
+<div id="galleryDisplay"></div>
+</div>
+<!-- ✅ Menu -->
+<div class="menu" id="menu">
+<a onclick="showSection('gallerySection'); closeMenu();">💅🏽 DESIGNS</a>
+<a onclick="showSection('bookingSection'); closeMenu();">📆 BOOKING</a>
+<a onclick="showSection('reviewsSection'); closeMenu();">⭐️ REVIEWS</a>
+<div class="sidebar">
+<!-- Opening Hours Section -->
+<div class="opening-hours">
+<h3>OPENING HOURS:</h3>
+<p>Monday - Friday: 9:00 AM - 6:00 PM</p>
+<p>Saturday: 10:00 AM - 4:00 PM</p>
+<p>Sunday: Closed</p>
+</div>
+<a class="admin-button" onclick="showUserBookings(); closeMenu();" style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:#61134A; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;">
+   MY BOOKINGS
+    </a>
+<a onclick="showPaymentInfo(); closeMenu();" 
+   style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:#61134A; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;"
+   href="javascript:void(0);">
+   PAYMENT INFO
+</a>
+    
+<!-- Another Separator Line -->
+<div class="separator-line"></div>
+    
+<div class="social-links" style="display:flex; justify-content:center; gap:35px; margin-top:25px;">
+<!-- Instagram -->
+<a href="https://www.instagram.com/nailz_by_navia?igsh=aGN4YTJ2cnUyNmhl" style="display:inline-block;" target="_blank">
+  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+    <defs>
+      <linearGradient id="instagramGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#ffc107"/>
+        <stop offset="25%" style="stop-color:#ff5722"/>
+        <stop offset="50%" style="stop-color:#e91e63"/>
+        <stop offset="75%" style="stop-color:#9c27b0"/>
+        <stop offset="100%" style="stop-color:#673ab7"/>
+      </linearGradient>
+    </defs>
+    <path fill="url(#instagramGradient)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+</a>
+
+<!-- TikTok -->
+<a href="https://www.tiktok.com/@tishay_nailpalace" target="_blank" style="display:inline-block;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 448 512">
+    <!-- Pink/Red shadow -->
+    <path fill="#ff0050" d="M448 209.91a210.06 210.06 0 0 1-122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14z" transform="translate(3, 3)"/>
+    
+    <!-- Cyan shadow -->
+    <path fill="#25f4ee" d="M448 209.91a210.06 210.06 0 0 1-122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14z" transform="translate(-3, -3)"/>
+    
+    <!-- Main white logo -->
+    <path fill="#ffffff" d="M448 209.91a210.06 210.06 0 0 1-122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14z"/>
+  </svg>
+</a>
+</div>
+
+
+</div>
+<!-- Another Separator Line -->
+<div class="separator-line"></div>
+<div class="location-info">
+<h3>LOCATION:</h3>
+<p>Shop #4, 1 Wesley road cheago plaza, Angellace beauty salon</p>
+</div>
+<!-- Another Separator Line -->
+<div class="separator-line"></div>
+<!-- Logout and Admin Buttons -->
+<a onclick="logoutUser(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:red; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; font-weight:bold;">
+       LOGOUT
+    </a>
+<a class="admin-button" onclick="login(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#61134A; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
+       ADMIN
+    </a>
+</div>
+</div>
+
+    <!-- Add this booking confirmation modal right after your existing modals -->
+<div id="bookingModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+">
+  <div style="
+    background: ;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 450px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    position: relative;
+  ">
+    <h3 id="bookingModalTitle" style="margin: 10px 0; color: #FE5DC7; text-align: center;">
+      Booking Confirmation
+    </h3>
+    <p id="bookingModalContent"></p>
+  </div>
+</div>
+
+    
+<!-- My Bookings Modal -->
+<div id="myBookingsModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+">
+<div id="myBookingsBox" style="
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    max-width:400px;
+    width:90%;
+    max-height:80vh;       /* ✅ keeps inside screen */
+    overflow-y:auto;       /* ✅ scroll only content */
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    position:relative;
+  ">
+<!-- Close Button -->
+<button onclick="closeMyBookings()" style="
+      position:sticky; top:0; right:0;
+      float:right;
+      background:#fff;
+      border:none;
+      font-size:24px;
+      cursor:pointer;
+      z-index:10001;
+    ">✖</button>
+<h3 style="margin:10px 0; color:#FE5DC7; text-align:center;">
+      My Last 5 Bookings
+    </h3>
+<div id="myBookingsContent"></div>
+</div>
+</div>
+
+<!-- Updated Booking Section -->
+<div class="content-section" id="bookingSection">
+<h1>BOOK APPOINTMENT</h1>
+<form onsubmit="submitBooking(event)">
+<label for="name">Name:</label>
+<input id="name" required="" type="text"/>
+
+<label for="phone">Phone Number:</label>
+<input 
+  id="phone" 
+  type="tel" 
+  inputmode="numeric" 
+  maxlength="14" 
+  placeholder="eg... (876) 123-4567" 
+  required 
+/>
+
+<label for="date">Preferred Date:</label>
+<input id="date" min="" onchange="loadAvailableSlots()" required="" type="date"/>
+
+<!-- Time slots will appear here -->
+<label for="selectedTime">Available Times:</label>
+<select id="selectedTime" required="" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
+<option value="">COMPLETE FORM TO SEE AVAILABLE SLOTS</option>
+</select>
+
+<!-- Manicure & Pedicure Services -->
+<label for="manicurePedicureType">Manicure & Pedicure:</label>
+<select id="manicurePedicureType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="Female Manicure">Female Manicure — $2,000</option>
+<option value="Female Pedicure">Female Pedicure — $3,000</option>
+<option value="Men's Manicure">Men's Manicure — $2,000</option>
+<option value="Men's Pedicure">Men's Pedicure — $5,000</option>
+</select>
+
+<!-- Polish & Art Services -->
+<label for="polishArtType">Polish & Art:</label>
+<select id="polishArtType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="Gel Polish Fingers">Gel Polish Fingers — $3,000</option>
+<option value="Gel Polish Toes">Gel Polish Toes — $2,000</option>
+<option value="French Toes">French Toes — $2,500</option>
+<option value="Hand Painted French">Hand Painted French — $2,000</option>
+<option value="Nail Art">Nail Art — $300</option>
+</select>
+
+<!-- Acrylic Services -->
+<label for="acrylicType">Acrylic (Hands & Toes):</label>
+<select id="acrylicType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="XL Full Set">XL Full Set — $8,000</option>
+<option value="Long Full Set">Long Full Set — $7,000</option>
+<option value="Medium Full Set">Medium Full Set — $6,000</option>
+<option value="Short Full Set">Short Full Set — $5,000</option>
+<option value="Oval/Almond Medium">Oval/Almond Medium — $7,000</option>
+<option value="Oval Faded French (Medium)">Oval Faded French (Medium) — $7,500</option>
+<option value="Coffin">Coffin — $6,000</option>
+<option value="Nail Overlay (Short)">Nail Overlay (Short) — $4,500</option>
+<option value="Overlay & Gel Polish">Overlay & Gel Polish — $7,000</option>
+<option value="Refill & Gel Polish">Refill & Gel Polish — $5,500</option>
+<option value="Refill My Work (2–3 Weeks)">Refill My Work (2–3 Weeks) — $3,000</option>
+<option value="Reshape & Cutdown Nails">Reshape & Cutdown Nails — $1,200</option>
+<option value="Acrylic All Toes">Acrylic All Toes — $4,000</option>
+<option value="Acrylic Big Toes">Acrylic Big Toes — $2,500</option>
+<option value="Fix Acrylic Toes">Fix Acrylic Toes — $1,500</option>
+<option value="Refill Toes">Refill Toes — $2,000</option>
+</select>
+
+<!-- Gel Services -->
+<label for="gelType">Gel Services:</label>
+<select id="gelType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="Gel X (Long)">Gel X (Long) — $7,500</option>
+<option value="Gel X (Medium)">Gel X (Medium) — $6,500</option>
+<option value="Rebalanced Structured Gel">Rebalanced Structured Gel — $5,500</option>
+</select>
+
+<!-- Other Services -->
+<label for="otherType">Other Services:</label>
+<select id="otherType" onchange="showEstimateTime(); loadAvailableSlots();">
+<option value="NONE">NONE</option>
+<option value="Soak Off Acrylic Fingers & Clean Up">Soak Off Acrylic Fingers & Clean Up — $1,500</option>
+<option value="Soak Off Toes">Soak Off Toes — $500</option>
+<option value="Gem Application">Gem Application — $300</option>
+<option value="Hair Brush">Hair Brush — $300</option>
+</select>
+
+<p id="estimateTimeMessage" style="color: #FE5DC7; font-weight: bold;"></p>
+
+<div style="margin: 15px 0; display: flex; align-items: center;">
+<input id="lateAgreement" required="" style="margin-right: 3px;" type="checkbox"/>
+<label for="lateAgreement" style="font-size: 14px; cursor: pointer; line-height: 1.4;">
+        I agree to make an online deposit of <strong>$4,000 (JMD)</strong> within the next 48 Hours to secure my booking.
+      </label>
+</div>
+
+<button type="submit">Book Now</button>
+</form>
+<p id="bookingMessage"></p>
+</div>
+
+
+
+    
+<div class="content-section" id="reviewsSection">
+<h1 style="text-align:center; color:#FE5DC7;">CLIENT REVIEWS</h1>
+<div id="reviewPrompt" style="display:none; max-width:500px; margin:20px auto; 
+            background-color:#e8d9fb; color:#6200ea; 
+            border:1px solid #d1aaff; border-radius:6px; 
+            padding:15px; text-align:center; font-weight:500;">
+  Hi, how was your appointment? Please leave a review!
+</div>
+<form id="reviewForm" style="max-width:85%; margin:10px auto; text-align:center;">
+<div style="max-width: 50%; margin: 0 auto;">
+<input id="reviewName" placeholder="Your Name" required="" style="width:100%; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;" type="text"/>
+</div>
+<textarea id="reviewComment" placeholder="Write your review..." required="" style="width:90%; height:80px; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;"></textarea>
+<div id="starRating" style="font-size:24px; margin-bottom:10px; cursor:pointer; color:#ccc;">
+<span data-value="1">★</span>
+<span data-value="2">★</span>
+<span data-value="3">★</span>
+<span data-value="4">★</span>
+<span data-value="5">★</span>
+</div>
+<button style="background-color:#61134A; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" type="submit">SUBMIT
+      REVIEW</button>
+</form>
+<p id="reviewSubmitMsg" style="text-align:center; color:green;"></p>
+<!-- Container where reviews will be loaded -->
+<div id="reviewsContainer" style="max-width:100%; margin:20px auto;"></div>
+</div>
+
+<!-- Admin Login Modal -->
+<div id="adminLoginModal" style="
+  display:none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+">
+<div style="
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    position: relative;
+  ">
+<!-- Close button -->
+<span onclick="closeAdminModal()" style="
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #999;
+    ">×</span>
+<h3 style="margin:10px 0 20px; color:#6200ea;">ADMIN LOGIN</h3>
+<input id="adminEmail" placeholder="Email" style="width: 90%; margin-bottom:10px; padding:10px;
+                  border:1px solid #ccc; border-radius:6px;" type="email"/>
+<input id="adminPassword" placeholder="Password" style="width: 90%; margin-bottom:10px; padding:10px;
+                  border:1px solid #ccc; border-radius:6px;" type="password"/>
+<p id="adminLoginMsg" style="color:red; font-size:14px; display:none;"></p>
+<button onclick="closeAdminModal()" style="
+      background-color:#ccc; color:#333; border:none;
+      padding:10px 20px; border-radius:6px; cursor:pointer;">
+      Cancel
+    </button>
+<button onclick="attemptAdminLogin()" style="
+      background-color:#6200ea; color:white; border:none;
+      padding:10px 20px; border-radius:6px; cursor:pointer; margin-right:8px;">
+      Login
+    </button>
+</div>
+</div>
+<!-- ✅ Scripts -->
+<script>
+    
+
+let currentUser = null;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCI24steVBjoIgV68Wkr_OzddXzwHZjnMs",
+  authDomain: "nailuxe-nailz-by-navia.firebaseapp.com",
+  projectId: "nailuxe-nailz-by-navia",
+  storageBucket: "nailuxe-nailz-by-navia.firebasestorage.app",
+  messagingSenderId: "937826104665",
+  appId: "1:937826104665:web:9eea9808ccce54c1cd8848"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+firebase.auth().onAuthStateChanged(user => {
+  currentUser = user || null;
+  loadReviews(currentUser);
+});
+
+// Service durations in minutes
+const serviceDurations = {
+  "Female Manicure": 45,
+  "Female Pedicure": 60,
+  "Men's Manicure": 45,
+  "Men's Pedicure": 75,
+  "Gel Polish Fingers": 30,
+  "Gel Polish Toes": 30,
+  "French Toes": 45,
+  "Hand Painted French": 30,
+  "Nail Art": 15,
+  "XL Full Set": 180,
+  "Long Full Set": 150,
+  "Medium Full Set": 120,
+  "Short Full Set": 90,
+  "Oval/Almond Medium": 150,
+  "Oval Faded French (Medium)": 165,
+  "Coffin": 120,
+  "Nail Overlay (Short)": 75,
+  "Overlay & Gel Polish": 150,
+  "Refill & Gel Polish": 105,
+  "Refill My Work (2–3 Weeks)": 60,
+  "Reshape & Cutdown Nails": 30,
+  "Acrylic All Toes": 90,
+  "Acrylic Big Toes": 45,
+  "Fix Acrylic Toes": 30,
+  "Refill Toes": 45,
+  "Gel X (Long)": 135,
+  "Gel X (Medium)": 120,
+  "Rebalanced Structured Gel": 105,
+  "Soak Off Acrylic Fingers & Clean Up": 45,
+  "Soak Off Toes": 15,
+  "Gem Application": 10,
+  "Hair Brush": 10,
+  "Regular Pedicure": 60,
+  "Spa Pedicure": 90,
+  "Deluxe Pedicure": 90,
+  "Gel Pedicure": 120,
+  "Regular Manicure": 60,
+  "Spa Manicure": 90,
+  "Deluxe Manicure": 90,
+  "Gel Manicure": 120,
+  "Acrylic Powder Manicure": 120,
+  "NONE": 0
+};
+
+const businessHours = {
+  'Sunday': null, // Closed
+  'Monday': { open: '8:30 AM', close: '6:00 PM' },
+  'Tuesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Wednesday': { open: '8:30 AM', close: '6:00 PM' },
+  'Thursday': { open: '8:30 AM', close: '6:00 PM' },
+  'Friday': { open: '9:00 AM', close: '7:00 PM' },
+  'Saturday': { open: '9:00 AM', close: '7:00 PM' }
+};
+
+function login() {
+  document.getElementById('adminLoginModal').style.display = 'flex';
+}
+
+function closeAdminModal() {
+  document.getElementById('adminLoginModal').style.display = 'none';
+  document.getElementById('adminLoginMsg').style.display = 'none';
+  document.getElementById('adminEmail').value = "";
+  document.getElementById('adminPassword').value = "";
+}
+
+function attemptAdminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value.trim();
+  const msg = document.getElementById('adminLoginMsg');
+
+  const adminEmail = 'carlanviroberts@gmail.com';
+  const adminPassword = '@Carlanvi325';
+
+  if (email === adminEmail && password === adminPassword) {
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(() => {
+        closeAdminModal();
+        window.location.href = 'dashboard.html';
+      })
+      .catch(() => {
+        msg.textContent = "You are not an admin user.";
+        msg.style.display = "block";
+        document.getElementById('adminPassword').value = "";
+      });
+  } else {
+    msg.textContent = "You are not an admin user.";
+    msg.style.display = "block";
+    document.getElementById('adminPassword').value = "";
+  }
+}
+
+function toggleMenu() {
+  const menu = document.getElementById("menu");
+  const button = document.querySelector(".menu-button");
+
+  if (menu.classList.contains("show")) {
+    closeMenu();
+  } else {
+    menu.classList.add("show");
+    document.addEventListener("click", outsideClickHandler);
+  }
+
+  function outsideClickHandler(event) {
+    if (!menu.contains(event.target) && !button.contains(event.target)) {
+      closeMenu();
+      document.removeEventListener("click", outsideClickHandler);
+    }
+  }
+}
+
+function closeMenu() {
+  const menu = document.getElementById("menu");
+  menu.classList.remove("show");
+}
+
+function formatTimeInput() {
+  let input = document.getElementById('timeInput');
+  let value = input.value.replace(/\D/g, '');
+
+  if (value.length === 0) {
+    input.value = '';
+    return;
+  }
+
+  if (value.length <= 2) {
+    input.value = value;
+  } else if (value.length === 3) {
+    input.value = `${value.slice(0, 1)}:${value.slice(1)}`;
+  } else if (value.length === 4) {
+    input.value = `${value.slice(0, 2)}:${value.slice(2)}`;
+  }
+}
+
+function selectPeriod(period) {
+  document.getElementById('timePeriod').value = period;
+  document.getElementById('amBtn').style.display = 'none';
+  document.getElementById('pmBtn').style.display = 'none';
+
+  const confirmation = document.getElementById('periodConfirmation');
+  confirmation.innerText = `You selected ${period}`;
+  confirmation.style.fontWeight = 'bold';
+  confirmation.style.marginBottom = '10px';
+}
+
+function showExtensionLengthOptions() {
+  const extensionType = document.getElementById('nailExtensionType').value;
+  const lengthContainer = document.getElementById('extensionLengthContainer');
+
+  if (extensionType !== 'NONE') {
+    lengthContainer.style.display = 'block';
+  } else {
+    lengthContainer.style.display = 'none';
+  }
+}
+
+function loadGallery(containerId) {
+  const galleryContainer = document.getElementById(containerId);
+  galleryContainer.innerHTML = '';
+
+  db.collection('gallery').onSnapshot((querySnapshot) => {
+    galleryContainer.innerHTML = '';
+    const categories = {};
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const imageUrl = data.url;
+      const category = data.category || 'Uncategorized';
+
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push(imageUrl);
+    });
+
+    for (const category in categories) {
+      galleryContainer.innerHTML += `
+        <div class="gallery-category">
+          <h3>${category}</h3>
+          <div class="gallery-wrapper">
+            <div class="gallery-grid" id="gallery-${category}"></div>
+          </div>
+          <div style="text-align:center; margin-top:7px;">
+            <button 
+              onclick="showSection('bookingSection')" 
+              style="background-color:#61134A; color:#000; font-weight: bold; padding:10px 20px; border:none; border-radius:15px; cursor:pointer;">
+              BOOK A SERVICE NOW
+            </button>
+          </div>
+        </div>
+      `;
+
+      const categoryContainer = document.getElementById(`gallery-${category}`);
+      categories[category].forEach((imageUrl) => {
+        categoryContainer.innerHTML += `
+          <div>
+            <img src="${imageUrl}" alt="Design" style="margin-bottom:10px;">
+          </div>
+        `;
+      });
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  showSection('gallerySection');
+  loadGallery('galleryDisplay');
+});
+
+function convertToMinutes(timeStr) {
+  let [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  }
+  if (period.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return (hours * 60) + minutes;
+}
+
+function showEstimateTime() {
+  const manicurePedicure = document.getElementById('manicurePedicureType').value;
+  const polishArt = document.getElementById('polishArtType').value;
+  const acrylic = document.getElementById('acrylicType').value;
+  const gel = document.getElementById('gelType').value;
+  const other = document.getElementById('otherType').value;
+  const estimateMessage = document.getElementById('estimateTimeMessage');
+
+  if (manicurePedicure === 'NONE' && polishArt === 'NONE' && acrylic === 'NONE' && gel === 'NONE' && other === 'NONE') {
+    estimateMessage.innerHTML = '';
+    return;
+  }
+
+  let totalDuration = 0;
+
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      totalDuration += serviceDurations[service] || 0;
+    }
+  });
+
+  if (totalDuration > 0) {
+    const hours = Math.floor(totalDuration / 60);
+    const minutes = totalDuration % 60;
+    let timeStr = '';
+    if (hours > 0) timeStr += `${hours} hour${hours > 1 ? 's' : ''}`;
+    if (minutes > 0) {
+      if (timeStr) timeStr += ' and ';
+      timeStr += `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+    estimateMessage.innerHTML = `Estimated Duration: Approximately ${timeStr}`;
+  } else {
+    estimateMessage.innerHTML = '';
+  }
+}
+
+function normalizeTimeStr(timeStr) {
+  if (!timeStr) return null;
+
+  if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
+
+  let [hours, minutes] = timeStr.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
+function validateTimeSlot(date, selectedTime) {
+  const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+
+  if (!business) {
+    alert(`We are closed on Sundays. Please select another day.`);
+    return Promise.resolve(false);
+  }
+
+  const selectedMinutes = convertToMinutes(selectedTime);
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
+    alert(`Please choose a time within business hours.\n\nBusiness Hours for ${dayName}: ${business.open} to ${business.close}`);
+    return Promise.resolve(false);
+  }
+
+  return db.collection('unavailableDays').where('date', '==', date).get()
+    .then((unavailableSnapshot) => {
+      let isUnavailable = false;
+
+      unavailableSnapshot.forEach((doc) => {
+        const data = doc.data();
+
+        if (data.allDay) {
+          isUnavailable = true;
+        } else {
+          const startMinutes = convertToMinutes(normalizeTimeStr(data.startTime));
+          const endMinutes = convertToMinutes(normalizeTimeStr(data.endTime));
+
+          if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
+            isUnavailable = true;
+          }
+        }
+      });
+
+      if (isUnavailable) {
+        return false;
+      }
+
+      return db.collection('bookings')
+        .where('date', '==', date)
+        .get()
+        .then((querySnapshot) => {
+          const buffer = getBufferForSelectedServices();
+
+          for (let doc of querySnapshot.docs) {
+            let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+            let bookedMinutes = convertToMinutes(bookedTime);
+
+            if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
+              return false;
+            }
+          }
+
+          return true;
+        });
+    });
+}
+
+function generateBookingNumber(name) {
+  const initials = name.trim().substring(0, 2).toUpperCase();
+  const digits = Math.floor(1000 + Math.random() * 9000);
+  return initials + digits;
+}
+
+function submitBooking(event) {
+  event.preventDefault();
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("You must be logged in to book an appointment. Click OK to log in.")) {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+
+  // Get form values
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('selectedTime').value;
+  const services = getSelectedServices();
+
+  // Validation
+  if (!name || !phone || !date || !time) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  if (services === 'No services selected') {
+    alert('Please select at least one service before booking.');
+    return;
+  }
+
+  const bookingNumber = generateBookingNumber(name);
+  const duration = getSelectedServiceDuration();
+
+  validateTimeSlot(date, time)
+    .then((isAvailable) => {
+      if (!isAvailable) {
+        alert('This time is not available. Please choose another time.');
+        return;
+      }
+
+      return db.collection('bookings').add({
+        uid: user.uid,
+        bookingNumber,
+        name,
+        phone,
+        date: date,
+        time,
+        service: services,
+        duration,
+        deposit: "No"
+      });
+    })
+    .then(() => {
+      const [year, month, day] = date.split("-");
+      const formattedDate = new Date(year, month - 1, day).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const message = `📅 New Booking Request
+
+🔑 Booking #: ${bookingNumber}
+👤 Name: ${name}
+📞 Phone: ${phone}
+📍 Date: ${formattedDate}
+⏰ Time: ${time}
+💅 Service: ${services}`;
+
+      const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
+      const telegramChatId = "-1002734216867";
+
+      return fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: message,
+          parse_mode: "HTML"
+        })
+      });
+    })
+    .then((response) => {
+      if (response.ok) {
+        document.querySelector("#bookingSection form").reset();
+        document.getElementById("estimateTimeMessage").innerHTML = "";
+        document.getElementById("selectedTime").innerHTML = "<option value=''>Pick date & service first</option>";
+
+        document.querySelector("#bookingModal h3").style.display = "none";
+        document.querySelector("#bookingModal p").innerHTML = `
+          <div style="
+            text-align:center; 
+            padding:15px; 
+            font-family:Arial,sans-serif; 
+            color:#333;
+            max-width:400px;
+            margin:0 auto;
+            background:white;
+            border-radius:8px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <h2 style="margin:0 0 8px 0; font-size:20px; font-weight:bold;">BOOKING CONFIRMED</h2>
+            <p style="font-size:16px; margin:0 0 12px 0;">
+             Your Booking #: <strong>${bookingNumber}</strong>
+            </p>
+            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+            <p style="font-size:13px; line-height:1.4; margin:8px 0;">
+              <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
+             to the account below or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
+            </p>
+            <p style="font-size:15px; margin:8px 0; color:#6c2eb9; font-weight:bold;">
+              💵 Deposit Due: JMD $4,000.00
+            </p>
+            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+            <h3 style="font-size:14px; margin:8px 0;">Banking Details:</h3>
+            <div style="font-size:12px; text-align:left; margin:8px 0;">
+              <p style="margin:3px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
+              <p style="margin:3px 0;">👤 Account: <strong>Your Account Name</strong></p>
+              <p style="margin:3px 0;">#️⃣ Number: <strong>123456789</strong></p>
+              <p style="margin:3px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
+            </div>
+            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+            <p style="font-size:11px; color:#666; margin:8px 0;">
+              ℹ️ If you need to see the banking info again it is always visible in the <strong>PAYMENT INFO</strong> section of the menu
+            </p>
+            <button onclick="closeBookingModal()" style="
+              margin-top:15px; 
+              padding:10px 25px; 
+              background:#6c2eb9; 
+              color:white; 
+              border:none; 
+              border-radius:5px; 
+              font-size:14px; 
+              cursor:pointer;
+              font-weight:bold;">
+              OK
+            </button>
+          </div>
+        `;
+        document.getElementById('bookingModal').style.display = 'flex';
+      }
+    })
+    .catch((err) => {
+      console.error("Booking error:", err);
+      alert("Failed to save booking. Please try again.");
+    });
+}
+
+function closeBookingModal() {
+  document.getElementById('bookingModal').style.display = 'none';
+}
+
+function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(section =>
+    section.classList.remove('active')
+  );
+  document.getElementById(sectionId).classList.add('active');
+
+  if (sectionId === 'gallerySection') {
+    loadGallery('galleryDisplay');
+  } else if (sectionId === 'reviewsSection') {
+    loadReviews(currentUser);
+  }
+}
+
+let selectedRating = 0;
+
+// Star rating UI logic - wrapped in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+  const starRatingElement = document.getElementById('starRating');
+  if (starRatingElement) {
+    starRatingElement.querySelectorAll('span').forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.getAttribute('data-value'));
+        starRatingElement.querySelectorAll('span').forEach(s => {
+          s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+        });
+      });
+    });
+  }
+
+  // Submit review - wrapped in DOMContentLoaded
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+          window.location.href = 'login.html';
+        }
+        return;
+      }
+
+      const name = document.getElementById('reviewName').value.trim();
+      const comment = document.getElementById('reviewComment').value.trim();
+      const msg = document.getElementById('reviewSubmitMsg');
+
+      if (!name || !comment || selectedRating === 0) {
+        msg.style.color = "red";
+        msg.textContent = "Please fill all fields and select a star rating.";
+        return;
+      }
+
+      try {
+        await db.collection('reviews').add({
+          name,
+          comment,
+          rating: selectedRating,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          uid: user.uid
+        });
+
+        msg.style.color = "green";
+        msg.textContent = "Thank you for your review!";
+        reviewForm.reset();
+        selectedRating = 0;
+        starRatingElement.querySelectorAll('span').forEach(s => s.style.color = '#ccc');
+
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        msg.style.color = "red";
+        msg.textContent = "Error submitting review.";
+      }
+    });
+  }
+});
+
+function formatReviewTime(timestamp) {
+  if (!timestamp || !timestamp.toDate) return '';
+
+  const now = new Date();
+  const reviewDate = timestamp.toDate();
+  const diffMs = now - reviewDate;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHours = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
+
+  if (diffSec < 60) return "Just now";
+  if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffWeeks < 5) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+  if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+  return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+}
+
+function loadReviews(user) {
+  const container = document.getElementById('reviewsContainer');
+  if (!container) return;
+
+  container.innerHTML = "<p>Loading reviews...</p>";
+
+  db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    if (snapshot.empty) {
+      container.innerHTML = "<p>No reviews yet.</p>";
+      return;
+    }
+
+    container.innerHTML = '';
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const isOwner = user && d.uid === user.uid;
+
+      const dateString = formatReviewTime(d.timestamp);
+
+      let stars = '';
+      for (let i = 1; i <= 5; i++) {
+        stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
+      }
+
+      container.innerHTML += `
+        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
+          <div><strong>${d.name}</strong> <small style="color:gray; font-style:italic;">${dateString}</small></div>
+          <div>${stars}</div>
+          <div>${d.comment}</div>
+          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
+        </div>
+      `;
+    });
+  });
+}
+
+function deleteReview(docId) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  db.collection('reviews').doc(docId).get().then(doc => {
+    if (!doc.exists) {
+      alert("Review not found.");
+      return;
+    }
+
+    const data = doc.data();
+    if (data.uid !== user.uid) {
+      alert("You can only delete your own reviews.");
+      return;
+    }
+
+    db.collection('reviews').doc(docId).delete()
+      .then(() => alert("Review deleted."))
+      .catch(error => alert("Failed to delete review: " + error.message));
+  }).catch(error => {
+    alert("Error fetching review: " + error.message);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      firebase.auth().signOut()
+        .then(() => {
+          window.location.href = 'login.html';
+        })
+        .catch((error) => {
+          console.error("Logout error:", error);
+          alert("Failed to log out.");
+        });
+    });
+  }
+});
+
+function logoutUser() {
+  firebase.auth().signOut()
+    .then(() => {
+      window.location.href = 'login.html';
+    })
+    .catch(error => {
+      alert('Logout failed: ' + error.message);
+    });
+}
+
+
+    function showUserBookings() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("Please log in to view your bookings. Click OK to log in.")) {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+
+  // Close any other modals first
+  document.getElementById('bookingModal').style.display = 'none';
+  document.getElementById('adminLoginModal').style.display = 'none';
+
+  console.log("Loading bookings for user:", user.uid); // Debug log
+
+  // Show loading state
+  document.getElementById('myBookingsContent').innerHTML = '<p style="text-align:center; color:#666;">Loading your bookings...</p>';
+  document.getElementById('myBookingsModal').style.display = 'flex';
+
+  // Use onSnapshot for real-time updates when admin changes deposit status
+  const unsubscribe = db.collection('bookings')
+    .where("uid", "==", user.uid)
+    .onSnapshot(snapshot => {
+      console.log("Query returned", snapshot.docs.length, "documents"); // Debug log
+      
+      let bookings = [];
+      snapshot.forEach(doc => {
+        console.log("Booking data:", doc.data()); // Debug log
+        bookings.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Sort bookings by date (most recent first)
+      bookings.sort((a, b) => {
+        let dateA, dateB;
+        
+        // Handle different date formats
+        if (a.date && a.date.toDate) {
+          dateA = a.date.toDate();
+        } else if (typeof a.date === 'string') {
+          dateA = new Date(a.date);
+        } else {
+          dateA = new Date(0);
+        }
+        
+        if (b.date && b.date.toDate) {
+          dateB = b.date.toDate();
+        } else if (typeof b.date === 'string') {
+          dateB = new Date(b.date);
+        } else {
+          dateB = new Date(0);
+        }
+        
+        return dateB - dateA;
+      });
+
+      // Take only the 5 most recent
+      bookings = bookings.slice(0, 5);
+
+      // Build HTML
+      let bookingsHTML = "";
+      if (bookings.length === 0) {
+        bookingsHTML = `
+          <div style="text-align:center; padding:20px;">
+            <p style="color:#666; font-size:16px;">You don't have any bookings yet.</p>
+            <button onclick="closeMyBookings(); showSection('bookingSection');" 
+                    style="background-color:#61134A; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">
+              Make Your First Booking
+            </button>
+          </div>
+        `;
+      } else {
+        bookings.forEach(b => {
+          // Format date
+          let bookingDate = "Unknown Date";
+          try {
+            if (b.date && b.date.toDate) {
+              bookingDate = b.date.toDate().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              });
+            } else if (typeof b.date === "string") {
+              const [y, m, d] = b.date.split("-").map(Number);
+              if (y && m && d) {
+                bookingDate = new Date(y, m - 1, d).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                });
+              }
+            }
+          } catch (err) {
+            console.error("Date format issue:", err);
+          }
+
+          // Clean services
+          let cleanService = "";
+          if (b.service) {
+            cleanService = b.service
+              .replace(/,?\s*Manicure:\s*NONE/gi, "")
+              .replace(/,?\s*Pedicure:\s*NONE/gi, "")
+              .replace(/,?\s*Nail Extension:\s*NONE/gi, "")
+              .trim()
+              .replace(/^,+|,+$/g, "") // Remove leading/trailing commas
+              .replace(/,\s*,/g, ","); // Remove double commas
+          }
+
+          // Build card
+          let cardHTML = `
+            <div style="
+              border:1px solid #ddd;
+              border-radius:12px;
+              padding:15px;
+              margin-bottom:15px;
+              background:white;
+              box-shadow:0 2px 5px rgba(0,0,0,0.1);
+            ">
+              <h3 style="margin-top:0; color:#61134A; font-size:18px;">
+                Booking #: ${b.bookingNumber || "N/A"}
+              </h3>
+              <p><strong>👤 Name:</strong> ${b.name || "N/A"}</p>
+              <p><strong>📞 Phone:</strong> ${b.phone || "N/A"}</p>
+              <p><strong>📅 Date:</strong> ${bookingDate}</p>
+              <p><strong>⏰ Time:</strong> ${b.time || "N/A"}</p>
+          `;
+
+          if (cleanService) {
+            cardHTML += `<p><strong>💅 Services:</strong> ${cleanService}</p>`;
+          }
+
+          // Deposit status
+          const depositStatus = b.deposit === "Made" || b.deposit === "Yes";
+          cardHTML += `
+            <p><strong>💵 Deposit:</strong> 
+              <span style="color:${depositStatus ? 'green' : 'red'}; font-weight:bold;">
+                ${depositStatus ? 'Confirmed' : 'Pending'}
+              </span>
+            </p>
+          `;
+
+          if (b.notes) {
+            cardHTML += `<p><strong>📝 Notes:</strong> ${b.notes}</p>`;
+          }
+
+          cardHTML += `</div>`;
+          bookingsHTML += cardHTML;
+        });
+      }
+
+      // Show in modal
+      document.getElementById('myBookingsContent').innerHTML = bookingsHTML;
+    }, error => {
+      console.error("Error loading bookings:", error);
+      document.getElementById('myBookingsContent').innerHTML = `
+        <div style="text-align:center; padding:20px;">
+          <p style="color:red;">Error loading your bookings.</p>
+          <p style="color:#666; font-size:14px;">Please try again or contact support.</p>
+          <button onclick="closeMyBookings();" 
+                  style="background-color:#ccc; color:#333; padding:8px 16px; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">
+            Close
+          </button>
+        </div>
+      `;
+    });
+
+  // Store unsubscribe function globally so we can clean it up
+  window.bookingsUnsubscribe = unsubscribe;
+}
+
+// Make sure the close function exists and cleans up the listener
+function closeMyBookings() {
+  document.getElementById('myBookingsModal').style.display = 'none';
+  
+  // Clean up the real-time listener to prevent memory leaks
+  if (window.bookingsUnsubscribe) {
+    window.bookingsUnsubscribe();
+    window.bookingsUnsubscribe = null;
+  }
+}
+    
+    
+    function showPaymentInfo() {
+  Swal.fire({
+    title: "<div class='swal2-title-nowrap'>BANK TRANSER INFO</div>",
+    html: `
+      <div style="text-align:left; font-size:16px; line-height:1.6; color:white;">
+        <p><b>Bank Name:</b> First Caribbean Bank</p>
+        <p><b>Account Name:</b> John Doe</p>
+        <p><b>Account Number:</b> 123456789</p>
+        <p><b>Branch:</b> Kingston, Jamaica</p>
+        <p><b>Note:</b> Please use your Booking # as the payment reference.</p>
+      </div>
+    `,
+    width: 600,  // ✅ slightly wider modal
+    confirmButtonText: "CLOSE",
+    background: "#1a73e8",
+    color: "white",
+    confirmButtonColor: "#0d47a1",
+    customClass: {
+      popup: "swal2-rounded"
+    }
+  });
+    }
+
+function getBufferForSelectedServices() {
+  let buffer = 30; // default
+
+  const pedicureType = document.getElementById('pedicureType')?.value || "NONE";
+  const manicureType = document.getElementById('manicureType')?.value || "NONE";
+  const nailExtensionType = document.getElementById('nailExtensionType')?.value || "NONE";
+
+  // Example buffer logic — adjust if needed
+  if (pedicureType === "Gel Pedicure") buffer = 60;
+  if (manicureType === "Gel Manicure") buffer = 50;
+  if (nailExtensionType !== "NONE") buffer = 40;
+
+  return buffer;
+}
+
+
+function getSelectedServiceDuration() {
+  const manicurePedicure = document.getElementById('manicurePedicureType').value;
+  const polishArt = document.getElementById('polishArtType').value;
+  const acrylic = document.getElementById('acrylicType').value;
+  const gel = document.getElementById('gelType').value;
+  const other = document.getElementById('otherType').value;
+  
+  let totalDuration = 0;
+  
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      totalDuration += serviceDurations[service] || 0;
+    }
+  });
+  
+  return totalDuration || 60; // fallback to 60 minutes if nothing selected
+}
+
+    
+// ✅ FINAL version — only one loadAvailableSlots() now
+async function loadAvailableSlots() {
+  const date = document.getElementById('date').value;
+  const pedicure = document.getElementById('pedicureType')?.value || "NONE";
+  const manicure = document.getElementById('manicureType')?.value || "NONE";
+  const nailExtension = document.getElementById('nailExtensionType')?.value || "NONE";
+
+  const timeSelect = document.getElementById('selectedTime');
+  timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
+
+  // Must have a date + at least one service
+  if (!date || (pedicure === "NONE" && manicure === "NONE" && nailExtension === "NONE")) {
+    timeSelect.innerHTML = "<option value=''>COMPLETE FORM TO SEE AVAILABLE SLOTS</option>";
+    return;
+  }
+
+  const duration = getSelectedServiceDuration();
+
+  const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
+  const business = businessHours[dayName];
+  if (!business) {
+    timeSelect.innerHTML = "<option value=''>Closed this day</option>";
+    return;
+  }
+
+  const openMinutes = convertToMinutes(business.open);
+  const closeMinutes = convertToMinutes(business.close);
+
+  try {
+    // ✅ Fetch bookings
+    const snapshot = await db.collection("bookings")
+      .where("date", "==", date)
+      .get();
+
+    const bookings = snapshot.docs.map(doc => {
+      const bookedTime = convertToMinutes(normalizeTimeStr(doc.data().time));
+      const bookedDuration = doc.data().duration || 60;
+      return { start: bookedTime, end: bookedTime + bookedDuration };
+    });
+
+    // ✅ Fetch unavailable ranges
+    const unavailableSnapshot = await db.collection("unavailableDays")
+      .where("date", "==", date)
+      .get();
+
+    let unavailableRanges = [];
+    unavailableSnapshot.forEach(doc => {
+      const data = doc.data();
+
+      if (data.allDay) {
+        unavailableRanges.push({ start: openMinutes, end: closeMinutes });
+      } else {
+        const start = convertToMinutes(normalizeTimeStr(data.startTime));
+        const end = convertToMinutes(normalizeTimeStr(data.endTime));
+
+        // ✅ Only add if both are valid numbers and end > start
+        if (!isNaN(start) && !isNaN(end) && end > start) {
+          unavailableRanges.push({ start, end });
+        }
+      }
+    });
+
+    // 🔍 Debug output (remove later)
+    console.log("Bookings:", bookings);
+    console.log("Unavailable ranges:", unavailableRanges);
+
+    // ✅ Generate slots every 5 minutes
+    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+      const end = t + duration;
+
+      // Skip if overlaps with any booking or unavailable range
+      let conflict =
+        bookings.some(b => !(end <= b.start || t >= b.end)) ||
+        unavailableRanges.some(r => !(end <= r.start || t >= r.end));
+
+      if (!conflict) {
+        const hours = Math.floor(t / 60);
+        const minutes = t % 60;
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayHours = ((hours + 11) % 12 + 1);
+        const displayTime = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+
+        let option = document.createElement("option");
+        option.value = displayTime;
+        option.textContent = displayTime;
+        timeSelect.appendChild(option);
+      }
+    }
+
+    // If no slots remain
+    if (timeSelect.options.length === 1) {
+      let option = document.createElement("option");
+      option.value = "";
+      option.textContent = "No available slots";
+      timeSelect.appendChild(option);
+    }
+  } catch (err) {
+    console.error("Error loading slots:", err);
+    timeSelect.innerHTML = "<option value=''>Error loading slots</option>";
+  }
+}
+
+
+    // ✅ Auto-format phone number in booking form
+document.addEventListener("DOMContentLoaded", function () {
+  const phoneInput = document.getElementById("phone");
+  if (phoneInput) {
+    phoneInput.addEventListener("input", function(e) {
+      let input = e.target.value.replace(/\D/g, ""); // only digits
+      if (input.length > 10) input = input.substring(0, 10); // max 10 digits
+
+      let formatted = input;
+
+      if (input.length > 6) {
+        formatted = `(${input.substring(0,3)}) ${input.substring(3,6)}-${input.substring(6)}`;
+      } else if (input.length > 3) {
+        formatted = `(${input.substring(0,3)}) ${input.substring(3)}`;
+      } else if (input.length > 0) {
+        formatted = `(${input}`;
+      }
+
+      e.target.value = formatted;
+    });
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const dateInput = document.getElementById("date");
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0]; 
+    dateInput.setAttribute("min", today); // ✅ Block past dates
+  }
+});
+
+
+// Get selected services for booking
+function getSelectedServices() {
+  const manicurePedicure = document.getElementById('manicurePedicureType').value;
+  const polishArt = document.getElementById('polishArtType').value;
+  const acrylic = document.getElementById('acrylicType').value;
+  const gel = document.getElementById('gelType').value;
+  const other = document.getElementById('otherType').value;
+  
+  let services = [];
+  
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      services.push(service);
+    }
+  });
+  
+  return services.length > 0 ? services.join(', ') : 'No services selected';
+}
+
+// Service duration estimates (in minutes)
+const serviceDurations = {
+  "Female Manicure": 45,
+  "Female Pedicure": 60,
+  "Men's Manicure": 45,
+  "Men's Pedicure": 75,
+  "Gel Polish Fingers": 30,
+  "Gel Polish Toes": 30,
+  "French Toes": 45,
+  "Hand Painted French": 30,
+  "Nail Art": 15,
+  "XL Full Set": 180,
+  "Long Full Set": 150,
+  "Medium Full Set": 120,
+  "Short Full Set": 90,
+  "Oval/Almond Medium": 150,
+  "Oval Faded French (Medium)": 165,
+  "Coffin": 120,
+  "Nail Overlay (Short)": 75,
+  "Overlay & Gel Polish": 150,
+  "Refill & Gel Polish": 105,
+  "Refill My Work (2–3 Weeks)": 60,
+  "Reshape & Cutdown Nails": 30,
+  "Acrylic All Toes": 90,
+  "Acrylic Big Toes": 45,
+  "Fix Acrylic Toes": 30,
+  "Refill Toes": 45,
+  "Gel X (Long)": 135,
+  "Gel X (Medium)": 120,
+  "Rebalanced Structured Gel": 105,
+  "Soak Off Acrylic Fingers & Clean Up": 45,
+  "Soak Off Toes": 15,
+  "Gem Application": 10,
+  "Hair Brush": 10
+};
+    
+  </script>
+</body>
+</html>
