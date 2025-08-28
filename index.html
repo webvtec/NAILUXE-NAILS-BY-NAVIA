@@ -399,7 +399,7 @@
        LOGOUT
     </a>
 <a class="admin-button" 
-   onclick="closeMenu(); setTimeout(login, 100);" 
+   onclick="closeMenu(); login();" 
    style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#61134A; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
    ADMIN
 </a>
@@ -1184,7 +1184,10 @@ function showSection(sectionId) {
   if (sectionId === 'gallerySection') {
     loadGallery('galleryDisplay');
   } else if (sectionId === 'reviewsSection') {
-    loadReviews(currentUser); // ✅ Pass the user here
+    // Wait for auth state before loading reviews
+    firebase.auth().onAuthStateChanged(user => {
+      loadReviews(user);
+    });
   }
 }
 
@@ -1272,15 +1275,16 @@ function formatReviewTime(timestamp) {
 
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
-  container.innerHTML = "<p>Loading reviews...</p>";
+  container.innerHTML = "<p style='text-align:center; color:#666;'>Loading reviews...</p>";
 
   db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    container.innerHTML = ''; // Clear loading message
+    
     if (snapshot.empty) {
-      container.innerHTML = "<p>No reviews yet.</p>";
+      container.innerHTML = "<p style='text-align:center; color:#666;'>No reviews yet. Be the first to leave a review!</p>";
       return;
     }
 
-    container.innerHTML = '';
     snapshot.forEach(doc => {
       const d = doc.data();
       const isOwner = user && d.uid === user.uid;
@@ -1295,18 +1299,24 @@ function loadReviews(user) {
       }
 
       container.innerHTML += `
-        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
-          <div><strong>${d.name}</strong> <small style="color:gray; font-style:italic;">${dateString}</small></div>
-          <div>${stars}</div>
-          <div>${d.comment}</div>
-          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
+        <div style="background:#fff; border:1px solid #eee; padding:15px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <strong style="color:#61134A;">${d.name}</strong>
+            <small style="color:#999; font-style:italic;">${dateString}</small>
+          </div>
+          <div style="margin-bottom:8px;">${stars}</div>
+          <div style="color:#333; line-height:1.4;">${d.comment}</div>
+          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-size:12px;">Delete</button>` : ''}
         </div>
       `;
     });
+  }, error => {
+    console.error("Error loading reviews:", error);
+    container.innerHTML = "<p style='text-align:center; color:red;'>Error loading reviews. Please try again later.</p>";
   });
 }
 
-
+    
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
 if (!user) {
