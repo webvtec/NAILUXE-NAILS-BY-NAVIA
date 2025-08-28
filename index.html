@@ -1611,23 +1611,21 @@ function getSelectedServiceDuration() {
 
 // ✅ FINAL version — only one loadAvailableSlots() now
 async function loadAvailableSlots() {
-  const timeSelect = document.getElementById("selectedTime"); // ✅ make sure we have it
-  timeSelect.innerHTML = ""; // ✅ clear old options every time
-
   const date = document.getElementById('date').value;
   const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
-  const polishArt = document.getElementById('polishArtType')?.value || "NONE";
-  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
-  const gel = document.getElementById('gelType')?.value || "NONE";
-  const other = document.getElementById('otherType')?.value || "NONE";
+const polishArt = document.getElementById('polishArtType')?.value || "NONE";
+const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+const gel = document.getElementById('gelType')?.value || "NONE";
+const other = document.getElementById('otherType')?.value || "NONE";
 
-  // Must have a date + at least one service
-  if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic === "NONE" && gel === "NONE" && other === "NONE")) {
+// Must have a date + at least one service
+if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic === "NONE" && gel === "NONE" && other === "NONE")) {
     timeSelect.innerHTML = "<option value=''>COMPLETE FORM TO SEE AVAILABLE SLOTS</option>";
     return;
   }
 
   const duration = getSelectedServiceDuration();
+
   const dayName = new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
   if (!business) {
@@ -1640,7 +1638,10 @@ async function loadAvailableSlots() {
 
   try {
     // ✅ Fetch bookings
-    const snapshot = await db.collection("bookings").where("date", "==", date).get();
+    const snapshot = await db.collection("bookings")
+      .where("date", "==", date)
+      .get();
+
     const bookings = snapshot.docs.map(doc => {
       const bookedTime = convertToMinutes(normalizeTimeStr(doc.data().time));
       const bookedDuration = doc.data().duration || 60;
@@ -1648,24 +1649,36 @@ async function loadAvailableSlots() {
     });
 
     // ✅ Fetch unavailable ranges
-    const unavailableSnapshot = await db.collection("unavailableDays").where("date", "==", date).get();
+    const unavailableSnapshot = await db.collection("unavailableDays")
+      .where("date", "==", date)
+      .get();
+
     let unavailableRanges = [];
     unavailableSnapshot.forEach(doc => {
       const data = doc.data();
+
       if (data.allDay) {
         unavailableRanges.push({ start: openMinutes, end: closeMinutes });
       } else {
         const start = convertToMinutes(normalizeTimeStr(data.startTime));
         const end = convertToMinutes(normalizeTimeStr(data.endTime));
+
+        // ✅ Only add if both are valid numbers and end > start
         if (!isNaN(start) && !isNaN(end) && end > start) {
           unavailableRanges.push({ start, end });
         }
       }
     });
 
+    // 🔍 Debug output (remove later)
+    console.log("Bookings:", bookings);
+    console.log("Unavailable ranges:", unavailableRanges);
+
     // ✅ Generate slots every 5 minutes
     for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
       const end = t + duration;
+
+      // Skip if overlaps with any booking or unavailable range
       let conflict =
         bookings.some(b => !(end <= b.start || t >= b.end)) ||
         unavailableRanges.some(r => !(end <= r.start || t >= r.end));
@@ -1685,7 +1698,7 @@ async function loadAvailableSlots() {
     }
 
     // If no slots remain
-    if (timeSelect.options.length === 0) {
+    if (timeSelect.options.length === 1) {
       let option = document.createElement("option");
       option.value = "";
       option.textContent = "No available slots";
@@ -1697,6 +1710,37 @@ async function loadAvailableSlots() {
   }
 }
 
+
+    // ✅ Auto-format phone number in booking form
+document.addEventListener("DOMContentLoaded", function () {
+  const phoneInput = document.getElementById("phone");
+  if (phoneInput) {
+    phoneInput.addEventListener("input", function(e) {
+      let input = e.target.value.replace(/\D/g, ""); // only digits
+      if (input.length > 10) input = input.substring(0, 10); // max 10 digits
+
+      let formatted = input;
+
+      if (input.length > 6) {
+        formatted = `(${input.substring(0,3)}) ${input.substring(3,6)}-${input.substring(6)}`;
+      } else if (input.length > 3) {
+        formatted = `(${input.substring(0,3)}) ${input.substring(3)}`;
+      } else if (input.length > 0) {
+        formatted = `(${input}`;
+      }
+
+      e.target.value = formatted;
+    });
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const dateInput = document.getElementById("date");
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0]; 
+    dateInput.setAttribute("min", today); // ✅ Block past dates
+  }
+});
 
 
 
