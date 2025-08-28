@@ -1178,71 +1178,65 @@ function showSection(sectionId) {
   if (sectionId === 'gallerySection') {
     loadGallery('galleryDisplay');
   } else if (sectionId === 'reviewsSection') {
-    loadReviews(currentUser);
+    loadReviews(currentUser); // ✅ Pass the user here
   }
 }
 
+// Assume firebase is initialized and 'db' and 'auth' are set up
+
 let selectedRating = 0;
 
-// Star rating UI logic - wrapped in DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
-  const starRatingElement = document.getElementById('starRating');
-  if (starRatingElement) {
-    starRatingElement.querySelectorAll('span').forEach(star => {
-      star.addEventListener('click', () => {
-        selectedRating = parseInt(star.getAttribute('data-value'));
-        starRatingElement.querySelectorAll('span').forEach(s => {
-          s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
-        });
-      });
+// Star rating UI logic
+document.querySelectorAll('#starRating span').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.getAttribute('data-value'));
+    document.querySelectorAll('#starRating span').forEach(s => {
+      s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
     });
+  });
+});
+
+// Submit review
+document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+        window.location.href = 'login.html';
+    }
+    return;
+}
+
+  const name = document.getElementById('reviewName').value.trim();
+  const comment = document.getElementById('reviewComment').value.trim();
+  const msg = document.getElementById('reviewSubmitMsg');
+
+  if (!name || !comment || selectedRating === 0) {
+    msg.style.color = "red";
+    msg.textContent = "Please fill all fields and select a star rating.";
+    return;
   }
 
-  // Submit review - wrapped in DOMContentLoaded
-  const reviewForm = document.getElementById('reviewForm');
-  if (reviewForm) {
-    reviewForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const user = firebase.auth().currentUser;
-      if (!user) {
-        if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
-          window.location.href = 'login.html';
-        }
-        return;
-      }
-
-      const name = document.getElementById('reviewName').value.trim();
-      const comment = document.getElementById('reviewComment').value.trim();
-      const msg = document.getElementById('reviewSubmitMsg');
-
-      if (!name || !comment || selectedRating === 0) {
-        msg.style.color = "red";
-        msg.textContent = "Please fill all fields and select a star rating.";
-        return;
-      }
-
-      try {
-        await db.collection('reviews').add({
-          name,
-          comment,
-          rating: selectedRating,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          uid: user.uid
-        });
-
-        msg.style.color = "green";
-        msg.textContent = "Thank you for your review!";
-        reviewForm.reset();
-        selectedRating = 0;
-        starRatingElement.querySelectorAll('span').forEach(s => s.style.color = '#ccc');
-
-      } catch (error) {
-        console.error("Error submitting review:", error);
-        msg.style.color = "red";
-        msg.textContent = "Error submitting review.";
-      }
+  try {
+    await db.collection('reviews').add({
+      name,
+      comment,
+      rating: selectedRating,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      uid: user.uid
     });
+
+    msg.style.color = "green";
+    msg.textContent = "Thank you for your review!";
+    document.getElementById('reviewForm').reset();
+    selectedRating = 0;
+    document.querySelectorAll('#starRating span').forEach(s => s.style.color = '#ccc');
+
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    msg.style.color = "red";
+    msg.textContent = "Error submitting review.";
   }
 });
 
@@ -1269,10 +1263,9 @@ function formatReviewTime(timestamp) {
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 }
 
+
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
-  if (!container) return;
-
   container.innerHTML = "<p>Loading reviews...</p>";
 
   db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
@@ -1286,8 +1279,10 @@ function loadReviews(user) {
       const d = doc.data();
       const isOwner = user && d.uid === user.uid;
 
+      // Format time display
       const dateString = formatReviewTime(d.timestamp);
 
+      // Star rating display
       let stars = '';
       for (let i = 1; i <= 5; i++) {
         stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
@@ -1305,12 +1300,13 @@ function loadReviews(user) {
   });
 }
 
+
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
-  if (!user) {
-    window.location.href = 'login.html';
+if (!user) {
+    window.location.href = 'login.html'; // send them to your login form
     return;
-  }
+}
 
   db.collection('reviews').doc(docId).get().then(doc => {
     if (!doc.exists) {
@@ -1324,6 +1320,7 @@ function deleteReview(docId) {
       return;
     }
 
+    // If the review belongs to the current user, delete it
     db.collection('reviews').doc(docId).delete()
       .then(() => alert("Review deleted."))
       .catch(error => alert("Failed to delete review: " + error.message));
@@ -1332,22 +1329,21 @@ function deleteReview(docId) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      firebase.auth().signOut()
-        .then(() => {
-          window.location.href = 'login.html';
-        })
-        .catch((error) => {
-          console.error("Logout error:", error);
-          alert("Failed to log out.");
-        });
-    });
-  }
+    document.addEventListener('DOMContentLoaded', function () {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      firebase.auth().signOut()
+        .then(() => {
+          window.location.href = 'login.html';
+        })
+        .catch((error) => {
+          console.error("Logout error:", error);
+          alert("Failed to log out.");
+        });
+    });
+  }
 });
-
 
 
 function logoutUser() {
