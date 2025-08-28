@@ -1184,66 +1184,75 @@ function showSection(sectionId) {
 }
 
 
-
 let selectedRating = 0;
 
-// Star rating UI logic
-document.querySelectorAll('#starRating span').forEach(star => {
-  star.addEventListener('click', () => {
-    selectedRating = parseInt(star.getAttribute('data-value'));
-    document.querySelectorAll('#starRating span').forEach(s => {
-      s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+// ⭐ Star rating UI logic
+document.addEventListener('DOMContentLoaded', function () {
+  const starRatingElement = document.getElementById('starRating');
+  if (starRatingElement) {
+    starRatingElement.querySelectorAll('span').forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.getAttribute('data-value'));
+        starRatingElement.querySelectorAll('span').forEach(s => {
+          s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
+        });
+      });
     });
-  });
-});
-
-// Submit review
-document.getElementById('reviewForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
-        window.location.href = 'login.html';
-    }
-    return;
-}
-
-  const name = document.getElementById('reviewName').value.trim();
-  const comment = document.getElementById('reviewComment').value.trim();
-  const msg = document.getElementById('reviewSubmitMsg');
-
-  if (!name || !comment || selectedRating === 0) {
-    msg.style.color = "red";
-    msg.textContent = "Please fill all fields and select a star rating.";
-    return;
   }
 
-  try {
-    await db.collection('reviews').add({
-      name,
-      comment,
-      rating: selectedRating,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      uid: user.uid
+  // 📝 Submit review
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+          window.location.href = 'login.html';
+        }
+        return;
+      }
+
+      const name = document.getElementById('reviewName').value.trim();
+      const comment = document.getElementById('reviewComment').value.trim();
+      const msg = document.getElementById('reviewSubmitMsg');
+
+      if (!name || !comment || selectedRating === 0) {
+        msg.style.color = "red";
+        msg.textContent = "Please fill all fields and select a star rating.";
+        return;
+      }
+
+      try {
+        await db.collection('reviews').add({
+          name,
+          comment,
+          rating: selectedRating,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          uid: user.uid
+        });
+
+        msg.style.color = "green";
+        msg.textContent = "Thank you for your review!";
+        reviewForm.reset();
+        selectedRating = 0;
+        if (starRatingElement) {
+          starRatingElement.querySelectorAll('span').forEach(s => s.style.color = '#ccc');
+        }
+
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        msg.style.color = "red";
+        msg.textContent = "Error submitting review.";
+      }
     });
-
-    msg.style.color = "green";
-    msg.textContent = "Thank you for your review!";
-    document.getElementById('reviewForm').reset();
-    selectedRating = 0;
-    document.querySelectorAll('#starRating span').forEach(s => s.style.color = '#ccc');
-
-  } catch (error) {
-    console.error("Error submitting review:", error);
-    msg.style.color = "red";
-    msg.textContent = "Error submitting review.";
   }
 });
 
+// 🕒 Format time nicely
 function formatReviewTime(timestamp) {
   if (!timestamp || !timestamp.toDate) return '';
-
   const now = new Date();
   const reviewDate = timestamp.toDate();
   const diffMs = now - reviewDate;
@@ -1264,9 +1273,10 @@ function formatReviewTime(timestamp) {
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 }
 
-
+// 📖 Load reviews
 function loadReviews(user) {
   const container = document.getElementById('reviewsContainer');
+  if (!container) return;
   container.innerHTML = "<p>Loading reviews...</p>";
 
   db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
@@ -1279,35 +1289,34 @@ function loadReviews(user) {
     snapshot.forEach(doc => {
       const d = doc.data();
       const isOwner = user && d.uid === user.uid;
-
-      // Format time display
       const dateString = formatReviewTime(d.timestamp);
 
-      // Star rating display
       let stars = '';
       for (let i = 1; i <= 5; i++) {
         stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
       }
 
       container.innerHTML += `
-        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
-          <div><strong>${d.name}</strong> <small style="color:gray; font-style:italic;">${dateString}</small></div>
+        <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px; border-radius:6px;">
+          <div><strong>${d.name}</strong> 
+            <small style="color:gray; font-style:italic; margin-left:8px;">${dateString}</small>
+          </div>
           <div>${stars}</div>
           <div>${d.comment}</div>
-          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
+          ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px;">Delete</button>` : ''}
         </div>
       `;
     });
   });
 }
 
-
+// ❌ Delete review
 function deleteReview(docId) {
   const user = firebase.auth().currentUser;
-if (!user) {
-    window.location.href = 'login.html'; // send them to your login form
+  if (!user) {
+    window.location.href = 'login.html';
     return;
-}
+  }
 
   db.collection('reviews').doc(docId).get().then(doc => {
     if (!doc.exists) {
@@ -1321,7 +1330,6 @@ if (!user) {
       return;
     }
 
-    // If the review belongs to the current user, delete it
     db.collection('reviews').doc(docId).delete()
       .then(() => alert("Review deleted."))
       .catch(error => alert("Failed to delete review: " + error.message));
@@ -1330,21 +1338,21 @@ if (!user) {
   });
 }
 
-    document.addEventListener('DOMContentLoaded', function () {
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      firebase.auth().signOut()
-        .then(() => {
-          window.location.href = 'login.html';
-        })
-        .catch((error) => {
-          console.error("Logout error:", error);
-          alert("Failed to log out.");
-        });
-    });
-  }
+// 🚪 Logout handler
+document.addEventListener('DOMContentLoaded', function () {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      firebase.auth().signOut()
+        .then(() => window.location.href = 'login.html')
+        .catch((error) => {
+          console.error("Logout error:", error);
+          alert("Failed to log out.");
+        });
+    });
+  }
 });
+
 
 
 
