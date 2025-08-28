@@ -1169,6 +1169,22 @@ function closeBookingModal() {
 }
 
 
+function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(section =>
+    section.classList.remove('active')
+  );
+  document.getElementById(sectionId).classList.add('active');
+
+  if (sectionId === 'gallerySection') {
+    loadGallery('galleryDisplay');
+  } else if (sectionId === 'reviewsSection') {
+    // ✅ Only call the real loader
+    loadReviews(currentUser);
+  }
+}
+
+
+
 let selectedRating = 0;
 
 // Star rating UI logic
