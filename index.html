@@ -399,7 +399,7 @@
        LOGOUT
     </a>
 <a class="admin-button" 
-   onclick="closeMenu(); login();" 
+   onclick="closeMenu(); showAdminModal();" 
    style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#61134A; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
    ADMIN
 </a>
@@ -732,6 +732,10 @@ const businessHours = {
 };
 
 function login() {
+  document.getElementById('adminLoginModal').style.display = 'flex';
+}
+
+function showAdminModal() {
   document.getElementById('adminLoginModal').style.display = 'flex';
 }
 
