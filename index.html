@@ -1636,6 +1636,24 @@ const serviceDurations = {
   "Hair Brush": 10
 };
 
+
+function getBufferForSelectedServices() {
+  let buffer = 30; // default buffer in minutes
+
+  // Get the actual form values from your booking form
+  const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
+
+  // Adjust buffer based on service complexity
+  if (acrylic !== "NONE" && acrylic.includes("XL")) buffer = 60;
+  else if (acrylic !== "NONE" && acrylic.includes("Long")) buffer = 50;
+  else if (gel !== "NONE") buffer = 45;
+  else if (manicurePedicure !== "NONE" && manicurePedicure.includes("Men's Pedicure")) buffer = 40;
+
+  return buffer;
+}
+
 function getSelectedServiceDuration() {
   const manicurePedicure = document.getElementById('manicurePedicureType').value;
   const polishArt = document.getElementById('polishArtType').value;
