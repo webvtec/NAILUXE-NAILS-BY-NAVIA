@@ -1329,22 +1329,6 @@ function loadReviews(user) {
     });
 }
 
-// Also update your showSection function to ensure reviews load properly:
-function showSection(sectionId) {
-  document.querySelectorAll('.content-section').forEach(section =>
-    section.classList.remove('active')
-  );
-  document.getElementById(sectionId).classList.add('active');
-
-  if (sectionId === 'gallerySection') {
-    loadGallery('galleryDisplay');
-  } else if (sectionId === 'reviewsSection') {
-    // Add a small delay to ensure the section is visible before loading
-    setTimeout(() => {
-      loadReviews(currentUser);
-    }, 100);
-  }
-}
 
 
 // Add this debugging function to test your Firebase connection:
