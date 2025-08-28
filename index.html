@@ -1346,31 +1346,6 @@ function showSection(sectionId) {
   }
 }
 
-// Add this debugging function to test your Firebase connection:
-function testFirebaseConnection() {
-  console.log('Testing Firebase connection...');
-  db.collection('reviews').limit(1).get()
-    .then(snapshot => {
-      console.log('Firebase connection successful');
-      console.log('Number of reviews found:', snapshot.size);
-    })
-    .catch(error => {
-      console.error('Firebase connection failed:', error);
-    });
-}
-
-// Call this in your browser console to test
-// testFirebaseConnection();
-
-// Ensure reviews load when the page first loads
-document.addEventListener('DOMContentLoaded', function() {
-  // Wait for Firebase to initialize
-  setTimeout(() => {
-    if (document.getElementById('reviewsSection').classList.contains('active')) {
-      loadReviews(currentUser);
-    }
-  }, 1000);
-});
 
 // Add this debugging function to test your Firebase connection:
 function testFirebaseConnection() {
