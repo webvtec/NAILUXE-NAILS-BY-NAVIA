@@ -1752,6 +1752,17 @@ async function loadAvailableSlots() {
     for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
       const end = t + duration;
 
+      // ✅ Block past times for today
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const selectedDate = new Date(date + "T00:00:00");
+      if (selectedDate.getTime() === today.getTime()) {
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        if (t <= currentMinutes) {
+          continue; // skip this slot
+        }
+      }
+
       // Skip if overlaps with any booking or unavailable range
       let conflict =
         bookings.some(b => !(end <= b.start || t >= b.end)) ||
@@ -1771,18 +1782,6 @@ async function loadAvailableSlots() {
       }
     }
 
-      // ✅ Block past times for today
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const selectedDate = new Date(date + "T00:00:00");
-
-  if (selectedDate.getTime() === today.getTime()) {
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    if (t <= currentMinutes) {
-      continue; // skip this slot
-    }
-  }
-
     // If no slots remain
     if (timeSelect.options.length === 1) {
       let option = document.createElement("option");
@@ -1795,6 +1794,7 @@ async function loadAvailableSlots() {
     timeSelect.innerHTML = "<option value=''>Error loading slots</option>";
   }
 }
+
 
 // Auto-format phone number in booking form
 document.addEventListener("DOMContentLoaded", function () {
