@@ -1748,8 +1748,8 @@ async function loadAvailableSlots() {
       }
     });
 
-    // Generate slots every 15 minutes (changed from 5 to reduce clutter)
-    for (let t = openMinutes; t <= closeMinutes - duration; t += 15) {
+    // Generate slots every 5 minutes
+    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
       const end = t + duration;
 
       // Skip if overlaps with any booking or unavailable range
@@ -1770,6 +1770,18 @@ async function loadAvailableSlots() {
         timeSelect.appendChild(option);
       }
     }
+
+      // ✅ Block past times for today
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const selectedDate = new Date(date + "T00:00:00");
+
+  if (selectedDate.getTime() === today.getTime()) {
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    if (t <= currentMinutes) {
+      continue; // skip this slot
+    }
+  }
 
     // If no slots remain
     if (timeSelect.options.length === 1) {
