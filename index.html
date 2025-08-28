@@ -1178,10 +1178,11 @@ function showSection(sectionId) {
   if (sectionId === 'gallerySection') {
     loadGallery('galleryDisplay');
   } else if (sectionId === 'reviewsSection') {
-    // ✅ Only call the real loader
-    loadReviews(currentUser);
+    // Always reload reviews, even if user is not logged in
+    loadReviews(currentUser || null);
   }
 }
+
 
 
 let selectedRating = 0;
