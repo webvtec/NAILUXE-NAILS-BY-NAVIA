@@ -1748,11 +1748,11 @@ async function loadAvailableSlots() {
       }
     });
 
-    // Generate slots every 5 minutes
-    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+    // ✅ Allow bookings up to closing time (even if they run over)
+    for (let t = openMinutes; t <= closeMinutes; t += 5) {
       const end = t + duration;
 
-      // ✅ Block past times for today
+      // Block past times for today
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const selectedDate = new Date(date + "T00:00:00");
