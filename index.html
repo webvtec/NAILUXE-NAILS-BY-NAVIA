@@ -35,7 +35,7 @@
 
     .header-title {
       font-family: 'Zilla Slab', serif;
-      font-size: 22px;
+      font-size: 26px;
       font-weight: bold;
       background: linear-gradient(90deg, #abecd6, #f9d423, #24c6dc, #abecd6);  /* (COLOUR ALLOWED TO CHANGE FOR CLIENT)*/
       -webkit-background-clip: text;
@@ -309,10 +309,6 @@
   z-index: 10000;
 }
 
-#adminLoginModal {
-  z-index: 20000; /* ensures it’s on top of booking/review modals */
-}
-
     
   </style>
 </head>
@@ -320,7 +316,7 @@
 <div class="header-bar">
 <button class="menu-button" onclick="toggleMenu()">☰</button>
 <div class="header-title">NAILUXE NAILZ BY NAVIA</div>
-<a class="location-button" href="https://maps.app.goo.gl/T2eqba2KwhEGBfAH6">📍</a>
+<a class="location-button" href="https://maps.app.goo.gl/Y5KEuKuHc6AVJY1BA" target="_blank">📍</a>
 </div>
 <!-- ✅ Gallery Section (Now Wrapped) -->
 <div class="content-section active" id="gallerySection">
@@ -354,7 +350,7 @@
     
 <div class="social-links" style="display:flex; justify-content:center; gap:35px; margin-top:25px;">
 <!-- Instagram -->
-<a href="https://www.instagram.com/nailz_by_navia?igsh=aGN4YTJ2cnUyNmhl" style="display:inline-block;" target="_blank">
+<a href="https://www.instagram.com/tishays_nailpalace/" style="display:inline-block;" target="_blank">
   <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
     <defs>
       <linearGradient id="instagramGradient" x1="0%" y1="100%" x2="100%" y2="0%">
@@ -390,7 +386,7 @@
 <div class="separator-line"></div>
 <div class="location-info">
 <h3>LOCATION:</h3>
-<p>Shop #4, 1 Wesley road cheago plaza, Angellace beauty salon</p>
+<p>Shop #14, Kings Plaza, Montegobay, St. James, Jamaica</p>
 </div>
 <!-- Another Separator Line -->
 <div class="separator-line"></div>
@@ -398,11 +394,9 @@
 <a onclick="logoutUser(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:red; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; font-weight:bold;">
        LOGOUT
     </a>
-<a class="admin-button" 
-   onclick="closeMenu(); showAdminModal();" 
-   style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#61134A; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
-   ADMIN
-</a>
+<a class="admin-button" onclick="login(); closeMenu();" style="display:block; text-align:center; margin:10px auto; padding:10px 20px; background-color:#61134A; color:white; border-radius:6px; text-decoration:none; width:80%; font-weight:bold;">
+       ADMIN
+    </a>
 </div>
 </div>
 
@@ -604,7 +598,7 @@
 <!-- Container where reviews will be loaded -->
 <div id="reviewsContainer" style="max-width:100%; margin:20px auto;"></div>
 </div>
-    
+
 <!-- Admin Login Modal -->
 <div id="adminLoginModal" style="
   display:none;
