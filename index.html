@@ -571,33 +571,47 @@
 
 
     
+<!-- Replace your entire reviews section with this fixed version -->
 <div class="content-section" id="reviewsSection">
-<h1 style="text-align:center; color:#FE5DC7;">CLIENT REVIEWS</h1>
-<div id="reviewPrompt" style="display:none; max-width:500px; margin:20px auto; 
-            background-color:#e8d9fb; color:#6200ea; 
-            border:1px solid #d1aaff; border-radius:6px; 
-            padding:15px; text-align:center; font-weight:500;">
-  Hi, how was your appointment? Please leave a review!
+  <h1 style="text-align:center; color:#FE5DC7;">CLIENT REVIEWS</h1>
+  
+  <div id="reviewPrompt" style="display:none; max-width:500px; margin:20px auto; 
+              background-color:#e8d9fb; color:#6200ea; 
+              border:1px solid #d1aaff; border-radius:6px; 
+              padding:15px; text-align:center; font-weight:500;">
+    Hi, how was your appointment? Please leave a review!
+  </div>
+
+  <form id="reviewForm" style="max-width:85%; margin:10px auto; text-align:center;">
+    <div style="max-width: 50%; margin: 0 auto;">
+      <input id="reviewName" placeholder="Your Name" required 
+             style="width:100%; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;" type="text"/>
+    </div>
+    
+    <textarea id="reviewComment" placeholder="Write your review..." required 
+              style="width:90%; height:80px; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;"></textarea>
+    
+    <div id="starRating" style="font-size:24px; margin-bottom:10px; cursor:pointer; color:#ccc;">
+      <span data-value="1">★</span>
+      <span data-value="2">★</span>
+      <span data-value="3">★</span>
+      <span data-value="4">★</span>
+      <span data-value="5">★</span>
+    </div>
+    
+    <button style="background-color:#61134A; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" type="submit">
+      SUBMIT REVIEW
+    </button>
+  </form>
+  
+  <p id="reviewSubmitMsg" style="text-align:center; color:green;"></p>
+  
+  <!-- Container where reviews will be loaded -->
+  <div id="reviewsContainer" style="max-width:100%; margin:20px auto;">
+    <p style="text-align:center; color:#666;">Loading reviews...</p>
+  </div>
 </div>
-<form id="reviewForm" style="max-width:85%; margin:10px auto; text-align:center;">
-<div style="max-width: 50%; margin: 0 auto;">
-<input id="reviewName" placeholder="Your Name" required="" style="width:100%; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;" type="text"/>
-</div>
-<textarea id="reviewComment" placeholder="Write your review..." required="" style="width:90%; height:80px; margin-bottom:10px; padding:10px; border-radius:6px; border:1px solid #ccc;"></textarea>
-<div id="starRating" style="font-size:24px; margin-bottom:10px; cursor:pointer; color:#ccc;">
-<span data-value="1">★</span>
-<span data-value="2">★</span>
-<span data-value="3">★</span>
-<span data-value="4">★</span>
-<span data-value="5">★</span>
-</div>
-<button style="background-color:#61134A; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" type="submit">SUBMIT
-      REVIEW</button>
-</form>
-<p id="reviewSubmitMsg" style="text-align:center; color:green;"></p>
-<!-- Container where reviews will be loaded -->
-<div id="reviewsContainer" style="max-width:100%; margin:20px auto;"></div>
-</div>
+
     
 <!-- Admin Login Modal -->
 <div id="adminLoginModal" style="
@@ -1182,144 +1196,245 @@ function showSection(sectionId) {
       }
     }
 
-    let selectedRating = 0;
+    
 
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('#starRating span').forEach(star => {
-        star.addEventListener('click', () => {
-          selectedRating = parseInt(star.getAttribute('data-value'));
-          document.querySelectorAll('#starRating span').forEach(s => {
-            s.style.color = parseInt(s.getAttribute('data-value')) <= selectedRating ? '#f39c12' : '#ccc';
-          });
+// Fixed JavaScript for reviews functionality
+let selectedRating = 0;
+
+// Initialize reviews when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  initializeReviews();
+});
+
+function initializeReviews() {
+  console.log('Initializing reviews...');
+  
+  // Set up star rating functionality
+  const starRatingElement = document.getElementById('starRating');
+  if (starRatingElement) {
+    starRatingElement.querySelectorAll('span').forEach(star => {
+      star.addEventListener('click', function() {
+        selectedRating = parseInt(this.getAttribute('data-value'));
+        console.log('Selected rating:', selectedRating);
+        
+        // Update star display
+        starRatingElement.querySelectorAll('span').forEach(s => {
+          const starValue = parseInt(s.getAttribute('data-value'));
+          s.style.color = starValue <= selectedRating ? '#f39c12' : '#ccc';
         });
       });
-
-      document.getElementById('reviewForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const user = firebase.auth().currentUser;
-        if (!user) {
-          if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
-            window.location.href = 'login.html';
-          }
-          return;
-        }
-
-        const name = document.getElementById('reviewName').value.trim();
-        const comment = document.getElementById('reviewComment').value.trim();
-        const msg = document.getElementById('reviewSubmitMsg');
-
-        if (!name || !comment || selectedRating === 0) {
-          msg.style.color = "red";
-          msg.textContent = "Please fill all fields and select a star rating.";
-          return;
-        }
-
-        try {
-          await db.collection('reviews').add({
-            name,
-            comment,
-            rating: selectedRating,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            uid: user.uid
-          });
-
-          msg.style.color = "green";
-          msg.textContent = "Thank you for your review!";
-          document.getElementById('reviewForm').reset();
-          selectedRating = 0;
-          document.querySelectorAll('#starRating span').forEach(s => s.style.color = '#ccc');
-
-        } catch (error) {
-          console.error("Error submitting review:", error);
-          msg.style.color = "red";
-          msg.textContent = "Error submitting review.";
-        }
-      });
-
-      const phoneInput = document.getElementById("phone");
-      if (phoneInput) {
-        phoneInput.addEventListener("input", function(e) {
-          let input = e.target.value.replace(/\D/g, "");
-          if (input.length > 10) input = input.substring(0, 10);
-
-          let formatted = input;
-
-          if (input.length > 6) {
-            formatted = `(${input.substring(0,3)}) ${input.substring(3,6)}-${input.substring(6)}`;
-          } else if (input.length > 3) {
-            formatted = `(${input.substring(0,3)}) ${input.substring(3)}`;
-          } else if (input.length > 0) {
-            formatted = `(${input}`;
-          }
-
-          e.target.value = formatted;
+      
+      // Add hover effect
+      star.addEventListener('mouseover', function() {
+        const hoverValue = parseInt(this.getAttribute('data-value'));
+        starRatingElement.querySelectorAll('span').forEach(s => {
+          const starValue = parseInt(s.getAttribute('data-value'));
+          s.style.color = starValue <= hoverValue ? '#f39c12' : '#ccc';
         });
-      }
-
-      const dateInput = document.getElementById("date");
-      if (dateInput) {
-        const today = new Date().toISOString().split("T")[0]; 
-        dateInput.setAttribute("min", today);
-      }
+      });
     });
+    
+    // Reset on mouse leave
+    starRatingElement.addEventListener('mouseleave', function() {
+      starRatingElement.querySelectorAll('span').forEach(s => {
+        const starValue = parseInt(s.getAttribute('data-value'));
+        s.style.color = starValue <= selectedRating ? '#f39c12' : '#ccc';
+      });
+    });
+  }
 
-    function formatReviewTime(timestamp) {
-      if (!timestamp || !timestamp.toDate) return '';
+  // Set up form submission
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', submitReview);
+  }
 
-      const now = new Date();
-      const reviewDate = timestamp.toDate();
-      const diffMs = now - reviewDate;
-      const diffSec = Math.floor(diffMs / 1000);
-      const diffMin = Math.floor(diffSec / 60);
-      const diffHours = Math.floor(diffMin / 60);
-      const diffDays = Math.floor(diffHours / 24);
-      const diffWeeks = Math.floor(diffDays / 7);
-      const diffMonths = Math.floor(diffDays / 30);
-      const diffYears = Math.floor(diffDays / 365);
+  // Load existing reviews
+  loadReviewsFixed();
+}
 
-      if (diffSec < 60) return "Just now";
-      if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
-      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-      if (diffWeeks < 5) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
-      if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
-      return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+// Fixed review submission
+function submitReview(e) {
+  e.preventDefault();
+  console.log('Submitting review...');
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    if (confirm("You must be logged in to submit a review. Click OK to log in.")) {
+      window.location.href = 'login.html';
     }
+    return;
+  }
 
-    function loadReviews(user) {
-      const container = document.getElementById('reviewsContainer');
-      container.innerHTML = "<p>Loading reviews...</p>";
+  const name = document.getElementById('reviewName').value.trim();
+  const comment = document.getElementById('reviewComment').value.trim();
+  const msg = document.getElementById('reviewSubmitMsg');
 
-      db.collection('reviews').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-        if (snapshot.empty) {
-          container.innerHTML = "<p>No reviews yet.</p>";
-          return;
-        }
+  if (!name || !comment || selectedRating === 0) {
+    msg.style.color = "red";
+    msg.textContent = "Please fill all fields and select a star rating.";
+    return;
+  }
 
-        container.innerHTML = '';
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const isOwner = user && d.uid === user.uid;
+  // Show submitting message
+  msg.style.color = "#666";
+  msg.textContent = "Submitting review...";
 
-          const dateString = formatReviewTime(d.timestamp);
+  db.collection('reviews').add({
+    name: name,
+    comment: comment,
+    rating: selectedRating,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    uid: user.uid
+  }).then(() => {
+    console.log('Review submitted successfully');
+    msg.style.color = "green";
+    msg.textContent = "Thank you for your review!";
+    
+    // Reset form
+    document.getElementById('reviewForm').reset();
+    selectedRating = 0;
+    
+    // Reset stars
+    const starRatingElement = document.getElementById('starRating');
+    if (starRatingElement) {
+      starRatingElement.querySelectorAll('span').forEach(s => s.style.color = '#ccc');
+    }
+    
+    // Reload reviews
+    loadReviewsFixed();
+    
+  }).catch(error => {
+    console.error("Error submitting review:", error);
+    msg.style.color = "red";
+    msg.textContent = "Error submitting review. Please try again.";
+  });
+}
 
-          let stars = '';
-          for (let i = 1; i <= 5; i++) {
-            stars += `<span style="color: ${i <= d.rating ? '#f39c12' : '#ccc'};">★</span>`;
-          }
+// Completely rewritten loadReviews function
+function loadReviewsFixed() {
+  console.log('Loading reviews...');
+  
+  const container = document.getElementById('reviewsContainer');
+  if (!container) {
+    console.error('Reviews container not found');
+    return;
+  }
 
-          container.innerHTML += `
-            <div style="background:#fff; border:1px solid #eee; padding:10px; margin-bottom:10px;">
-              <div><strong>${d.name}</strong> <small style="color:gray; font-style:italic;">${dateString}</small></div>
-              <div>${stars}</div>
-              <div>${d.comment}</div>
-              ${isOwner ? `<button onclick="deleteReview('${doc.id}')" style="color:red; cursor:pointer;">Delete</button>` : ''}
-            </div>
-          `;
+  // Show loading
+  container.innerHTML = "<p style='text-align:center; color:#666;'>Loading reviews...</p>";
+
+  // Test Firebase connection first
+  db.collection('reviews').limit(1).get()
+    .then(testSnap => {
+      console.log('Firebase connection successful. Found', testSnap.size, 'reviews in test query');
+      
+      // Now load all reviews
+      return db.collection('reviews').get();
+    })
+    .then(snapshot => {
+      console.log('Total reviews found:', snapshot.size);
+      
+      if (snapshot.empty) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:30px;">
+            <p style="color:#666; font-size:16px; margin-bottom:10px;">No reviews yet.</p>
+            <p style="color:#999; font-size:14px;">Be the first to leave a review!</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Convert to array and sort manually
+      let reviews = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        reviews.push({
+          id: doc.id,
+          ...data
         });
       });
-    }
+      
+      // Sort by timestamp (newest first)
+      reviews.sort((a, b) => {
+        if (!a.timestamp && !b.timestamp) return 0;
+        if (!a.timestamp) return 1;
+        if (!b.timestamp) return -1;
+        
+        const aTime = a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+        const bTime = b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+        
+        return bTime - aTime;
+      });
+
+      // Build HTML
+      let html = '';
+      reviews.forEach(review => {
+        const isOwner = currentUser && review.uid === currentUser.uid;
+        const dateString = formatReviewTime(review.timestamp);
+        
+        // Build stars
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+          stars += `<span style="color: ${i <= (review.rating || 0) ? '#f39c12' : '#ccc'};">★</span>`;
+        }
+
+        html += `
+          <div style="background:#fff; border:1px solid #eee; padding:15px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <div style="margin-bottom:8px;">
+              <strong>${review.name || 'Anonymous'}</strong>
+              ${dateString ? `<small style="color:gray; font-style:italic; margin-left:10px;">${dateString}</small>` : ''}
+            </div>
+            <div style="margin-bottom:8px;">${stars}</div>
+            <div style="line-height:1.4;">${review.comment || ''}</div>
+            ${isOwner ? `<button onclick="deleteReview('${review.id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-size:12px;">Delete</button>` : ''}
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      
+    })
+    .catch(error => {
+      console.error("Error loading reviews:", error);
+      container.innerHTML = `
+        <div style="text-align:center; padding:20px; background:#fee; border:1px solid #fcc; border-radius:8px; margin:20px;">
+          <p style="color:red; font-weight:bold;">Error loading reviews</p>
+          <p style="color:#666; font-size:14px; margin:10px 0;">Error: ${error.message}</p>
+          <button onclick="loadReviewsFixed()" style="background:#61134A; color:white; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;">
+            Try Again
+          </button>
+        </div>
+      `;
+    });
+}
+
+// Updated formatReviewTime function
+function formatReviewTime(timestamp) {
+  if (!timestamp || !timestamp.toDate) {
+    return 'Recently';
+  }
+
+  try {
+    const now = new Date();
+    const reviewDate = timestamp.toDate();
+    const diffMs = now - reviewDate;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSec < 60) return "Just now";
+    if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    
+    return reviewDate.toLocaleDateString();
+  } catch (error) {
+    console.error('Error formatting review time:', error);
+    return 'Recently';
+  }
+}
 
     function deleteReview(docId) {
       const user = firebase.auth().currentUser;
