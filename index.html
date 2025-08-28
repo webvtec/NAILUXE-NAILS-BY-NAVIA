@@ -1176,10 +1176,9 @@ function showSection(sectionId) {
 
   if (sectionId === 'gallerySection') {
     loadGallery('galleryDisplay');
-  } else if (sectionId === 'reviewsSection') {
-  initializeReviewsOnce();
-  loadReviewsClean();
-  }
+  } } else if (sectionId === 'reviewsSection') {
+  loadReviews(currentUser);
+}
 }
 
 let selectedRating = 0;
