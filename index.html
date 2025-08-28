@@ -1002,19 +1002,23 @@ function submitBooking(event) {
     return;
   }
 
+  // Get form values
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const date = document.getElementById('date').value;
   const time = document.getElementById('selectedTime').value;
+  const services = getSelectedServices();
 
-  // Get selected services from all categories
-const services = getSelectedServices();
+  // Validation
+  if (!name || !phone || !date || !time) {
+    alert('Please fill in all required fields.');
+    return;
+  }
 
-// Check if at least one service is selected
-if (services === 'No services selected') {
-  alert('Please select at least one service before booking.');
-  return;
-}
+  if (services === 'No services selected') {
+    alert('Please select at least one service before booking.');
+    return;
+  }
 
   const bookingNumber = generateBookingNumber(name);
   const duration = getSelectedServiceDuration();
@@ -1033,7 +1037,7 @@ if (services === 'No services selected') {
         phone,
         date: date,
         time,
-        service,
+        service: services,
         duration,
         deposit: "No"
       });
@@ -1053,7 +1057,7 @@ if (services === 'No services selected') {
 📞 Phone: ${phone}
 📍 Date: ${formattedDate}
 ⏰ Time: ${time}
-💅 Service: ${service}`;
+💅 Service: ${services}`;
 
       const telegramBotToken = "7638261664:AAGm0MNVQxN0hlW1bhXBRf-kSRuMgRkCLC8";
       const telegramChatId = "-1002734216867";
@@ -1077,52 +1081,63 @@ if (services === 'No services selected') {
         document.querySelector("#bookingModal h3").style.display = "none";
         document.querySelector("#bookingModal p").innerHTML = `
           <div style="
-            text-align:center; 
-            padding:15px; 
-            font-family:Arial,sans-serif; 
-            color:#333;
-            max-width:400px;
-            margin:0 auto;
-            background:white;
-            border-radius:8px;
-            box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-            <h2 style="margin:0 0 8px 0; font-size:20px; font-weight:bold;">BOOKING CONFIRMED</h2>
-            <p style="font-size:16px; margin:0 0 12px 0;">
-             Your Booking #: <strong>${bookingNumber}</strong>
-            </p>
-            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
-            <p style="font-size:13px; line-height:1.4; margin:8px 0;">
-              <strong>$4,000 (JMD)</strong> must be transferred within <strong>48 hours</strong> 
-             to the account below or your booking will be <span style="color:red; font-weight:bold;">cancelled</span>.
-            </p>
-            <p style="font-size:15px; margin:8px 0; color:#6c2eb9; font-weight:bold;">
-              💵 Deposit Due: JMD $4,000.00
-            </p>
-            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
-            <h3 style="font-size:14px; margin:8px 0;">Banking Details:</h3>
-            <div style="font-size:12px; text-align:left; margin:8px 0;">
-              <p style="margin:3px 0;">🏦 Bank: <strong>Your Bank Name</strong></p>
-              <p style="margin:3px 0;">👤 Account: <strong>Your Account Name</strong></p>
-              <p style="margin:3px 0;">#️⃣ Number: <strong>123456789</strong></p>
-              <p style="margin:3px 0;">🏢 Branch: <strong>Your Branch Name</strong></p>
-            </div>
-            <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
-            <p style="font-size:11px; color:#666; margin:8px 0;">
-              ℹ️ If you need to see the banking info again it is always visible in the <strong>PAYMENT INFO</strong> section of the menu
-            </p>
-            <button onclick="closeBookingModal()" style="
-              margin-top:15px; 
-              padding:10px 25px; 
-              background:#6c2eb9; 
-              color:white; 
-              border:none; 
-              border-radius:5px; 
-              font-size:14px; 
-              cursor:pointer;
-              font-weight:bold;">
-              OK
-            </button>
-          </div>
+    text-align:center; 
+    padding:15px; 
+    font-family:Arial,sans-serif; 
+    color:#333;
+    max-width:400px;
+    margin:0 auto;
+    background:white;
+    border-radius:8px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+
+        <!-- Round Tick -->
+    <div style="
+        width:60px; 
+        height:60px; 
+        margin:0 auto 12px auto; 
+        border-radius:50%; 
+        background:#4CAF50; 
+        display:flex; 
+        align-items:center; 
+        justify-content:center;">
+        <span style="font-size:30px; color:white;">✔</span>
+    </div>
+    
+    <h2 style="margin:0 0 8px 0; font-size:20px; font-weight:bold;">
+      BOOKING CONFIRMED
+    </h2>
+    
+    <p style="font-size:16px; margin:0 0 12px 0;">
+      Your Booking #: <strong>${bookingNumber}</strong>
+    </p>
+    
+    <hr style="margin:12px 0; border:0; height:1px; background:#ddd;">
+    
+    <p style="font-size:14px; line-height:1.4; margin:8px 0;">
+      Thank you for booking with us!  We are looking forward to see you soon.🎉
+    </p>
+
+    <p style="font-size:11px; color:#666; margin:8px 0;">
+      ℹ️ If you wish to make your payment via online banking please click the menu bar icon at the top left of your screen and view the
+      <strong>PAYMENT INFO</strong> section and use your booking number as payment refrence.
+    </p>
+
+    <!-- OK Button -->
+      <button onclick="closeBookingModal()" style="
+        background:#4CAF50;
+        color:white;
+        border:none;
+        padding:10px 20px;
+        border-radius:6px;
+        font-size:14px;
+        cursor:pointer;
+        margin-top:12px;
+        font-weight:bold;
+      ">
+        OK
+    </button>
+</div>
         `;
         document.getElementById('bookingModal').style.display = 'flex';
       }
@@ -1132,6 +1147,8 @@ if (services === 'No services selected') {
       alert("Failed to save booking. Please try again.");
     });
 }
+
+
 
 // The closeBookingModal() function should already exist in your HTML/existing JavaScript
 // Add this function to close the modal
