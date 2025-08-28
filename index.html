@@ -1536,24 +1536,6 @@ function closeMyBookings() {
   });
     }
 
-// Get selected services for booking
-function getSelectedServices() {
-  const manicurePedicure = document.getElementById('manicurePedicureType').value;
-  const polishArt = document.getElementById('polishArtType').value;
-  const acrylic = document.getElementById('acrylicType').value;
-  const gel = document.getElementById('gelType').value;
-  const other = document.getElementById('otherType').value;
-  
-  let services = [];
-  
-  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
-    if (service && service !== 'NONE') {
-      services.push(service);
-    }
-  });
-  
-  return services.length > 0 ? services.join(', ') : 'No services selected';
-}
 
 // Service duration estimates (in minutes)
 const serviceDurations = {
