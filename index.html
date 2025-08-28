@@ -1612,14 +1612,21 @@ function getSelectedServiceDuration() {
 // ✅ FINAL version — only one loadAvailableSlots() now
 async function loadAvailableSlots() {
   const date = document.getElementById('date').value;
+  
+  // Get services from the actual form fields that exist
   const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
-const polishArt = document.getElementById('polishArtType')?.value || "NONE";
-const acrylic = document.getElementById('acrylicType')?.value || "NONE";
-const gel = document.getElementById('gelType')?.value || "NONE";
-const other = document.getElementById('otherType')?.value || "NONE";
+  const polishArt = document.getElementById('polishArtType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
+  const other = document.getElementById('otherType')?.value || "NONE";
 
-// Must have a date + at least one service
-if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic === "NONE" && gel === "NONE" && other === "NONE")) {
+  const timeSelect = document.getElementById('selectedTime');
+  timeSelect.innerHTML = "<option value=''>-- Select a time --</option>";
+
+  // Must have a date + at least one service
+  const hasService = [manicurePedicure, polishArt, acrylic, gel, other].some(service => service !== "NONE");
+  
+  if (!date || !hasService) {
     timeSelect.innerHTML = "<option value=''>COMPLETE FORM TO SEE AVAILABLE SLOTS</option>";
     return;
   }
@@ -1637,7 +1644,7 @@ if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic ===
   const closeMinutes = convertToMinutes(business.close);
 
   try {
-    // ✅ Fetch bookings
+    // Fetch bookings
     const snapshot = await db.collection("bookings")
       .where("date", "==", date)
       .get();
@@ -1648,7 +1655,7 @@ if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic ===
       return { start: bookedTime, end: bookedTime + bookedDuration };
     });
 
-    // ✅ Fetch unavailable ranges
+    // Fetch unavailable ranges
     const unavailableSnapshot = await db.collection("unavailableDays")
       .where("date", "==", date)
       .get();
@@ -1663,19 +1670,14 @@ if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic ===
         const start = convertToMinutes(normalizeTimeStr(data.startTime));
         const end = convertToMinutes(normalizeTimeStr(data.endTime));
 
-        // ✅ Only add if both are valid numbers and end > start
         if (!isNaN(start) && !isNaN(end) && end > start) {
           unavailableRanges.push({ start, end });
         }
       }
     });
 
-    // 🔍 Debug output (remove later)
-    console.log("Bookings:", bookings);
-    console.log("Unavailable ranges:", unavailableRanges);
-
-    // ✅ Generate slots every 5 minutes
-    for (let t = openMinutes; t <= closeMinutes - duration; t += 5) {
+    // Generate slots every 15 minutes (changed from 5 to reduce clutter)
+    for (let t = openMinutes; t <= closeMinutes - duration; t += 15) {
       const end = t + duration;
 
       // Skip if overlaps with any booking or unavailable range
@@ -1710,8 +1712,7 @@ if (!date || (manicurePedicure === "NONE" && polishArt === "NONE" && acrylic ===
   }
 }
 
-
-    // ✅ Auto-format phone number in booking form
+// Auto-format phone number in booking form
 document.addEventListener("DOMContentLoaded", function () {
   const phoneInput = document.getElementById("phone");
   if (phoneInput) {
@@ -1734,14 +1735,33 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// Set minimum date to today
 document.addEventListener("DOMContentLoaded", function () {
   const dateInput = document.getElementById("date");
   if (dateInput) {
     const today = new Date().toISOString().split("T")[0]; 
-    dateInput.setAttribute("min", today); // ✅ Block past dates
+    dateInput.setAttribute("min", today);
   }
 });
 
+// Get selected services for booking - FIXED to match actual form fields
+function getSelectedServices() {
+  const manicurePedicure = document.getElementById('manicurePedicureType')?.value || "NONE";
+  const polishArt = document.getElementById('polishArtType')?.value || "NONE";
+  const acrylic = document.getElementById('acrylicType')?.value || "NONE";
+  const gel = document.getElementById('gelType')?.value || "NONE";
+  const other = document.getElementById('otherType')?.value || "NONE";
+  
+  let services = [];
+  
+  [manicurePedicure, polishArt, acrylic, gel, other].forEach(service => {
+    if (service && service !== 'NONE') {
+      services.push(service);
+    }
+  });
+  
+  return services.length > 0 ? services.join(', ') : 'No services selected';
+}
 
 
     
