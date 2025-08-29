@@ -332,9 +332,10 @@
 <!-- Opening Hours Section -->
 <div class="opening-hours">
 <h3>OPENING HOURS:</h3>
-<p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-<p>Saturday: 10:00 AM - 4:00 PM</p>
+<p>Monday: 9:00 AM - 6:00 PM</p>
+<p>Wednesday - Saturday 9:00 AM - 6:00 PM</p>
 <p>Sunday: Closed</p>
+<p>Tuesday: Closed</p>
 </div>
 <a class="admin-button" onclick="showUserBookings(); closeMenu();" style="display:block; text-align:center; font-size:15px; margin:10px auto; padding:10px 10px; background-color:#61134A; color:white; border-radius:6px; cursor:pointer; text-decoration:none; width:80%; white-space:nowrap; font-weight:bold; overflow:hidden; text-overflow:ellipsis;">
    MY BOOKINGS
@@ -852,9 +853,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const businessHours = {
   'Sunday': null, // Closed
+  'Wednesday': null, // Closed
   'Monday': { open: '9:00 AM', close: '6:00 PM' },
   'Tuesday': { open: '9:00 AM', close: '6:00 PM' },
-  'Wednesday': { open: '9:00 AM', close: '6:00 PM' },
   'Thursday': { open: '9:00 AM', close: '6:00 PM' },
   'Friday': { open: '9:00 AM', close: '6:00 PM' },
   'Saturday': { open: '9:00 AM', close: '6:00 PM' }
