@@ -958,29 +958,25 @@ function showEstimateTime() {
       }
 
       return db.collection('bookings')
-  .where('date', '==', date)
-  .get()
-  .then((querySnapshot) => {
-    const duration = getSelectedServiceDuration(); // how long the *new* booking lasts
+        .where('date', '==', date)
+        .get()
+        .then((querySnapshot) => {
+          const buffer = getBufferForSelectedServices();
 
-    for (let doc of querySnapshot.docs) {
-      let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
-      let bookedMinutes = convertToMinutes(bookedTime);
+          for (let doc of querySnapshot.docs) {
+            let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
+            let bookedMinutes = convertToMinutes(bookedTime);
 
-      // how long the existing booking lasts (fallback to 60 mins)
-      const bookedDuration = doc.data().duration || 60;
-      const bookedEnd = bookedMinutes + bookedDuration;
-      const newEnd = selectedMinutes + duration;
+            if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
+          return false; // Conflict
+        }
 
-      // ❌ Overlap check
-      if (!(newEnd <= bookedMinutes || selectedMinutes >= bookedEnd)) {
-        return false; // Conflict
-      }
+          }
+
+          return true; // No conflict
+        });
+    });
     }
-
-    return true; // ✅ No conflict
-  });
-
 
 
 function generateBookingNumber(name) {
