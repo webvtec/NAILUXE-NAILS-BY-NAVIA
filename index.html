@@ -967,9 +967,14 @@ function showEstimateTime() {
             let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
             let bookedMinutes = convertToMinutes(bookedTime);
 
-            if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
-              return false; // Conflict
-            }
+            const bookedDuration = doc.data().duration || 60;
+const bookedEnd = bookedMinutes + bookedDuration;
+
+// Conflict if times overlap
+if (!(selectedMinutes + duration <= bookedMinutes || selectedMinutes >= bookedEnd)) {
+  return false;
+}
+
           }
 
           return true; // No conflict
