@@ -915,7 +915,9 @@ function showEstimateTime() {
 }
 
 
-    function validateTimeSlot(date, selectedTime) {
+// Replace your existing validateTimeSlot function with this improved version
+
+function validateTimeSlot(date, selectedTime) {
   const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
   const business = businessHours[dayName];
 
@@ -947,9 +949,8 @@ function showEstimateTime() {
           const endMinutes = convertToMinutes(normalizeTimeStr(data.endTime));
 
           if (selectedMinutes >= startMinutes && selectedMinutes <= endMinutes) {
-          isUnavailable = true;
-         }
-
+            isUnavailable = true;
+          }
         }
       });
 
@@ -961,23 +962,41 @@ function showEstimateTime() {
         .where('date', '==', date)
         .get()
         .then((querySnapshot) => {
-          const buffer = getBufferForSelectedServices();
+          // Get the duration of the service being booked
+          const newServiceDuration = getSelectedServiceDuration();
+          const newServiceEndTime = selectedMinutes + newServiceDuration;
 
           for (let doc of querySnapshot.docs) {
             let bookedTime = doc.data().time.trim().replace(/\s+/g, ' ');
             let bookedMinutes = convertToMinutes(bookedTime);
+            let bookedDuration = doc.data().duration || 60; // Get stored duration or default
+            let bookedEndTime = bookedMinutes + bookedDuration;
 
-            if (Math.abs(selectedMinutes - bookedMinutes) < buffer) {
-          return false; // Conflict
-        }
-
+            // Check for actual time overlap (no buffer needed)
+            // New booking conflicts if it starts before existing booking ends 
+            // AND existing booking starts before new booking ends
+            if (selectedMinutes < bookedEndTime && bookedMinutes < newServiceEndTime) {
+              console.log(`Conflict detected: New booking ${selectedTime} conflicts with existing booking at ${bookedTime}`);
+              return false;
+            }
           }
 
           return true; // No conflict
         });
+    })
+    .catch(error => {
+      console.error("Error validating time slot:", error);
+      return false;
     });
-    }
+}
 
+// Also update your getBufferForSelectedServices function to be simpler
+function getBufferForSelectedServices() {
+  // Return a small buffer just for UI purposes (5-10 minutes)
+  // The real conflict checking is now done by actual service durations
+  return 10; 
+}
+    
 
 function generateBookingNumber(name) {
   const initials = name.trim().substring(0, 2).toUpperCase();
